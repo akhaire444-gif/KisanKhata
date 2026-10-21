@@ -23,21 +23,39 @@ KisanKhata-main/
 
 ## Quick Start
 
-### 1. Backend (Spring Boot)
-Requires Java 17+ and Maven 3.9+.
+### Quickest: One-Click Launch (Both Services)
 
+Double-click `run.bat` or run:
+
+```powershell
+.\run-dev.ps1
+```
+
+---
+
+### Manual Launch
+
+#### 1. Backend (Spring Boot 3.4 + Java 17)
 ```bash
 cd backend
-mvn spring-boot:run
+.\mvnw.cmd spring-boot:run     # Windows
+# or ./mvnw spring-boot:run     # Linux/macOS
 ```
-Backend runs at `http://localhost:8080`.
+Backend runs at `http://localhost:8080` (H2 Database + REST APIs).
+Health Check: `http://localhost:8080/actuator/health`
 
-### 2. Frontend (React + Vite)
-Requires Node.js 18+.
-
+#### 2. Frontend (React 19 + TypeScript + Vite)
 ```bash
 cd frontend
-npm install
+npm install --legacy-peer-deps
 npm run dev
 ```
-Frontend runs at `http://localhost:5173`.
+Frontend runs at `http://localhost:3000` (auto-proxies `/api` to `http://localhost:8080`).
+
+---
+
+### Key URLs & Demo Credentials
+- **Web App:** [http://localhost:3000](http://localhost:3000)
+- **API & Actuator:** [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
+- **Bootstrap Admin:** `admin@kisankhata.in` / `SecureAdminPassword2026!`
+- **Demo Farmer:** Rajesh Patil (`Farm-MH-4012`)

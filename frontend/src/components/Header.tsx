@@ -10,7 +10,8 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
     currentFarmer,
     logoutFarmer,
     switchToDemoFarmer,
-    todayReminders
+    todayReminders,
+    backendStatus
   } = useApp();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -37,7 +38,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
     <header className="fixed top-0 w-full z-50 bg-[#f9f9ff]/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-b border-[#e7eeff]">
       <div className="h-20 w-full px-4 lg:px-8 max-w-7xl mx-auto flex items-center justify-between gap-4">
         {/* Left: Brand & Tenant ID */}
-        <div className="flex items-center gap-4 lg:gap-6">
+        <div className="flex items-center gap-3 lg:gap-4">
           <button
             onClick={() => handleNavClick('dashboard')}
             className="flex items-center gap-2.5 text-left focus:outline-none group cursor-pointer"
@@ -56,6 +57,29 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
               </span>
             </div>
           </button>
+
+          {/* Backend Connection Badge */}
+          <div
+            title={backendStatus === 'connected' ? 'Spring Boot 3.4 (Java 17) Backend is connected' : 'Operating in local memory mode'}
+            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all border ${
+              backendStatus === 'connected'
+                ? 'bg-[#1b4332]/10 text-[#116c4a] border-[#a1f4c8]'
+                : backendStatus === 'checking'
+                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                : 'bg-stone-100 text-stone-600 border-stone-200'
+            }`}
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                backendStatus === 'connected'
+                  ? 'bg-[#116c4a] animate-pulse'
+                  : backendStatus === 'checking'
+                  ? 'bg-amber-500 animate-ping'
+                  : 'bg-stone-400'
+              }`}
+            />
+            <span>{backendStatus === 'connected' ? 'API Live (Java 17)' : backendStatus === 'checking' ? 'Connecting...' : 'Local Cache'}</span>
+          </div>
 
           {/* Tenant Status Pill */}
           <div className="hidden xl:flex items-center px-3 py-1 rounded-full bg-[#a1f4c8] text-[#1b724f] text-[12px] font-semibold shadow-xs">

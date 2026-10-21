@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class BootstrapAdmin {
- @Bean CommandLineRunner bootstrapAdmin(UserRepository users,PasswordEncoder encoder,
+ @Bean CommandLineRunner bootstrapAdminRunner(UserRepository users,PasswordEncoder encoder,
    @Value("${app.bootstrap-admin.email:}") String email,@Value("${app.bootstrap-admin.password:}") String password) {
   return args -> {
    if(email==null||email.isBlank()||password==null||password.isBlank()) return;

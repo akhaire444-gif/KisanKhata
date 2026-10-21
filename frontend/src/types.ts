@@ -97,6 +97,26 @@ export interface Reminder {
   createdAt: string;
 }
 
+export type WateringIntervalUnit = 'hours' | 'days' | 'weeks';
+
+export interface WateringReminder {
+  id: string;
+  farmerId: string;
+  cropId?: string;
+  cropName?: string;
+  plotName: string;
+  intervalValue: number;
+  intervalUnit: WateringIntervalUnit;
+  time: string;
+  method: 'Drip' | 'Canal' | 'Borewell' | 'Sprinkler' | 'Flood';
+  durationTarget?: string;
+  nextWateringDate: string;
+  lastWateredDate?: string;
+  isActive?: boolean;
+  notes?: string;
+  createdAt: string;
+}
+
 export type NavigationPath = 
   | 'home'
   | 'dashboard'

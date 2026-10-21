@@ -65,6 +65,9 @@ interface AppContextType {
   // UI Toast
   toastMessage: { text: string; type: 'success' | 'error' | 'info' } | null;
   showToast: (text: string, type?: 'success' | 'error' | 'info') => void;
+
+  // Live Backend Connectivity
+  backendStatus: 'connected' | 'offline' | 'checking';
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -373,6 +376,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Toast
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [backendStatus, setBackendStatus] = useState<'connected' | 'offline' | 'checking'>('checking');
+
+  useEffect(() => {
+    api.auth.csrf()
+      .then(() => setBackendStatus('connected'))
+      .catch(() => setBackendStatus('offline'));
+  }, []);
 
   const showToast = (text: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToastMessage({ text, type });
@@ -741,7 +751,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleReminderDone,
         todayReminders,
         toastMessage,
-        showToast
+        showToast,
+        backendStatus
       }}
     >
       {children}

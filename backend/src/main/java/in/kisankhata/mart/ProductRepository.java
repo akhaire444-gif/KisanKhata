@@ -14,6 +14,6 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     List<Product> findAllByOrderByCreatedAtDesc();
 
     @Modifying
-    @Query("UPDATE Product p SET p.stockQuantity = p.stockQuantity - :qty, p.updatedAt = CURRENT_TIMESTAMP WHERE p.id = :id AND p.stockQuantity >= :qty")
+    @Query("UPDATE Product p SET p.stockQuantity = p.stockQuantity - :qty, p.updatedAt = CURRENT_INSTANT WHERE p.id = :id AND p.stockQuantity >= :qty")
     int atomicDeductStock(@Param("id") String id, @Param("qty") int qty);
 }
