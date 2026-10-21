@@ -1,0 +1,6 @@
+{
+  "name": "KisanKhata - Farm Expense & Agri Mart",
+  "description": "Simple farm expense management, worker wage ledgers, crop records, and fresh farm marketplace for farmers across India.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
