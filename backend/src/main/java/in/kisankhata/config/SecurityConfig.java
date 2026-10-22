@@ -84,6 +84,9 @@ public class SecurityConfig {
                 .successHandler(oauth2SuccessHandler)
                 .failureHandler((req, res, ex) -> {
                     String redirect = env.getProperty("app.cors.allowed-origin", "http://localhost:3000");
+                    if (redirect != null && redirect.endsWith("/")) {
+                        redirect = redirect.substring(0, redirect.length() - 1);
+                    }
                     res.sendRedirect(redirect + "/?auth=error&message=oauth_failed");
                 })
             )

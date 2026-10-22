@@ -17,6 +17,13 @@
 | `FRONTEND_ORIGIN` | `http://localhost:5173` | Allowed CORS origin (production domain, e.g. `https://kisankhata.in`) |
 | `BOOTSTRAP_ADMIN_EMAIL` | *(empty)* | Initial admin email address (required for first start) |
 | `BOOTSTRAP_ADMIN_PASSWORD` | *(empty)* | Initial admin password (min 12 characters, required for first start) |
+| `SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID` or `GOOGLE_CLIENT_ID` | *(empty)* | Google OAuth 2.0 Web Client ID (from Google Cloud Console) |
+| `SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET` or `GOOGLE_CLIENT_SECRET` | *(empty)* | Google OAuth 2.0 Client Secret (from Google Cloud Console) |
+
+> **Note on Google Cloud Console Redirect URI:**
+> In your Google Cloud Console OAuth 2.0 Client Credentials, add the Authorized Redirect URI:
+> `https://<YOUR_BACKEND_RENDER_HOST>/login/oauth2/code/google`
+> (For local development: `http://localhost:8080/login/oauth2/code/google`)
 
 ## 3. Build & Packaging Instructions
 

@@ -52,8 +52,8 @@ app:
     password: ${BOOTSTRAP_ADMIN_PASSWORD:}
   oauth2:
     google:
-      client-id: ${GOOGLE_CLIENT_ID:}
-      client-secret: ${GOOGLE_CLIENT_SECRET:}
+      client-id: ${GOOGLE_CLIENT_ID:${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID:${spring.security.oauth2.client.registration.google.client-id:}}}
+      client-secret: ${GOOGLE_CLIENT_SECRET:${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET:${spring.security.oauth2.client.registration.google.client-secret:}}}
 logging:
   level:
     root: INFO
