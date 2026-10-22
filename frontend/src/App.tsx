@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -6,9 +6,36 @@ import { HomePage } from './pages/HomePage';
 import { FarmerDashboard } from './pages/farmer/FarmerDashboard';
 import { AboutPage, ContactPage } from './pages/public/AboutAndContact';
 import { AuthModal } from './components/AuthModals';
+import { NavigationPath } from './types';
+
+const PUBLIC_PATHS: NavigationPath[] = ['home', 'about', 'contact'];
 
 const MainApp: React.FC = () => {
-  const { currentPath, toastMessage } = useApp();
+  const {
+    currentPath,
+    setCurrentPath,
+    currentFarmer,
+    isAuthChecking,
+    toastMessage,
+    showToast,
+    refreshData
+  } = useApp();
+
+  // Listen for OAuth2 callback query parameters (?auth=success or ?auth=error)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const authStatus = params.get('auth');
+    if (authStatus === 'success') {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      showToast('Signed in successfully with Google!', 'success');
+      refreshData();
+    } else if (authStatus === 'error') {
+      const err = params.get('message') || 'Google authentication failed';
+      window.history.replaceState({}, document.title, window.location.pathname);
+      showToast(`Sign in error: ${err}`, 'error');
+    }
+  }, [showToast, refreshData]);
+
   const [authModalConfig, setAuthModalConfig] = useState<{
     isOpen: boolean;
     isRegister?: boolean;
@@ -16,6 +43,9 @@ const MainApp: React.FC = () => {
     isOpen: false,
     isRegister: false
   });
+
+  // Preserve intended destination when unauthenticated user hits a protected route
+  const intendedDestinationRef = useRef<NavigationPath | null>(null);
 
   const handleOpenAuthModal = (isRegister = false) => {
     setAuthModalConfig({
@@ -26,11 +56,64 @@ const MainApp: React.FC = () => {
 
   const handleCloseAuthModal = () => {
     setAuthModalConfig(prev => ({ ...prev, isOpen: false }));
+    // If user cancelled login and is still not authenticated on a protected route, send to public home
+    if (!currentFarmer && !PUBLIC_PATHS.includes(currentPath)) {
+      setCurrentPath('home');
+    }
   };
 
+  const handleAuthSuccess = () => {
+    const target = intendedDestinationRef.current || 'dashboard';
+    intendedDestinationRef.current = null;
+    setCurrentPath(target);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Centralized Authentication Guard Effect
+  useEffect(() => {
+    if (isAuthChecking) return;
+
+    const isProtected = !PUBLIC_PATHS.includes(currentPath);
+    if (isProtected && !currentFarmer) {
+      // Intercept and redirect to login
+      intendedDestinationRef.current = currentPath;
+      handleOpenAuthModal(false);
+      showToast('Please sign in to access your farm records', 'info');
+    }
+  }, [currentPath, currentFarmer, isAuthChecking, showToast]);
+
   const renderContent = () => {
+    // 1. Initial authentication verification spinner
+    if (isAuthChecking) {
+      return (
+        <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
+          <div className="w-9 h-9 border-3 border-[#116c4a]/20 border-t-[#116c4a] rounded-full animate-spin" />
+          <p className="text-xs font-semibold text-[#414844]">Verifying secure session...</p>
+        </div>
+      );
+    }
+
+    // 2. Unauthenticated visitor handling
+    if (!currentFarmer) {
+      switch (currentPath) {
+        case 'about':
+          return <AboutPage />;
+        case 'contact':
+          return <ContactPage />;
+        case 'home':
+        default:
+          return <HomePage onOpenAuthModal={handleOpenAuthModal} />;
+      }
+    }
+
+    // 3. Authenticated farmer handling
     switch (currentPath) {
       case 'home':
+        return <HomePage onOpenAuthModal={handleOpenAuthModal} />;
+      case 'about':
+        return <AboutPage />;
+      case 'contact':
+        return <ContactPage />;
       case 'dashboard':
       case 'crops':
       case 'expenses':
@@ -39,11 +122,6 @@ const MainApp: React.FC = () => {
       case 'reminders':
       case 'reports':
       case 'help':
-        return <FarmerDashboard />;
-      case 'about':
-        return <AboutPage />;
-      case 'contact':
-        return <ContactPage />;
       default:
         return <FarmerDashboard />;
     }
@@ -67,6 +145,7 @@ const MainApp: React.FC = () => {
         <AuthModal
           initialIsRegister={authModalConfig.isRegister}
           onClose={handleCloseAuthModal}
+          onSuccess={handleAuthSuccess}
         />
       )}
 

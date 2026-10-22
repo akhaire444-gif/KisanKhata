@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="kkBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#012d1d" />
+      <stop offset="60%" stop-color="#0a4d34" />
+      <stop offset="100%" stop-color="#116c4a" />
+    </linearGradient>
+    <linearGradient id="kkGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd56b" />
+      <stop offset="100%" stop-color="#f49b1a" />
+    </linearGradient>
+    <linearGradient id="kkLeaf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a1f4c8" />
+      <stop offset="100%" stop-color="#4ade80" />
+    </linearGradient>
+    <filter id="kkShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.18" />
+    </filter>
+  </defs>
+
+  <!-- Background Emblem Rounded Shield -->
+  <rect x="6" y="6" width="108" height="108" rx="28" fill="url(#kkBg)" filter="url(#kkShadow)" />
+  <rect x="7" y="7" width="106" height="106" rx="27" fill="none" stroke="#a1f4c8" stroke-width="1.5" stroke-opacity="0.35" />
+
+  <!-- Ledger Book Base (Khata) -->
+  <path d="M28 78 C28 73 34 70 42 70 L60 70 L78 70 C86 70 92 73 92 78 L92 84 C86 80 78 78 60 78 C42 78 34 80 28 84 Z" fill="#ffffff" fill-opacity="0.9" />
+  <path d="M28 84 C34 80 42 78 60 78 C78 78 86 80 92 84 L92 88 C86 84 78 82 60 82 C42 82 34 84 28 88 Z" fill="#a1f4c8" fill-opacity="0.8" />
+  <line x1="60" y1="70" x2="60" y2="84" stroke="#0a4d34" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Sprouting Crops / Wheat Ear (Kisan) -->
+  <!-- Center Main Stem -->
+  <path d="M60 70 Q60 48 60 26" fill="none" stroke="url(#kkGold)" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Central Top Seed -->
+  <ellipse cx="60" cy="24" rx="4.5" ry="8" fill="url(#kkGold)" />
+
+  <!-- Left Leaves / Grains -->
+  <path d="M60 38 C52 36 46 29 46 24 C52 24 58 31 60 38 Z" fill="url(#kkGold)" />
+  <path d="M60 48 C50 46 42 39 42 33 C49 33 57 41 60 48 Z" fill="url(#kkGold)" />
+  <path d="M60 59 C48 57 38 48 38 41 C46 41 56 50 60 59 Z" fill="url(#kkLeaf)" />
+
+  <!-- Right Leaves / Grains -->
+  <path d="M60 38 C68 36 74 29 74 24 C68 24 62 31 60 38 Z" fill="url(#kkGold)" />
+  <path d="M60 48 C70 46 78 39 78 33 C71 33 63 41 60 48 Z" fill="url(#kkGold)" />
+  <path d="M60 59 C72 57 82 48 82 41 C74 41 64 50 60 59 Z" fill="url(#kkLeaf)" />
+
+  <!-- Central Rupee Symbol Accent in Golden Glow -->
+  <circle cx="60" cy="58" r="9" fill="#012d1d" stroke="#ffd56b" stroke-width="1.8" />
+  <text x="60" y="62" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="10" font-weight="bold" fill="#ffd56b" text-anchor="middle">₹</text>
+</svg>

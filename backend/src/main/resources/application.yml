@@ -1,5 +1,13 @@
 server:
   port: ${PORT:8080}
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        name: JSESSIONID
+        same-site: ${SESSION_COOKIE_SAMESITE:lax}
+        secure: ${SESSION_COOKIE_SECURE:false}
+        http-only: true
   error:
     include-message: never
     include-stacktrace: never
@@ -42,6 +50,10 @@ app:
   bootstrap-admin:
     email: ${BOOTSTRAP_ADMIN_EMAIL:}
     password: ${BOOTSTRAP_ADMIN_PASSWORD:}
+  oauth2:
+    google:
+      client-id: ${GOOGLE_CLIENT_ID:}
+      client-secret: ${GOOGLE_CLIENT_SECRET:}
 logging:
   level:
     root: INFO

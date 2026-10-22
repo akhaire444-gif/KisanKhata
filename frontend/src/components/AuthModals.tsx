@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { getOAuth2GoogleUrl } from '../api/client';
 
 interface AuthModalProps {
   initialIsRegister?: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   initialIsRegister = false,
-  onClose
+  onClose,
+  onSuccess
 }) => {
   const {
     loginFarmer,
-    registerFarmer,
-    switchToDemoFarmer
+    registerFarmer
   } = useApp();
 
   const [isRegister, setIsRegister] = useState(initialIsRegister);
@@ -30,15 +32,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [state, setState] = useState('Maharashtra');
 
   const [error, setError] = useState('');
-
-  // Quick fill demo credentials
-  const fillDemoCredentials = () => {
-    setEmail('rajesh.patil@kisankhata.in');
-    setPassword('farmer123');
-  };
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setError('');
 
     if (isRegister) {
@@ -46,7 +44,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         setError('First and last name are required');
         return;
       }
-      if (mobile.trim().length !== 10) {
+      if (mobile.trim().length !== 10 || !/^\d{10}$/.test(mobile.trim())) {
         setError('Mobile number must be exactly 10 digits');
         return;
       }
@@ -59,35 +57,58 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         return;
       }
 
-      const res = await registerFarmer({
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        mobile: mobile.trim(),
-        email: email.trim(),
-        address: address.trim() || 'Nashik Rural',
-        farmName: farmName.trim() || `${firstName} Krishi Farm`,
-        state,
-        totalAcres: 10,
-        password: password.trim()
-      } as any);
+      setIsSubmitting(true);
+      try {
+        const res = await registerFarmer({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          mobile: mobile.trim(),
+          email: email.trim().toLowerCase(),
+          address: address.trim() || 'Rural Maharashtra',
+          farmName: farmName.trim() || `${firstName.trim()} Krishi Farm`,
+          state,
+          totalAcres: 10,
+          password: password.trim()
+        } as any);
 
-      if (!res.success) {
-        setError(res.error || 'Registration failed');
-        return;
+        if (!res.success) {
+          setError(res.error || 'Registration failed');
+          return;
+        }
+
+        if (onSuccess) onSuccess();
+        onClose();
+      } catch (err: any) {
+        setError(err.message || 'Registration failed');
+      } finally {
+        setIsSubmitting(false);
       }
-      onClose();
     } else {
-      const res = await loginFarmer(email, password);
-      if (!res.success) {
-        setError(res.error || 'Email or password is incorrect');
+      if (!email.trim() || !password) {
+        setError('Email and password are required');
         return;
       }
-      onClose();
+
+      setIsSubmitting(true);
+      try {
+        const res = await loginFarmer(email.trim().toLowerCase(), password);
+        if (!res.success) {
+          setError(res.error || 'Email or password is incorrect');
+          return;
+        }
+
+        if (onSuccess) onSuccess();
+        onClose();
+      } catch (err: any) {
+        setError(err.message || 'Authentication error');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-[#d8e3fb] max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#f0f3ff]">
           <div>
@@ -99,40 +120,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </span>
           </div>
 
-          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] cursor-pointer">
+          <button
+            onClick={onClose}
+            className="text-[#717973] hover:text-[#012d1d] p-1 rounded-lg hover:bg-stone-100 transition-colors cursor-pointer"
+            aria-label="Close"
+          >
             <span className="material-symbols-outlined text-[24px]">close</span>
           </button>
         </div>
 
         {error && (
-          <div className="p-3 mb-4 rounded-xl bg-[#ffdad6] text-[#ba1a1a] text-[13px] font-semibold">
-            {error}
+          <div className="p-3 mb-4 rounded-xl bg-[#ffdad6] text-[#ba1a1a] text-[13px] font-semibold flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px]">error</span>
+            <span>{error}</span>
           </div>
         )}
-
-        {/* Demo Fast Fill button */}
-        <div className="mb-4 p-2.5 rounded-xl bg-[#f0f3ff] flex items-center justify-between text-[12px]">
-          <span className="text-[#414844]">Quick test with pre-configured demo account:</span>
-          <div className="flex gap-1.5">
-            <button
-              type="button"
-              onClick={fillDemoCredentials}
-              className="px-2.5 py-1 rounded-lg bg-[#012d1d] text-white font-bold hover:bg-[#1b4332] cursor-pointer"
-            >
-              Fill Form
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                switchToDemoFarmer();
-                onClose();
-              }}
-              className="px-2.5 py-1 rounded-lg bg-[#116c4a] text-white font-bold hover:bg-[#116c4a]/90 cursor-pointer"
-            >
-              Direct Demo
-            </button>
-          </div>
-        </div>
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           {isRegister && (
@@ -144,9 +146,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     type="text"
                     value={firstName}
                     onChange={e => setFirstName(e.target.value)}
-                    placeholder="Rajesh"
-                    className="w-full px-3 py-2 rounded-xl border border-[#d8e3fb] text-[14px]"
+                    placeholder="e.g. Ramesh"
+                    className="w-full px-3 py-2 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
                 <div>
@@ -155,9 +158,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     type="text"
                     value={lastName}
                     onChange={e => setLastName(e.target.value)}
-                    placeholder="Patil"
-                    className="w-full px-3 py-2 rounded-xl border border-[#d8e3fb] text-[14px]"
+                    placeholder="e.g. Shinde"
+                    className="w-full px-3 py-2 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -170,9 +174,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     maxLength={10}
                     value={mobile}
                     onChange={e => setMobile(e.target.value)}
-                    placeholder="9822014012"
-                    className="w-full px-3 py-2 rounded-xl border border-[#d8e3fb] text-[14px]"
+                    placeholder="9876543210"
+                    className="w-full px-3 py-2 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
                 <div>
@@ -181,8 +186,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     type="text"
                     value={farmName}
                     onChange={e => setFarmName(e.target.value)}
-                    placeholder="Patil Krishi Farm"
-                    className="w-full px-3 py-2 rounded-xl border border-[#d8e3fb] text-[14px]"
+                    placeholder="Krishi Farm"
+                    className="w-full px-3 py-2 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -194,7 +200,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   value={address}
                   onChange={e => setAddress(e.target.value)}
                   placeholder="e.g. Sinnar, Nashik Rural"
-                  className="w-full px-3 py-2 rounded-xl border border-[#d8e3fb] text-[14px]"
+                  className="w-full px-3 py-2 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
+                  disabled={isSubmitting}
                 />
               </div>
             </>
@@ -206,9 +213,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="rajesh.patil@kisankhata.in"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-[#d8e3fb] text-[14px]"
+              placeholder="farmer@example.com"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
               required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -218,9 +226,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="Min 6 characters"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-[#d8e3fb] text-[14px]"
+              placeholder="Minimum 6 characters"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
               required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -232,19 +241,67 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 value={repeatPassword}
                 onChange={e => setRepeatPassword(e.target.value)}
                 placeholder="Repeat password"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#d8e3fb] text-[14px]"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
                 required
+                disabled={isSubmitting}
               />
             </div>
           )}
 
           <button
             type="submit"
-            className="w-full min-h-[48px] py-3 rounded-xl bg-[#012d1d] text-white font-bold text-[15px] hover:bg-[#1b4332] transition-colors shadow-md mt-2 cursor-pointer"
+            disabled={isSubmitting}
+            className="w-full min-h-[48px] py-3 rounded-xl bg-[#012d1d] text-white font-bold text-[15px] hover:bg-[#1b4332] transition-colors shadow-md mt-2 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {isRegister ? 'Complete Farm Registration' : 'Sign In to Khata'}
+            {isSubmitting ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <span>{isRegister ? 'Creating Farm Account...' : 'Signing In...'}</span>
+              </>
+            ) : (
+              <span>{isRegister ? 'Complete Farm Registration' : 'Sign In to Khata'}</span>
+            )}
           </button>
         </form>
+
+        {/* Divider */}
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-[#d8e3fb]" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-3 text-[#717973] font-semibold">Or continue with</span>
+          </div>
+        </div>
+
+        {/* Google OAuth Button */}
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = getOAuth2GoogleUrl();
+          }}
+          className="w-full py-2.5 px-4 rounded-xl border border-[#d8e3fb] bg-white text-[#111c2d] hover:bg-[#f0f3ff] font-semibold text-[14px] transition-colors flex items-center justify-center gap-2.5 shadow-2xs cursor-pointer"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24">
+            <path
+              fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+            />
+          </svg>
+          <span>Continue with Google</span>
+        </button>
 
         <div className="pt-4 mt-4 border-t border-[#f0f3ff] text-center text-[13px] text-[#414844]">
           {isRegister ? (
@@ -252,7 +309,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               Already registered?{' '}
               <button
                 type="button"
-                onClick={() => setIsRegister(false)}
+                onClick={() => {
+                  setError('');
+                  setIsRegister(false);
+                }}
                 className="font-bold text-[#116c4a] hover:underline cursor-pointer"
               >
                 Sign In here
@@ -263,7 +323,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               Need a free ledger account?{' '}
               <button
                 type="button"
-                onClick={() => setIsRegister(true)}
+                onClick={() => {
+                  setError('');
+                  setIsRegister(true);
+                }}
                 className="font-bold text-[#116c4a] hover:underline cursor-pointer"
               >
                 Register your Farm (Free)

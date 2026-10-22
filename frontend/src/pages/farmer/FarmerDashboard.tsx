@@ -136,10 +136,10 @@ export const FarmerDashboard: React.FC = () => {
   });
 
   // Delete handler
-  const executeDelete = () => {
+  const executeDelete = async () => {
     if (!deleteConfirm) return;
     if (deleteConfirm.type === 'crop') {
-      const res = deleteCrop(deleteConfirm.id);
+      const res = await deleteCrop(deleteConfirm.id);
       if (!res.success) {
         showToast(res.error || 'Cannot delete crop', 'error');
       }
@@ -162,15 +162,15 @@ export const FarmerDashboard: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-3 py-1 rounded-full bg-[#a1f4c8] text-[#1b724f] font-bold text-[12px]">
-              Tenant: {currentFarmer?.tenantId || 'Farm-MH-4012'}
+              Tenant: {currentFarmer?.tenantId || 'Farm Ledger'}
             </span>
             <span className="text-[12px] text-[#414844] font-medium">{todayFormatted}</span>
           </div>
           <h1 className="text-[24px] sm:text-[28px] font-bold text-[#012d1d]">
-            Namaste, {currentFarmer?.firstName || 'Rajesh'} Patil ji
+            Namaste, {currentFarmer ? `${currentFarmer.firstName} ${currentFarmer.lastName}`.trim() : 'Farmer'} ji
           </h1>
           <p className="text-[14px] text-[#414844]">
-            {currentFarmer?.farmName || 'Patil Krishi Farm'} • {currentFarmer?.address || 'Nashik Rural, Maharashtra'}
+            {currentFarmer?.farmName || 'My Farm'} • {currentFarmer?.address || currentFarmer?.state || 'Bharat'}
           </p>
         </div>
 
@@ -1274,11 +1274,11 @@ export const FarmerDashboard: React.FC = () => {
         <CropModal
           crop={editingCrop}
           onClose={() => setShowAddCropModal(false)}
-          onSave={(data) => {
+          onSave={async (data) => {
             if (editingCrop) {
-              updateCrop(editingCrop.id, data);
+              await updateCrop(editingCrop.id, data);
             } else {
-              const res = addCrop(data);
+              const res = await addCrop(data);
               if (!res.success) {
                 showToast(res.error || 'Failed to add crop', 'error');
                 return;
@@ -1295,11 +1295,11 @@ export const FarmerDashboard: React.FC = () => {
           crops={crops}
           expense={editingExpense}
           onClose={() => setShowAddExpenseModal(false)}
-          onSave={(data) => {
+          onSave={async (data) => {
             if (editingExpense) {
-              updateExpense(editingExpense.id, data);
+              await updateExpense(editingExpense.id, data);
             } else {
-              const res = addExpense(data);
+              const res = await addExpense(data);
               if (!res.success) {
                 showToast(res.error || 'Failed to add expense', 'error');
                 return;
@@ -1342,8 +1342,8 @@ export const FarmerDashboard: React.FC = () => {
       {showAddReminderModal && (
         <ReminderModal
           onClose={() => setShowAddReminderModal(false)}
-          onSave={(data) => {
-            const res = addReminder(data);
+          onSave={async (data) => {
+            const res = await addReminder(data);
             if (!res.success) {
               showToast(res.error || 'Failed to add reminder', 'error');
               return;

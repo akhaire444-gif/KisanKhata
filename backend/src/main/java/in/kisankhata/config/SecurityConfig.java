@@ -25,7 +25,11 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+        HttpSecurity http,
+        OAuth2SuccessHandler oauth2SuccessHandler,
+        Environment env
+    ) throws Exception {
         http
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
@@ -33,11 +37,24 @@ public class SecurityConfig {
                     "/api/v1/auth/register",
                     "/api/v1/auth/register-buyer",
                     "/api/v1/auth/login",
+                    "/api/v1/auth/logout",
                     "/actuator/health",
                     "/actuator/health/**"
                 )
             )
             .cors(Customizer.withDefaults())
+            .exceptionHandling(e -> e
+                .authenticationEntryPoint((req, res, ex) -> {
+                    res.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                    res.setContentType("application/json");
+                    res.getWriter().write("{\"success\":false,\"code\":\"UNAUTHORIZED\",\"message\":\"Authentication required\"}");
+                })
+                .accessDeniedHandler((req, res, ex) -> {
+                    res.setStatus(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
+                    res.setContentType("application/json");
+                    res.getWriter().write("{\"success\":false,\"code\":\"FORBIDDEN\",\"message\":\"Access denied\"}");
+                })
+            )
             .authorizeHttpRequests(auth -> auth
                 // Public authentication & health endpoints
                 .requestMatchers(
@@ -47,7 +64,9 @@ public class SecurityConfig {
                     "/api/v1/auth/csrf",
                     "/actuator/health",
                     "/actuator/health/**",
-                    "/api/v1/files/**"
+                    "/api/v1/files/**",
+                    "/oauth2/**",
+                    "/login/oauth2/**"
                 ).permitAll()
 
                 // Public marketplace browsing
@@ -60,6 +79,13 @@ public class SecurityConfig {
 
                 // Everything else requires authentication
                 .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth -> oauth
+                .successHandler(oauth2SuccessHandler)
+                .failureHandler((req, res, ex) -> {
+                    String redirect = env.getProperty("app.cors.allowed-origin", "http://localhost:3000");
+                    res.sendRedirect(redirect + "/?auth=error&message=oauth_failed");
+                })
             )
             .formLogin(f -> f.disable())
             .httpBasic(b -> b.disable())
@@ -79,10 +105,26 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource(Environment env) {
         CorsConfiguration config = new CorsConfiguration();
-        String allowedOrigin = env.getProperty("app.cors.allowed-origin", "http://localhost:5173");
-        config.setAllowedOrigins(List.of(allowedOrigin, "http://localhost:3000"));
+        java.util.List<String> origins = new java.util.ArrayList<>();
+        origins.add("http://localhost:5173");
+        origins.add("http://localhost:3000");
+        origins.add("https://kisan-khata-x1dp.vercel.app");
+
+        String allowedOrigin = env.getProperty("app.cors.allowed-origin");
+        if (allowedOrigin != null && !allowedOrigin.isBlank()) {
+            String trimmed = allowedOrigin.trim();
+            if (trimmed.endsWith("/")) {
+                trimmed = trimmed.substring(0, trimmed.length() - 1);
+            }
+            if (!origins.contains(trimmed)) {
+                origins.add(trimmed);
+            }
+        }
+
+        config.setAllowedOrigins(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Content-Type", "X-XSRF-TOKEN", "X-Requested-With", "Authorization"));
+        config.setAllowedHeaders(List.of("Content-Type", "X-XSRF-TOKEN", "X-Requested-With", "Authorization", "Accept", "Origin"));
+        config.setExposedHeaders(List.of("Set-Cookie", "X-XSRF-TOKEN"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   Role,
   Farmer,
@@ -21,45 +21,44 @@ interface AppContextType {
   
   // Auth state
   currentFarmer: Farmer | null;
-  farmers: Farmer[];
-  loginFarmer: (email: string, pass: string) => Promise<{ success: boolean; error?: string }> | { success: boolean; error?: string };
-  registerFarmer: (data: Omit<Farmer, 'id' | 'createdAt' | 'status' | 'tenantId'>) => Promise<{ success: boolean; error?: string }> | { success: boolean; error?: string };
-  logoutFarmer: () => void;
-  switchToDemoFarmer: () => void;
+  isAuthChecking: boolean;
+  loginFarmer: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  registerFarmer: (data: Omit<Farmer, 'id' | 'createdAt' | 'status' | 'tenantId'> & { password?: string }) => Promise<{ success: boolean; error?: string }>;
+  logoutFarmer: () => Promise<void>;
 
   // Crops
   crops: Crop[];
-  addCrop: (data: Omit<Crop, 'id' | 'farmerId' | 'createdAt'>) => { success: boolean; error?: string };
-  updateCrop: (id: string, data: Partial<Crop>) => void;
-  deleteCrop: (id: string) => { success: boolean; error?: string };
+  addCrop: (data: Omit<Crop, 'id' | 'farmerId' | 'createdAt'>) => Promise<{ success: boolean; error?: string }>;
+  updateCrop: (id: string, data: Partial<Crop>) => Promise<{ success: boolean; error?: string }>;
+  deleteCrop: (id: string) => Promise<{ success: boolean; error?: string }>;
 
   // Expenses
   expenses: Expense[];
-  addExpense: (data: Omit<Expense, 'id' | 'farmerId' | 'createdAt'>) => { success: boolean; error?: string };
-  updateExpense: (id: string, data: Partial<Expense>) => void;
-  deleteExpense: (id: string) => void;
+  addExpense: (data: Omit<Expense, 'id' | 'farmerId' | 'createdAt'>) => Promise<{ success: boolean; error?: string }>;
+  updateExpense: (id: string, data: Partial<Expense>) => Promise<{ success: boolean; error?: string }>;
+  deleteExpense: (id: string) => Promise<{ success: boolean; error?: string }>;
 
   // Workers
   workers: Worker[];
-  addWorker: (data: Omit<Worker, 'id' | 'farmerId' | 'paymentAmount' | 'createdAt'>) => void;
-  updateWorker: (id: string, data: Partial<Worker>) => void;
-  deleteWorker: (id: string) => void;
+  addWorker: (data: Omit<Worker, 'id' | 'farmerId' | 'paymentAmount' | 'createdAt'>) => Promise<{ success: boolean; error?: string }>;
+  updateWorker: (id: string, data: Partial<Worker>) => Promise<{ success: boolean; error?: string }>;
+  deleteWorker: (id: string) => Promise<{ success: boolean; error?: string }>;
 
   // Water Records
   waterRecords: WaterRecord[];
-  addWaterRecord: (data: Omit<WaterRecord, 'id' | 'farmerId' | 'createdAt'>) => void;
-  deleteWaterRecord: (id: string) => void;
+  addWaterRecord: (data: Omit<WaterRecord, 'id' | 'farmerId' | 'createdAt'>) => Promise<{ success: boolean; error?: string }>;
+  deleteWaterRecord: (id: string) => Promise<{ success: boolean; error?: string }>;
 
   // Fertilizer & Pesticide Records
   fertilizerRecords: FertilizerRecord[];
-  addFertilizerRecord: (data: Omit<FertilizerRecord, 'id' | 'farmerId' | 'createdAt'>) => void;
-  deleteFertilizerRecord: (id: string) => void;
+  addFertilizerRecord: (data: Omit<FertilizerRecord, 'id' | 'farmerId' | 'createdAt'>) => Promise<{ success: boolean; error?: string }>;
+  deleteFertilizerRecord: (id: string) => Promise<{ success: boolean; error?: string }>;
 
   // Reminders
   reminders: Reminder[];
-  addReminder: (data: Omit<Reminder, 'id' | 'farmerId' | 'isDone' | 'createdAt'>) => { success: boolean; error?: string };
-  deleteReminder: (id: string) => void;
-  toggleReminderDone: (id: string) => void;
+  addReminder: (data: Omit<Reminder, 'id' | 'farmerId' | 'isDone' | 'createdAt'>) => Promise<{ success: boolean; error?: string }>;
+  deleteReminder: (id: string) => Promise<{ success: boolean; error?: string }>;
+  toggleReminderDone: (id: string) => Promise<{ success: boolean; error?: string }>;
   todayReminders: Reminder[];
 
   // UI Toast
@@ -68,321 +67,41 @@ interface AppContextType {
 
   // Live Backend Connectivity
   backendStatus: 'connected' | 'offline' | 'checking';
+  refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Initial Demo Seed Data
-const INITIAL_FARMER: Farmer = {
-  id: 'f-patil-01',
-  firstName: 'Rajesh',
-  lastName: 'Patil',
-  mobile: '9822014012',
-  email: 'rajesh.patil@kisankhata.in',
-  address: 'Sinnar Taluka, Nashik Rural',
-  farmName: 'Patil Krishi Farm',
-  state: 'Maharashtra',
-  tenantId: 'Farm-MH-4012',
-  totalAcres: 14,
-  status: 'Active',
-  createdAt: '12-01-2026'
-};
-
-const INITIAL_CROPS: Crop[] = [
-  {
-    id: 'crop-1',
-    farmerId: 'f-patil-01',
-    name: 'Original Ratnagiri Alphonso',
-    category: 'Fruit',
-    plantationDate: '15-06-2023',
-    durationDays: 365,
-    description: 'GI tagged high aromatic mango orchard on laterite red soil',
-    acresPlanted: 5,
-    expectedYield: '450 Dozen',
-    createdAt: '15-06-2023'
-  },
-  {
-    id: 'crop-2',
-    farmerId: 'f-patil-01',
-    name: 'Bhagwa Pomegranate',
-    category: 'Fruit',
-    plantationDate: '10-08-2025',
-    durationDays: 180,
-    description: '14 acres dense plantation with high quality export arils',
-    acresPlanted: 6,
-    expectedYield: '18 Metric Tonnes',
-    createdAt: '10-08-2025'
-  },
-  {
-    id: 'crop-3',
-    farmerId: 'f-patil-01',
-    name: 'Sharbati Golden Wheat',
-    category: 'Grain',
-    plantationDate: '05-11-2025',
-    durationDays: 120,
-    description: 'Rabi winter season organic certified farm parcel with canal feeder',
-    acresPlanted: 3,
-    expectedYield: '45 Quintals',
-    createdAt: '05-11-2025'
+// Helper to format ISO date strings (YYYY-MM-DD) to DD-MM-YYYY if needed
+function toDisplayDate(isoOrDate: string): string {
+  if (!isoOrDate) return '';
+  if (isoOrDate.includes('-') && isoOrDate.split('-')[0].length === 4) {
+    const [y, m, d] = isoOrDate.split('-');
+    return `${d}-${m}-${y}`;
   }
-];
-
-const INITIAL_EXPENSES: Expense[] = [
-  {
-    id: 'exp-1',
-    farmerId: 'f-patil-01',
-    cropId: 'crop-2',
-    cropName: 'Bhagwa Pomegranate',
-    category: 'Tractor & Diesel',
-    details: 'Tractor diesel for bed formation & soil aerating (45 Litres)',
-    date: '08-10-2026',
-    amount: 4250,
-    quantity: '45 Litres',
-    createdAt: '08-10-2026'
-  },
-  {
-    id: 'exp-2',
-    farmerId: 'f-patil-01',
-    cropId: 'crop-1',
-    cropName: 'Original Ratnagiri Alphonso',
-    category: 'Fertilizers',
-    details: 'Organic neem cake compost & micronutrient manure 20 bags',
-    date: '04-10-2026',
-    amount: 8600,
-    quantity: '20 bags',
-    createdAt: '04-10-2026'
-  },
-  {
-    id: 'exp-3',
-    farmerId: 'f-patil-01',
-    cropId: 'crop-2',
-    cropName: 'Bhagwa Pomegranate',
-    category: 'Labour',
-    details: 'Manual weeding & ridge soil loosening labor (3 workers)',
-    date: '28-09-2026',
-    amount: 3400,
-    quantity: '3 workers',
-    createdAt: '28-09-2026'
-  },
-  {
-    id: 'exp-4',
-    farmerId: 'f-patil-01',
-    cropId: 'crop-3',
-    cropName: 'Sharbati Golden Wheat',
-    category: 'Seeds',
-    details: 'Certified rust-resistant seed grain bags (60 kg)',
-    date: '18-09-2026',
-    amount: 4800,
-    quantity: '60 kg seeds',
-    createdAt: '18-09-2026'
-  },
-  {
-    id: 'exp-5',
-    farmerId: 'f-patil-01',
-    cropId: 'crop-2',
-    cropName: 'Bhagwa Pomegranate',
-    category: 'Pesticides & Sprays',
-    details: 'Neem botanical spray & bio-fungicide for thrips control',
-    date: '02-10-2026',
-    amount: 3200,
-    quantity: '3 Litres formulation',
-    createdAt: '02-10-2026'
-  },
-  {
-    id: 'exp-6',
-    farmerId: 'f-patil-01',
-    cropId: 'crop-2',
-    cropName: 'Bhagwa Pomegranate',
-    category: 'Labour',
-    details: 'Manual weeding & bed soil aeration crew (4 workers)',
-    date: '25-09-2026',
-    amount: 4000,
-    quantity: '4 workers',
-    createdAt: '25-09-2026'
-  },
-  {
-    id: 'exp-7',
-    farmerId: 'f-patil-01',
-    cropId: 'crop-3',
-    cropName: 'Sharbati Golden Wheat',
-    category: 'Crop Cutting / Harvesting',
-    details: 'Combine harvester rental & manual sickle cutting labour',
-    date: '10-10-2026',
-    amount: 7500,
-    createdAt: '10-10-2026'
-  },
-  {
-    id: 'exp-8',
-    farmerId: 'f-patil-01',
-    cropId: 'crop-3',
-    cropName: 'Sharbati Golden Wheat',
-    category: 'Transport',
-    details: 'Tractor trolley transport to APMC grain yard & 50 gunny bags',
-    date: '11-10-2026',
-    amount: 2800,
-    quantity: '50 bags',
-    createdAt: '11-10-2026'
-  }
-];
-
-const INITIAL_WORKERS: Worker[] = [
-  {
-    id: 'wrk-1',
-    farmerId: 'f-patil-01',
-    name: 'Shankar Kadam',
-    contact: '9823011234',
-    daysWorked: 18,
-    dailyWage: 450,
-    paymentAmount: 8100,
-    email: 'shankar.k@ruralmail.in',
-    address: 'Dindori, Nashik Rural',
-    upiId: 'shankarkadam@upi',
-    createdAt: '01-09-2026'
-  },
-  {
-    id: 'wrk-2',
-    farmerId: 'f-patil-01',
-    name: 'Baburao Shinde',
-    contact: '9823055678',
-    daysWorked: 14,
-    dailyWage: 500,
-    paymentAmount: 7000,
-    address: 'Niphad, Nashik',
-    upiId: 'baburao.shinde@oksbi',
-    createdAt: '05-09-2026'
-  },
-  {
-    id: 'wrk-3',
-    farmerId: 'f-patil-01',
-    name: 'Sangeeta Bai',
-    contact: '9823099123',
-    daysWorked: 22,
-    dailyWage: 400,
-    paymentAmount: 8800,
-    address: 'Pimpalgaon Baswant',
-    createdAt: '02-09-2026'
-  }
-];
-
-const INITIAL_WATER: WaterRecord[] = [
-  {
-    id: 'wtr-1',
-    farmerId: 'f-patil-01',
-    plotName: 'Plot-1 (North Pomegranate Block)',
-    withFertilizer: true,
-    quantity: 4,
-    unit: 'Hours',
-    date: '10-10-2026',
-    createdAt: '10-10-2026'
-  },
-  {
-    id: 'wtr-2',
-    farmerId: 'f-patil-01',
-    plotName: 'Plot-2 (Alphonso Terrace)',
-    withFertilizer: false,
-    quantity: 6,
-    unit: 'Hours',
-    date: '06-10-2026',
-    createdAt: '06-10-2026'
-  }
-];
-
-const INITIAL_FERT: FertilizerRecord[] = [
-  {
-    id: 'fert-1',
-    farmerId: 'f-patil-01',
-    plotName: 'Plot-1',
-    productName: 'Neem Oil Organic Botanical 10000 PPM',
-    quantity: 600,
-    unit: 'ml',
-    date: '07-10-2026',
-    createdAt: '07-10-2026'
-  },
-  {
-    id: 'fert-2',
-    farmerId: 'f-patil-01',
-    plotName: 'Plot-2',
-    productName: 'Bio-NPK Consortium Culture',
-    quantity: 3,
-    unit: 'kg',
-    date: '02-10-2026',
-    createdAt: '02-10-2026'
-  }
-];
-
-// Today's date in YYYY-MM-DD
-const TODAY_STR = new Date().toISOString().split('T')[0];
-
-const INITIAL_REMINDERS: Reminder[] = [
-  {
-    id: 'rem-1',
-    farmerId: 'f-patil-01',
-    description: 'Check vegetative leaf growth and apply neem bio-spray for Plot 1',
-    date: TODAY_STR,
-    time: '07:30',
-    isDone: false,
-    createdAt: '08-10-2026'
-  },
-  {
-    id: 'rem-2',
-    farmerId: 'f-patil-01',
-    description: 'Inspect flowering panicles for mango hopper & apply organic spray if needed',
-    date: '2026-10-16',
-    time: '16:00',
-    isDone: false,
-    createdAt: '09-10-2026'
-  }
-];
+  return isoOrDate;
+}
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Navigation
   const [currentPath, setCurrentPath] = useState<NavigationPath>('home');
-  const [currentRole, setCurrentRole] = useState<Role>('farmer');
+  const [currentRole, setCurrentRole] = useState<Role>('visitor');
 
-  // Auth
-  const [currentFarmer, setCurrentFarmer] = useState<Farmer | null>(INITIAL_FARMER);
-  const [farmers, setFarmers] = useState<Farmer[]>([INITIAL_FARMER]);
+  // Auth: Start completely unauthenticated. NEVER default to demo user!
+  const [currentFarmer, setCurrentFarmer] = useState<Farmer | null>(null);
+  const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
 
-  // Data Collections
-  const [crops, setCrops] = useState<Crop[]>(() => {
-    const saved = localStorage.getItem('kk_crops');
-    return saved ? JSON.parse(saved) : INITIAL_CROPS;
-  });
+  // Data Collections: Start EMPTY. Real data loaded only after authentication!
+  const [crops, setCrops] = useState<Crop[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [workers, setWorkers] = useState<Worker[]>([]);
+  const [waterRecords, setWaterRecords] = useState<WaterRecord[]>([]);
+  const [fertilizerRecords, setFertilizerRecords] = useState<FertilizerRecord[]>([]);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
 
-  const [expenses, setExpenses] = useState<Expense[]>(() => {
-    const saved = localStorage.getItem('kk_expenses');
-    return saved ? JSON.parse(saved) : INITIAL_EXPENSES;
-  });
-
-  const [workers, setWorkers] = useState<Worker[]>(() => {
-    const saved = localStorage.getItem('kk_workers');
-    return saved ? JSON.parse(saved) : INITIAL_WORKERS;
-  });
-
-  const [waterRecords, setWaterRecords] = useState<WaterRecord[]>(() => {
-    const saved = localStorage.getItem('kk_water');
-    return saved ? JSON.parse(saved) : INITIAL_WATER;
-  });
-
-  const [fertilizerRecords, setFertilizerRecords] = useState<FertilizerRecord[]>(() => {
-    const saved = localStorage.getItem('kk_fert');
-    return saved ? JSON.parse(saved) : INITIAL_FERT;
-  });
-
-  const [reminders, setReminders] = useState<Reminder[]>(() => {
-    const saved = localStorage.getItem('kk_reminders');
-    return saved ? JSON.parse(saved) : INITIAL_REMINDERS;
-  });
-
-  // Toast
+  // Toast & Connection
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [backendStatus, setBackendStatus] = useState<'connected' | 'offline' | 'checking'>('checking');
-
-  useEffect(() => {
-    api.auth.csrf()
-      .then(() => setBackendStatus('connected'))
-      .catch(() => setBackendStatus('offline'));
-  }, []);
 
   const showToast = (text: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToastMessage({ text, type });
@@ -391,327 +110,705 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 3500);
   };
 
-  // Sync state to localStorage
-  useEffect(() => { localStorage.setItem('kk_crops', JSON.stringify(crops)); }, [crops]);
-  useEffect(() => { localStorage.setItem('kk_expenses', JSON.stringify(expenses)); }, [expenses]);
-  useEffect(() => { localStorage.setItem('kk_workers', JSON.stringify(workers)); }, [workers]);
-  useEffect(() => { localStorage.setItem('kk_water', JSON.stringify(waterRecords)); }, [waterRecords]);
-  useEffect(() => { localStorage.setItem('kk_fert', JSON.stringify(fertilizerRecords)); }, [fertilizerRecords]);
-  useEffect(() => { localStorage.setItem('kk_reminders', JSON.stringify(reminders)); }, [reminders]);
+  const mapUserToFarmer = (u: any): Farmer => ({
+    id: u.id,
+    firstName: u.firstName,
+    lastName: u.lastName,
+    mobile: u.mobile,
+    email: u.email,
+    address: u.address || '',
+    farmName: u.farmName || `${u.firstName} Krishi Farm`,
+    state: u.state || 'Maharashtra',
+    tenantId: `Farm-${(u.state || 'MH').substring(0, 2).toUpperCase()}-${u.id.substring(0, 4)}`,
+    totalAcres: 10,
+    status: 'Active',
+    createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
+  });
+
+  // Fetch real data for authenticated farmer from backend
+  const loadFarmerData = useCallback(async () => {
+    try {
+      const [cropsRes, expRes, wrkRes, waterRes, inputRes, remRes] = await Promise.allSettled([
+        api.farmer.getCrops(),
+        api.farmer.getExpenses(),
+        api.farmer.getWorkers(),
+        api.farmer.getWaterRecords(),
+        api.farmer.getInputRecords(),
+        api.farmer.getReminders()
+      ]);
+
+      if (cropsRes.status === 'fulfilled' && cropsRes.value?.success && Array.isArray(cropsRes.value.data)) {
+        const loadedCrops: Crop[] = cropsRes.value.data.map((c: any) => ({
+          id: c.id,
+          farmerId: c.farmerId,
+          name: c.name,
+          category: c.category || 'Crop',
+          plantationDate: toDisplayDate(c.plantationDate),
+          durationDays: c.durationDays || 120,
+          description: c.description || '',
+          acresPlanted: 5,
+          expectedYield: 'Standard',
+          createdAt: toDisplayDate(c.createdAt ? String(c.createdAt).split('T')[0] : '')
+        }));
+        setCrops(loadedCrops);
+      }
+
+      if (expRes.status === 'fulfilled' && expRes.value?.success && Array.isArray(expRes.value.data)) {
+        const loadedExpenses: Expense[] = expRes.value.data.map((e: any) => ({
+          id: e.id,
+          farmerId: e.farmerId,
+          cropId: e.cropId,
+          cropName: 'Farm Crop',
+          category: e.category,
+          details: e.details || '',
+          date: toDisplayDate(e.expenseDate),
+          amount: Number(e.amount),
+          quantity: e.quantity || '',
+          createdAt: toDisplayDate(e.createdAt ? String(e.createdAt).split('T')[0] : '')
+        }));
+        setExpenses(loadedExpenses);
+      }
+
+      if (wrkRes.status === 'fulfilled' && wrkRes.value?.success && Array.isArray(wrkRes.value.data)) {
+        const loadedWorkers: Worker[] = wrkRes.value.data.map((w: any) => ({
+          id: w.id,
+          farmerId: w.farmerId,
+          name: w.name,
+          contact: w.contact,
+          daysWorked: w.daysWorked || 0,
+          dailyWage: Number(w.dailyWage || 0),
+          paymentAmount: Number(w.paymentAmount || 0),
+          email: w.email || '',
+          address: w.address || '',
+          upiId: w.upiId || '',
+          createdAt: toDisplayDate(w.createdAt ? String(w.createdAt).split('T')[0] : '')
+        }));
+        setWorkers(loadedWorkers);
+      }
+
+      if (waterRes.status === 'fulfilled' && waterRes.value?.success && Array.isArray(waterRes.value.data)) {
+        const loadedWater: WaterRecord[] = waterRes.value.data.map((wr: any) => ({
+          id: wr.id,
+          farmerId: wr.farmerId,
+          plotName: wr.plot || wr.name || 'Plot',
+          withFertilizer: wr.fertilizerUsed ?? false,
+          quantity: wr.quantity ? parseFloat(wr.quantity) || 1 : 1,
+          unit: 'Hours',
+          date: toDisplayDate(wr.recordDate),
+          createdAt: toDisplayDate(wr.createdAt ? String(wr.createdAt).split('T')[0] : '')
+        }));
+        setWaterRecords(loadedWater);
+      }
+
+      if (inputRes.status === 'fulfilled' && inputRes.value?.success && Array.isArray(inputRes.value.data)) {
+        const loadedFert: FertilizerRecord[] = inputRes.value.data.map((fr: any) => ({
+          id: fr.id,
+          farmerId: fr.farmerId,
+          plotName: fr.plot || 'Plot',
+          productName: fr.product || fr.name || 'Fertilizer',
+          quantity: fr.quantity ? parseFloat(fr.quantity) || 1 : 1,
+          unit: 'kg',
+          date: toDisplayDate(fr.recordDate),
+          createdAt: toDisplayDate(fr.createdAt ? String(fr.createdAt).split('T')[0] : '')
+        }));
+        setFertilizerRecords(loadedFert);
+      }
+
+      if (remRes.status === 'fulfilled' && remRes.value?.success && Array.isArray(remRes.value.data)) {
+        const loadedReminders: Reminder[] = remRes.value.data.map((r: any) => ({
+          id: r.id,
+          farmerId: r.farmerId,
+          description: r.description || r.name,
+          date: r.reminderDate || r.recordDate || new Date().toISOString().split('T')[0],
+          time: r.reminderTime || '09:00',
+          isDone: r.done ?? false,
+          createdAt: toDisplayDate(r.createdAt ? String(r.createdAt).split('T')[0] : '')
+        }));
+        setReminders(loadedReminders);
+      }
+    } catch (err) {
+      console.error('Failed to load farmer data:', err);
+    }
+  }, []);
+
+  // Initial Session Check on Mount (Verifies real session with backend)
+  useEffect(() => {
+    let isMounted = true;
+    setIsAuthChecking(true);
+
+    api.auth.csrf()
+      .then(() => {
+        if (!isMounted) return;
+        setBackendStatus('connected');
+        return api.auth.me();
+      })
+      .then(res => {
+        if (!isMounted) return;
+        if (res && res.success && res.data) {
+          const farmer = mapUserToFarmer(res.data);
+          setCurrentFarmer(farmer);
+          setCurrentRole('farmer');
+          loadFarmerData();
+        } else {
+          setCurrentFarmer(null);
+          setCurrentRole('visitor');
+        }
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        // Session invalid or not logged in. Keep null!
+        setCurrentFarmer(null);
+        setCurrentRole('visitor');
+      })
+      .finally(() => {
+        if (isMounted) setIsAuthChecking(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [loadFarmerData]);
 
   // Today's reminders calculation
-  const todayReminders = reminders.filter(r => !r.isDone && r.date === TODAY_STR);
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayReminders = reminders.filter(r => !r.isDone && (r.date === todayStr || toDisplayDate(r.date) === toDisplayDate(todayStr)));
 
-  // Farmer Auth (Connected to Live API with offline fallback)
+  // Farmer Login: Strict backend authentication. Never fallback to demo!
   const loginFarmer = async (email: string, pass: string) => {
     try {
       const res = await api.auth.login({ email, password: pass });
-      if (res.success && res.data) {
-        const u = res.data;
-        const liveFarmer: Farmer = {
-          id: u.id,
-          firstName: u.firstName,
-          lastName: u.lastName,
-          mobile: u.mobile,
-          email: u.email,
-          address: u.address || 'Nashik Rural',
-          farmName: u.farmName || `${u.firstName} Krishi Farm`,
-          state: u.state || 'Maharashtra',
-          tenantId: `Farm-${(u.state || 'MH').substring(0, 2).toUpperCase()}-${u.id.substring(0, 4)}`,
-          totalAcres: 10,
-          status: 'Active',
-          createdAt: new Date().toLocaleDateString('en-GB')
-        };
+      if (res && res.success && res.data) {
+        const liveFarmer = mapUserToFarmer(res.data);
         setCurrentFarmer(liveFarmer);
         setCurrentRole('farmer');
-        setCurrentPath('dashboard');
         showToast(`Welcome back, ${liveFarmer.firstName} ji!`, 'success');
+        await loadFarmerData();
         return { success: true };
       }
+      return { success: false, error: res?.message || 'Login failed' };
     } catch (err: any) {
-      if (err.response?.message) {
-        return { success: false, error: err.response.message };
-      }
+      const msg = err.response?.message || err.message || 'Invalid email or password';
+      return { success: false, error: msg };
     }
-
-    const f = farmers.find(item => item.email.toLowerCase() === email.toLowerCase());
-    if (!f) {
-      return { success: false, error: 'Email or password is incorrect' };
-    }
-    if (f.status === 'Disabled') {
-      return { success: false, error: 'Account is disabled. Contact support.' };
-    }
-    if (pass.length < 6) {
-      return { success: false, error: 'Email or password is incorrect' };
-    }
-    setCurrentFarmer(f);
-    setCurrentRole('farmer');
-    setCurrentPath('dashboard');
-    showToast(`Welcome back, ${f.firstName} ji!`, 'success');
-    return { success: true };
   };
 
-  const registerFarmer = async (data: Omit<Farmer, 'id' | 'createdAt' | 'status' | 'tenantId'>) => {
+  // Farmer Registration: Strict backend registration. Never fallback to mock data!
+  const registerFarmer = async (data: Omit<Farmer, 'id' | 'createdAt' | 'status' | 'tenantId'> & { password?: string }) => {
     try {
-      const res = await api.auth.registerFarmer({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        mobile: data.mobile,
-        password: (data as any).password || 'Farmer@123',
-        farmName: data.farmName,
-        address: data.address,
-        state: data.state
-      });
-      if (res.success && res.data) {
-        const u = res.data;
-        const newFarmer: Farmer = {
-          id: u.id,
-          firstName: u.firstName,
-          lastName: u.lastName,
-          mobile: u.mobile,
-          email: u.email,
-          address: u.address,
-          farmName: u.farmName,
-          state: u.state,
-          tenantId: `Farm-${(u.state || 'MH').substring(0, 2).toUpperCase()}-${u.id.substring(0, 4)}`,
-          totalAcres: 10,
-          status: 'Active',
-          createdAt: new Date().toLocaleDateString('en-GB')
-        };
-        setFarmers(prev => [...prev, newFarmer]);
-        setCurrentFarmer(newFarmer);
-        setCurrentRole('farmer');
-        setCurrentPath('dashboard');
-        showToast('Farm registered successfully! Welcome to Krishi Khata.', 'success');
+      const payload = {
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        email: data.email.trim().toLowerCase(),
+        mobile: data.mobile.trim(),
+        password: data.password || 'Farmer@123',
+        farmName: data.farmName?.trim() || `${data.firstName} Krishi Farm`,
+        address: data.address?.trim() || 'Rural Maharashtra',
+        state: data.state || 'Maharashtra'
+      };
+
+      const res = await api.auth.registerFarmer(payload);
+      if (res && res.success) {
+        // Auto sign-in or prompt
+        const loginRes = await api.auth.login({ email: payload.email, password: payload.password });
+        if (loginRes && loginRes.success && loginRes.data) {
+          const liveFarmer = mapUserToFarmer(loginRes.data);
+          setCurrentFarmer(liveFarmer);
+          setCurrentRole('farmer');
+          showToast('Farm registered successfully! Welcome to KisanKhata.', 'success');
+          await loadFarmerData();
+          return { success: true };
+        }
+        showToast('Account created! Please sign in with your password.', 'success');
         return { success: true };
       }
+      return { success: false, error: res?.message || 'Registration failed' };
     } catch (err: any) {
-      if (err.response?.message) {
-        return { success: false, error: err.response.message };
-      }
+      const msg = err.response?.message || err.message || 'Registration failed';
+      return { success: false, error: msg };
     }
-
-    const exists = farmers.some(item => item.email.toLowerCase() === data.email.toLowerCase());
-    if (exists) {
-      return { success: false, error: 'This email is already registered.' };
-    }
-    if (data.mobile.length !== 10) {
-      return { success: false, error: 'Mobile number must be exactly 10 digits.' };
-    }
-    const tenantId = `Farm-${data.state.substring(0, 2).toUpperCase() || 'IN'}-${Math.floor(1000 + Math.random() * 9000)}`;
-    const newFarmer: Farmer = {
-      ...data,
-      id: 'farmer-' + Date.now(),
-      tenantId,
-      status: 'Active',
-      createdAt: new Date().toLocaleDateString('en-GB')
-    };
-    setFarmers(prev => [...prev, newFarmer]);
-    setCurrentFarmer(newFarmer);
-    setCurrentRole('farmer');
-    setCurrentPath('dashboard');
-    showToast('Farm registered successfully! Welcome to Krishi Khata.', 'success');
-    return { success: true };
   };
 
+  // Logout: Invalidate backend session and clear client memory & storage
   const logoutFarmer = async () => {
     try {
       await api.auth.logout();
     } catch {
       // Ignore network errors on logout
     }
+
+    // Clear state
+    setCurrentFarmer(null);
     setCurrentRole('visitor');
+    setCrops([]);
+    setExpenses([]);
+    setWorkers([]);
+    setWaterRecords([]);
+    setFertilizerRecords([]);
+    setReminders([]);
+
+    // Clear any leftover local storage
+    localStorage.removeItem('kk_crops');
+    localStorage.removeItem('kk_expenses');
+    localStorage.removeItem('kk_workers');
+    localStorage.removeItem('kk_water');
+    localStorage.removeItem('kk_fert');
+    localStorage.removeItem('kk_reminders');
+
     setCurrentPath('home');
-    showToast('Logged out from farm khata.', 'info');
+    showToast('Logged out securely from farm khata.', 'info');
   };
 
-  const switchToDemoFarmer = () => {
-    setCurrentFarmer(INITIAL_FARMER);
-    setCurrentRole('farmer');
-    setCurrentPath('dashboard');
-    showToast('Switched to Demo Farmer: Rajesh Patil (Farm-MH-4012)', 'success');
-  };
+  // Crop Management
+  const addCrop = async (data: Omit<Crop, 'id' | 'farmerId' | 'createdAt'>) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
 
-  // Crop Management (FR-CROP-01 to 05)
-  const addCrop = (data: Omit<Crop, 'id' | 'farmerId' | 'createdAt'>) => {
-    if (!currentFarmer) return { success: false, error: 'Farmer login required' };
-    
-    // Duplicate crop check: same name and plantation date
-    const duplicate = crops.some(
-      c => c.farmerId === currentFarmer.id &&
-           c.name.trim().toLowerCase() === data.name.trim().toLowerCase() &&
-           c.plantationDate === data.plantationDate
-    );
-    if (duplicate) {
-      return { success: false, error: 'This crop is already added.' };
+    try {
+      // Format plantation date to YYYY-MM-DD for backend
+      let plantationIso = data.plantationDate;
+      if (data.plantationDate.includes('-') && data.plantationDate.split('-')[0].length === 2) {
+        const [d, m, y] = data.plantationDate.split('-');
+        plantationIso = `${y}-${m}-${d}`;
+      }
+
+      const res = await api.farmer.createCrop({
+        name: data.name.trim(),
+        category: data.category || 'Crop',
+        plantationDate: plantationIso,
+        durationDays: data.durationDays || 120,
+        description: data.description || ''
+      });
+
+      if (res && res.success && res.data) {
+        const saved = res.data;
+        const newCrop: Crop = {
+          ...data,
+          id: saved.id,
+          farmerId: currentFarmer.id,
+          plantationDate: toDisplayDate(saved.plantationDate),
+          createdAt: toDisplayDate(saved.createdAt ? String(saved.createdAt).split('T')[0] : '')
+        };
+        setCrops(prev => [newCrop, ...prev]);
+        showToast('Crop saved successfully!', 'success');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Failed to save crop' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to add crop';
+      return { success: false, error: msg };
     }
-
-    const newCrop: Crop = {
-      ...data,
-      id: 'crop-' + Date.now(),
-      farmerId: currentFarmer.id,
-      createdAt: new Date().toLocaleDateString('en-GB')
-    };
-    setCrops(prev => [newCrop, ...prev]);
-    showToast('Crop saved successfully!', 'success');
-    return { success: true };
   };
 
-  const updateCrop = (id: string, data: Partial<Crop>) => {
-    setCrops(prev => prev.map(c => (c.id === id ? { ...c, ...data } : c)));
-    showToast('Crop details updated.', 'success');
-  };
+  const updateCrop = async (id: string, data: Partial<Crop>) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
 
-  const deleteCrop = (id: string) => {
-    // Acceptance criteria FR-CROP-04: Cannot delete crop if it has expenses!
-    const hasExpenses = expenses.some(e => e.cropId === id);
-    if (hasExpenses) {
-      return { success: false, error: 'This crop has expenses. Delete those expenses first.' };
+    try {
+      let plantationIso = data.plantationDate;
+      if (plantationIso && plantationIso.includes('-') && plantationIso.split('-')[0].length === 2) {
+        const [d, m, y] = plantationIso.split('-');
+        plantationIso = `${y}-${m}-${d}`;
+      }
+
+      const res = await api.farmer.updateCrop(id, {
+        name: data.name?.trim(),
+        category: data.category,
+        plantationDate: plantationIso,
+        durationDays: data.durationDays,
+        description: data.description
+      });
+
+      if (res && res.success) {
+        setCrops(prev => prev.map(c => (c.id === id ? { ...c, ...data } : c)));
+        showToast('Crop details updated.', 'success');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Update failed' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to update crop';
+      return { success: false, error: msg };
     }
-    setCrops(prev => prev.filter(c => c.id !== id));
-    showToast('Crop deleted.', 'info');
-    return { success: true };
   };
 
-  // Expense Management (FR-EXP-01 to 05)
-  const addExpense = (data: Omit<Expense, 'id' | 'farmerId' | 'createdAt'>) => {
-    if (!currentFarmer) return { success: false, error: 'Farmer login required' };
-    if (crops.length === 0) {
-      return { success: false, error: 'Add a crop first.' };
+  const deleteCrop = async (id: string) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
+
+    try {
+      const res = await api.farmer.deleteCrop(id);
+      if (res && res.success) {
+        setCrops(prev => prev.filter(c => c.id !== id));
+        showToast('Crop deleted.', 'info');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Delete failed' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Cannot delete crop';
+      return { success: false, error: msg };
     }
-    if (data.amount <= 0 || data.amount > 9999999) {
-      return { success: false, error: 'Amount must be between ₹1 and ₹99,99,999.' };
+  };
+
+  // Expense Management
+  const addExpense = async (data: Omit<Expense, 'id' | 'farmerId' | 'createdAt'>) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
+
+    try {
+      let expIso = data.date;
+      if (expIso.includes('-') && expIso.split('-')[0].length === 2) {
+        const [d, m, y] = expIso.split('-');
+        expIso = `${y}-${m}-${d}`;
+      }
+
+      const res = await api.farmer.createExpense({
+        cropId: data.cropId,
+        amount: data.amount,
+        category: data.category,
+        details: data.details || '',
+        expenseDate: expIso
+      });
+
+      if (res && res.success && res.data) {
+        const saved = res.data;
+        const newExp: Expense = {
+          ...data,
+          id: saved.id,
+          farmerId: currentFarmer.id,
+          date: toDisplayDate(saved.expenseDate),
+          amount: Number(saved.amount),
+          createdAt: toDisplayDate(saved.createdAt ? String(saved.createdAt).split('T')[0] : '')
+        };
+        setExpenses(prev => [newExp, ...prev]);
+        showToast('Expense saved in ledger!', 'success');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Failed to record expense' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to record expense';
+      return { success: false, error: msg };
     }
-
-    const newExp: Expense = {
-      ...data,
-      id: 'exp-' + Date.now(),
-      farmerId: currentFarmer.id,
-      createdAt: new Date().toLocaleDateString('en-GB')
-    };
-    setExpenses(prev => [newExp, ...prev]);
-    showToast('Expense saved in ledger!', 'success');
-    return { success: true };
   };
 
-  const updateExpense = (id: string, data: Partial<Expense>) => {
-    setExpenses(prev => prev.map(e => (e.id === id ? { ...e, ...data } : e)));
-    showToast('Expense updated.', 'success');
-  };
+  const updateExpense = async (id: string, data: Partial<Expense>) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
 
-  const deleteExpense = (id: string) => {
-    setExpenses(prev => prev.filter(e => e.id !== id));
-    showToast('Expense record removed.', 'info');
-  };
+    try {
+      let expIso = data.date;
+      if (expIso && expIso.includes('-') && expIso.split('-')[0].length === 2) {
+        const [d, m, y] = expIso.split('-');
+        expIso = `${y}-${m}-${d}`;
+      }
 
-  // Worker Management (FR-WRK-01 to 05)
-  const addWorker = (data: Omit<Worker, 'id' | 'farmerId' | 'paymentAmount' | 'createdAt'>) => {
-    if (!currentFarmer) return;
-    const paymentAmount = data.daysWorked * data.dailyWage;
-    const newWorker: Worker = {
-      ...data,
-      id: 'wrk-' + Date.now(),
-      farmerId: currentFarmer.id,
-      paymentAmount,
-      createdAt: new Date().toLocaleDateString('en-GB')
-    };
-    setWorkers(prev => [newWorker, ...prev]);
-    showToast('Worker added with wage ledger.', 'success');
-  };
+      const res = await api.farmer.updateExpense(id, {
+        cropId: data.cropId,
+        amount: data.amount,
+        category: data.category,
+        details: data.details,
+        expenseDate: expIso
+      });
 
-  const updateWorker = (id: string, data: Partial<Worker>) => {
-    setWorkers(prev =>
-      prev.map(w => {
-        if (w.id === id) {
-          const days = data.daysWorked !== undefined ? data.daysWorked : w.daysWorked;
-          const wage = data.dailyWage !== undefined ? data.dailyWage : w.dailyWage;
-          return {
-            ...w,
-            ...data,
-            daysWorked: days,
-            dailyWage: wage,
-            paymentAmount: days * wage
-          };
-        }
-        return w;
-      })
-    );
-    showToast('Worker wage roll updated.', 'success');
-  };
-
-  const deleteWorker = (id: string) => {
-    setWorkers(prev => prev.filter(w => w.id !== id));
-    showToast('Worker record deleted.', 'info');
-  };
-
-  // Water Records (FR-WTR-01 to 03)
-  const addWaterRecord = (data: Omit<WaterRecord, 'id' | 'farmerId' | 'createdAt'>) => {
-    if (!currentFarmer) return;
-    const record: WaterRecord = {
-      ...data,
-      id: 'wtr-' + Date.now(),
-      farmerId: currentFarmer.id,
-      createdAt: new Date().toLocaleDateString('en-GB')
-    };
-    setWaterRecords(prev => [record, ...prev]);
-    showToast('Water log saved.', 'success');
-  };
-
-  const deleteWaterRecord = (id: string) => {
-    setWaterRecords(prev => prev.filter(w => w.id !== id));
-    showToast('Water record removed.', 'info');
-  };
-
-  // Fertilizer Records (FR-PST-01 to 03)
-  const addFertilizerRecord = (data: Omit<FertilizerRecord, 'id' | 'farmerId' | 'createdAt'>) => {
-    if (!currentFarmer) return;
-    const record: FertilizerRecord = {
-      ...data,
-      id: 'fert-' + Date.now(),
-      farmerId: currentFarmer.id,
-      createdAt: new Date().toLocaleDateString('en-GB')
-    };
-    setFertilizerRecords(prev => [record, ...prev]);
-    showToast('Fertilizer/Pesticide log saved.', 'success');
-  };
-
-  const deleteFertilizerRecord = (id: string) => {
-    setFertilizerRecords(prev => prev.filter(f => f.id !== id));
-    showToast('Record removed.', 'info');
-  };
-
-  // Reminders (FR-REM-01 to 04)
-  const addReminder = (data: Omit<Reminder, 'id' | 'farmerId' | 'isDone' | 'createdAt'>) => {
-    if (!currentFarmer) return { success: false, error: 'Farmer login required' };
-    
-    // Check future date/time
-    const reminderDate = new Date(`${data.date}T${data.time}`);
-    const now = new Date();
-    if (reminderDate < now) {
-      return { success: false, error: 'Choose a future date and time' };
+      if (res && res.success) {
+        setExpenses(prev => prev.map(e => (e.id === id ? { ...e, ...data } : e)));
+        showToast('Expense updated.', 'success');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Update failed' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to update expense';
+      return { success: false, error: msg };
     }
-
-    const rem: Reminder = {
-      ...data,
-      id: 'rem-' + Date.now(),
-      farmerId: currentFarmer.id,
-      isDone: false,
-      createdAt: new Date().toLocaleDateString('en-GB')
-    };
-    setReminders(prev => [rem, ...prev]);
-    showToast('Farm reminder scheduled.', 'success');
-    return { success: true };
   };
 
-  const deleteReminder = (id: string) => {
-    setReminders(prev => prev.filter(r => r.id !== id));
-    showToast('Reminder dismissed.', 'info');
+  const deleteExpense = async (id: string) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
+
+    try {
+      const res = await api.farmer.deleteExpense(id);
+      if (res && res.success) {
+        setExpenses(prev => prev.filter(e => e.id !== id));
+        showToast('Expense record removed.', 'info');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Delete failed' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to delete expense';
+      return { success: false, error: msg };
+    }
   };
 
-  const toggleReminderDone = (id: string) => {
-    setReminders(prev => prev.map(r => (r.id === id ? { ...r, isDone: !r.isDone } : r)));
-    showToast('Reminder updated.', 'success');
+  // Worker Management
+  const addWorker = async (data: Omit<Worker, 'id' | 'farmerId' | 'paymentAmount' | 'createdAt'>) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
+
+    try {
+      const res = await api.farmer.createWorker({
+        name: data.name.trim(),
+        daysWorked: data.daysWorked,
+        dailyWage: data.dailyWage,
+        contact: data.contact,
+        email: data.email || null,
+        address: data.address || '',
+        upiId: data.upiId || ''
+      });
+
+      if (res && res.success && res.data) {
+        const saved = res.data;
+        const newWorker: Worker = {
+          ...data,
+          id: saved.id,
+          farmerId: currentFarmer.id,
+          paymentAmount: Number(saved.paymentAmount || data.daysWorked * data.dailyWage),
+          createdAt: toDisplayDate(saved.createdAt ? String(saved.createdAt).split('T')[0] : '')
+        };
+        setWorkers(prev => [newWorker, ...prev]);
+        showToast('Worker added with wage ledger.', 'success');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Failed to add worker' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to add worker';
+      return { success: false, error: msg };
+    }
+  };
+
+  const updateWorker = async (id: string, data: Partial<Worker>) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
+
+    try {
+      const current = workers.find(w => w.id === id);
+      const res = await api.farmer.updateWorker(id, {
+        name: data.name ?? current?.name,
+        daysWorked: data.daysWorked ?? current?.daysWorked,
+        dailyWage: data.dailyWage ?? current?.dailyWage,
+        contact: data.contact ?? current?.contact,
+        email: data.email ?? current?.email,
+        address: data.address ?? current?.address,
+        upiId: data.upiId ?? current?.upiId
+      });
+
+      if (res && res.success) {
+        setWorkers(prev =>
+          prev.map(w => {
+            if (w.id === id) {
+              const days = data.daysWorked !== undefined ? data.daysWorked : w.daysWorked;
+              const wage = data.dailyWage !== undefined ? data.dailyWage : w.dailyWage;
+              return {
+                ...w,
+                ...data,
+                daysWorked: days,
+                dailyWage: wage,
+                paymentAmount: days * wage
+              };
+            }
+            return w;
+          })
+        );
+        showToast('Worker wage roll updated.', 'success');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Update failed' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to update worker';
+      return { success: false, error: msg };
+    }
+  };
+
+  const deleteWorker = async (id: string) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
+
+    try {
+      const res = await api.farmer.deleteWorker(id);
+      if (res && res.success) {
+        setWorkers(prev => prev.filter(w => w.id !== id));
+        showToast('Worker record deleted.', 'info');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Delete failed' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to delete worker';
+      return { success: false, error: msg };
+    }
+  };
+
+  // Water Records
+  const addWaterRecord = async (data: Omit<WaterRecord, 'id' | 'farmerId' | 'createdAt'>) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
+
+    try {
+      let recDate = data.date;
+      if (recDate.includes('-') && recDate.split('-')[0].length === 2) {
+        const [d, m, y] = recDate.split('-');
+        recDate = `${y}-${m}-${d}`;
+      }
+
+      const res = await api.farmer.createWaterRecord({
+        name: `${data.plotName} Irrigation`,
+        plotName: data.plotName,
+        withFertilizer: data.withFertilizer,
+        quantity: String(data.quantity),
+        unit: data.unit,
+        date: recDate,
+        description: 'Irrigation record'
+      });
+
+      if (res && res.success && res.data) {
+        const saved = res.data;
+        const record: WaterRecord = {
+          ...data,
+          id: saved.id,
+          farmerId: currentFarmer.id,
+          date: toDisplayDate(saved.recordDate),
+          createdAt: toDisplayDate(saved.createdAt ? String(saved.createdAt).split('T')[0] : '')
+        };
+        setWaterRecords(prev => [record, ...prev]);
+        showToast('Water log saved.', 'success');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Failed to save water record' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to save water record';
+      return { success: false, error: msg };
+    }
+  };
+
+  const deleteWaterRecord = async (id: string) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
+
+    try {
+      const res = await api.farmer.deleteWaterRecord(id);
+      if (res && res.success) {
+        setWaterRecords(prev => prev.filter(w => w.id !== id));
+        showToast('Water record removed.', 'info');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Delete failed' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to delete record';
+      return { success: false, error: msg };
+    }
+  };
+
+  // Fertilizer Records
+  const addFertilizerRecord = async (data: Omit<FertilizerRecord, 'id' | 'farmerId' | 'createdAt'>) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
+
+    try {
+      let recDate = data.date;
+      if (recDate.includes('-') && recDate.split('-')[0].length === 2) {
+        const [d, m, y] = recDate.split('-');
+        recDate = `${y}-${m}-${d}`;
+      }
+
+      const res = await api.farmer.createInputRecord({
+        name: `${data.productName} Application`,
+        plotName: data.plotName,
+        productName: data.productName,
+        quantity: String(data.quantity),
+        unit: data.unit,
+        date: recDate,
+        description: 'Input record'
+      });
+
+      if (res && res.success && res.data) {
+        const saved = res.data;
+        const record: FertilizerRecord = {
+          ...data,
+          id: saved.id,
+          farmerId: currentFarmer.id,
+          date: toDisplayDate(saved.recordDate),
+          createdAt: toDisplayDate(saved.createdAt ? String(saved.createdAt).split('T')[0] : '')
+        };
+        setFertilizerRecords(prev => [record, ...prev]);
+        showToast('Fertilizer/Pesticide log saved.', 'success');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Failed to save record' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to save record';
+      return { success: false, error: msg };
+    }
+  };
+
+  const deleteFertilizerRecord = async (id: string) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
+
+    try {
+      const res = await api.farmer.deleteInputRecord(id);
+      if (res && res.success) {
+        setFertilizerRecords(prev => prev.filter(f => f.id !== id));
+        showToast('Record removed.', 'info');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Delete failed' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to delete record';
+      return { success: false, error: msg };
+    }
+  };
+
+  // Reminders
+  const addReminder = async (data: Omit<Reminder, 'id' | 'farmerId' | 'isDone' | 'createdAt'>) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
+
+    try {
+      let reminderDate = data.date;
+      const res = await api.farmer.createReminder({
+        name: data.description,
+        description: data.description,
+        reminderDate: reminderDate,
+        reminderTime: data.time
+      });
+
+      if (res && res.success && res.data) {
+        const saved = res.data;
+        const rem: Reminder = {
+          ...data,
+          id: saved.id,
+          farmerId: currentFarmer.id,
+          isDone: false,
+          date: saved.reminderDate || data.date,
+          time: saved.reminderTime || data.time,
+          createdAt: toDisplayDate(saved.createdAt ? String(saved.createdAt).split('T')[0] : '')
+        };
+        setReminders(prev => [rem, ...prev]);
+        showToast('Farm reminder scheduled.', 'success');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Failed to schedule reminder' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to schedule reminder';
+      return { success: false, error: msg };
+    }
+  };
+
+  const deleteReminder = async (id: string) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
+
+    try {
+      const res = await api.farmer.deleteReminder(id);
+      if (res && res.success) {
+        setReminders(prev => prev.filter(r => r.id !== id));
+        showToast('Reminder dismissed.', 'info');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Delete failed' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to delete reminder';
+      return { success: false, error: msg };
+    }
+  };
+
+  const toggleReminderDone = async (id: string) => {
+    if (!currentFarmer) return { success: false, error: 'Authentication required' };
+
+    try {
+      const res = await api.farmer.toggleReminder(id);
+      if (res && res.success && res.data) {
+        setReminders(prev => prev.map(r => (r.id === id ? { ...r, isDone: !r.isDone } : r)));
+        showToast('Reminder updated.', 'success');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Toggle failed' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to update reminder';
+      return { success: false, error: msg };
+    }
   };
 
   return (
@@ -722,11 +819,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentRole,
         setCurrentRole,
         currentFarmer,
-        farmers,
+        isAuthChecking,
         loginFarmer,
         registerFarmer,
         logoutFarmer,
-        switchToDemoFarmer,
         crops,
         addCrop,
         updateCrop,
@@ -752,7 +848,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         todayReminders,
         toastMessage,
         showToast,
-        backendStatus
+        backendStatus,
+        refreshData: loadFarmerData
       }}
     >
       {children}

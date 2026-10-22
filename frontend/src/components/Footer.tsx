@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
+import { KisanKhataLogo } from './KisanKhataLogo';
 
 export const Footer: React.FC = () => {
   const { setCurrentPath, currentFarmer } = useApp();
@@ -10,14 +11,14 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-[#d8e3fb]/60">
           {/* Brand Col */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2.5">
-              <img
-                alt="KisanKhata Logo"
-                className="h-6 w-auto object-contain"
-                src="https://lh3.googleusercontent.com/aida/AEtjO1WU9VSLtbc0JiZGVmnmcNptZl4TkxgdaaYa28yGY7ZcbMNexC76mB9v5GIkJQIGB3LmYIgumFYGZwAx38fHoG6XugyrGV6TXIJeu7aIlb-cUOzrRzL6sgnM8LCivSD5zmeh8x1N_NvtN62oZdulDxeRBAUMwPDcxIzuCXb7QWr4Wc7Nj9sjZoC4250zQboqt80J4pqn_4GpqOPHnYyFqe016ekQ64QhsONeHI77FMLHSDdsO_de9GZ8fTo"
-              />
-              <span className="font-bold text-[18px] text-[#012d1d]">KisanKhata</span>
-            </div>
+            <KisanKhataLogo
+              size="sm"
+              showTagline={false}
+              onClick={() => {
+                setCurrentPath('home');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
             <p className="text-[13px] text-[#414844] leading-relaxed">
               Next-generation enterprise agricultural SaaS ledger and rural bookkeeping infrastructure built specifically for Indian farmers and farmlands.
             </p>
@@ -154,7 +155,7 @@ export const Footer: React.FC = () => {
           <p>© 2026 KisanKhata Technologies Pvt Ltd. Dedicated to Bharat's Agricultural Producers.</p>
           <p className="flex items-center gap-1.5 font-medium text-[#116c4a]">
             <span className="material-symbols-outlined text-[16px]">verified</span>
-            Strict Tenant Isolation Guaranteed ({currentFarmer ? currentFarmer.tenantId : 'Farm-MH-4012'})
+            Strict Tenant Isolation Guaranteed{currentFarmer ? ` (${currentFarmer.tenantId})` : ''}
           </p>
         </div>
       </div>

@@ -52,10 +52,8 @@ npm run dev
 ```
 Frontend runs at `http://localhost:3000` (auto-proxies `/api` to `http://localhost:8080`).
 
----
-
-### Key URLs & Demo Credentials
+### Key URLs & Environment Provisioning
 - **Web App:** [http://localhost:3000](http://localhost:3000)
-- **API & Actuator:** [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
-- **Bootstrap Admin:** `admin@kisankhata.in` / `SecureAdminPassword2026!`
-- **Demo Farmer:** Rajesh Patil (`Farm-MH-4012`)
+- **API Health Check:** [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
+- **Farmer Access:** Farmers register securely via `/api/v1/auth/register` with BCrypt password hashing.
+- **Admin Provisioning:** Configure `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD` (min 12 characters) as protected environment variables. Zero hardcoded credentials in production.

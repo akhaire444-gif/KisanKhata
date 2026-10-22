@@ -1,6 +1,16 @@
 // Centralized API Client with credentials, CSRF token handling, and typed backend endpoints
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const rawBase = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const API_BASE = rawBase.endsWith('/') ? rawBase.slice(0, -1) : rawBase;
+
+export const getOAuth2GoogleUrl = (): string => {
+  if (API_BASE.startsWith('http')) {
+    return API_BASE.replace(/\/api\/v1\/?$/, '') + '/oauth2/authorization/google';
+  }
+  return '/oauth2/authorization/google';
+};
+
+let cachedCsrfToken: string | null = null;
 
 function getCookie(name: string): string | null {
   const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
@@ -20,7 +30,8 @@ export async function apiRequest<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  const url = `${API_BASE}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_BASE}${cleanEndpoint}`;
   
   const headers = new Headers(options.headers || {});
   if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
@@ -30,7 +41,7 @@ export async function apiRequest<T = any>(
   // Auto-inject CSRF token for state-mutating HTTP methods
   const method = (options.method || 'GET').toUpperCase();
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
-    const xsrf = getCookie('XSRF-TOKEN');
+    const xsrf = getCookie('XSRF-TOKEN') || cachedCsrfToken;
     if (xsrf) {
       headers.set('X-XSRF-TOKEN', xsrf);
     }
