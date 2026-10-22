@@ -83,8 +83,17 @@ public class SecurityConfig {
             .oauth2Login(oauth -> oauth
                 .successHandler(oauth2SuccessHandler)
                 .failureHandler((req, res, ex) -> {
-                    String redirect = env.getProperty("app.cors.allowed-origin", "http://localhost:3000");
-                    if (redirect != null && redirect.endsWith("/")) {
+                    String redirect = env.getProperty("app.cors.allowed-origin");
+                    String serverName = req.getServerName();
+                    if (serverName != null && !serverName.equalsIgnoreCase("localhost") && !serverName.equals("127.0.0.1")) {
+                        if (redirect == null || redirect.contains("localhost") || redirect.contains("127.0.0.1")) {
+                            redirect = "https://kisan-khata-x1dp.vercel.app";
+                        }
+                    }
+                    if (redirect == null || redirect.isBlank()) {
+                        redirect = "http://localhost:3000";
+                    }
+                    if (redirect.endsWith("/")) {
                         redirect = redirect.substring(0, redirect.length() - 1);
                     }
                     res.sendRedirect(redirect + "/?auth=error&message=oauth_failed");

@@ -36,4 +36,20 @@ public class OAuth2AuthorizationIntegrationTest {
         assertThat(redirectedUrl).contains("client_id=real-render-client-id-999.apps.googleusercontent.com");
         assertThat(redirectedUrl).doesNotContain("unconfigured");
     }
+
+    @Test
+    @DisplayName("/oauth2/authorization/google with Render forwarded headers generates exact HTTPS Render redirect URI")
+    void testOAuthAuthorizationRedirectWithRenderForwardedHeaders() throws Exception {
+        var result = mvc.perform(get("/oauth2/authorization/google")
+                .header("X-Forwarded-Proto", "https")
+                .header("X-Forwarded-Host", "kisankhata-1.onrender.com")
+                .header("X-Forwarded-Port", "443"))
+            .andExpect(status().is3xxRedirection())
+            .andReturn();
+
+        String redirectedUrl = result.getResponse().getRedirectedUrl();
+        assertThat(redirectedUrl).isNotNull();
+        assertThat(redirectedUrl).contains("redirect_uri=https://kisankhata-1.onrender.com/login/oauth2/code/google");
+        assertThat(redirectedUrl).doesNotContain("http://kisankhata-1.onrender.com");
+    }
 }

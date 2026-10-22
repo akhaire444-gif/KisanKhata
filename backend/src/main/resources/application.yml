@@ -54,6 +54,7 @@ app:
     google:
       client-id: ${GOOGLE_CLIENT_ID:${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID:${spring.security.oauth2.client.registration.google.client-id:}}}
       client-secret: ${GOOGLE_CLIENT_SECRET:${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET:${spring.security.oauth2.client.registration.google.client-secret:}}}
+      redirect-uri: ${GOOGLE_REDIRECT_URI:${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_REDIRECT_URI:${spring.security.oauth2.client.registration.google.redirect-uri:{baseUrl}/login/oauth2/code/{registrationId}}}}
 logging:
   level:
     root: INFO

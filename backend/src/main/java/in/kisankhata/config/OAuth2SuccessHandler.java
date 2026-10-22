@@ -46,7 +46,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         if (authentication.getPrincipal() instanceof OAuth2User oauthUser) {
             String email = oauthUser.getAttribute("email");
             if (email == null || email.isBlank()) {
-                response.sendRedirect(frontendOrigin + "/?auth=error&message=email_missing");
+                response.sendRedirect(resolveRedirectOrigin(request) + "/?auth=error&message=email_missing");
                 return;
             }
 
@@ -88,8 +88,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 ));
             });
 
+            String targetOrigin = resolveRedirectOrigin(request);
+
             if (!appUser.isActive()) {
-                response.sendRedirect(frontendOrigin + "/?auth=error&message=account_disabled");
+                response.sendRedirect(targetOrigin + "/?auth=error&message=account_disabled");
                 return;
             }
 
@@ -99,10 +101,21 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             SecurityContextHolder.setContext(context);
             request.getSession(true).setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
 
-            response.sendRedirect(frontendOrigin + "/?auth=success");
+            response.sendRedirect(targetOrigin + "/?auth=success");
             return;
         }
 
-        response.sendRedirect(frontendOrigin + "/?auth=success");
+        response.sendRedirect(resolveRedirectOrigin(request) + "/?auth=success");
+    }
+
+    private String resolveRedirectOrigin(HttpServletRequest request) {
+        String origin = this.frontendOrigin;
+        String serverName = request != null ? request.getServerName() : null;
+        if (serverName != null && !serverName.equalsIgnoreCase("localhost") && !serverName.equals("127.0.0.1")) {
+            if (origin == null || origin.contains("localhost") || origin.contains("127.0.0.1")) {
+                return "https://kisan-khata-x1dp.vercel.app";
+            }
+        }
+        return origin != null && !origin.isBlank() ? origin : "https://kisan-khata-x1dp.vercel.app";
     }
 }

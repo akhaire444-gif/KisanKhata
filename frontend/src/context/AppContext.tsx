@@ -231,43 +231,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  // Initial Session Check on Mount (Verifies real session with backend)
-  useEffect(() => {
-    let isMounted = true;
+  // Session Check (Verifies real session with backend)
+  const checkSession = useCallback(async (): Promise<boolean> => {
     setIsAuthChecking(true);
-
-    api.auth.csrf()
-      .then(() => {
-        if (!isMounted) return;
-        setBackendStatus('connected');
-        return api.auth.me();
-      })
-      .then(res => {
-        if (!isMounted) return;
-        if (res && res.success && res.data) {
-          const farmer = mapUserToFarmer(res.data);
-          setCurrentFarmer(farmer);
-          setCurrentRole('farmer');
-          loadFarmerData();
-        } else {
-          setCurrentFarmer(null);
-          setCurrentRole('visitor');
-        }
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        // Session invalid or not logged in. Keep null!
+    try {
+      await api.auth.csrf();
+      setBackendStatus('connected');
+      const res = await api.auth.me();
+      if (res && res.success && res.data) {
+        const farmer = mapUserToFarmer(res.data);
+        setCurrentFarmer(farmer);
+        setCurrentRole('farmer');
+        await loadFarmerData();
+        return true;
+      } else {
         setCurrentFarmer(null);
         setCurrentRole('visitor');
-      })
-      .finally(() => {
-        if (isMounted) setIsAuthChecking(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
+        return false;
+      }
+    } catch {
+      setCurrentFarmer(null);
+      setCurrentRole('visitor');
+      return false;
+    } finally {
+      setIsAuthChecking(false);
+    }
   }, [loadFarmerData]);
+
+  // Initial Session Check on Mount
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
 
   // Today's reminders calculation
   const todayStr = new Date().toISOString().split('T')[0];
@@ -849,7 +843,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toastMessage,
         showToast,
         backendStatus,
-        refreshData: loadFarmerData
+        refreshData: checkSession
       }}
     >
       {children}

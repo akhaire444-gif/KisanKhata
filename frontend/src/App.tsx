@@ -28,6 +28,7 @@ const MainApp: React.FC = () => {
     if (authStatus === 'success') {
       window.history.replaceState({}, document.title, window.location.pathname);
       showToast('Signed in successfully with Google!', 'success');
+      setCurrentPath('farmer-dashboard');
       refreshData();
     } else if (authStatus === 'error') {
       const err = params.get('message') || 'Google authentication failed';

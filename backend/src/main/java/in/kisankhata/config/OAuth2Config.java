@@ -38,10 +38,20 @@ public class OAuth2Config {
         boolean hasClientSecret = clientSecret != null && !clientSecret.isBlank();
 
         if (hasClientId && hasClientSecret) {
+            String redirectUri = resolveProperty(env,
+                "spring.security.oauth2.client.registration.google.redirect-uri",
+                "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_REDIRECT_URI",
+                "GOOGLE_REDIRECT_URI",
+                "app.oauth2.google.redirect-uri"
+            );
+            if (redirectUri == null || redirectUri.isBlank()) {
+                redirectUri = "{baseUrl}/login/oauth2/code/{registrationId}";
+            }
+
             ClientRegistration googleRegistration = CommonOAuth2Provider.GOOGLE.getBuilder("google")
                 .clientId(clientId)
                 .clientSecret(clientSecret)
-                .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+                .redirectUri(redirectUri)
                 .scope("openid", "profile", "email")
                 .build();
 

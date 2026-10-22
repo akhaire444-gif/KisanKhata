@@ -66,4 +66,33 @@ public class OAuth2ConfigTest {
 
         assertThat(reg).isNull();
     }
+
+    @Test
+    @DisplayName("Default redirect URI template is {baseUrl}/login/oauth2/code/{registrationId}")
+    void testDefaultRedirectUriTemplate() {
+        MockEnvironment env = new MockEnvironment();
+        env.setProperty("GOOGLE_CLIENT_ID", "mock-client-id");
+        env.setProperty("GOOGLE_CLIENT_SECRET", "mock-client-secret");
+
+        ClientRegistrationRepository repo = config.clientRegistrationRepository(env);
+        ClientRegistration reg = repo.findByRegistrationId("google");
+
+        assertThat(reg).isNotNull();
+        assertThat(reg.getRedirectUri()).isEqualTo("{baseUrl}/login/oauth2/code/{registrationId}");
+    }
+
+    @Test
+    @DisplayName("Custom redirect URI template from env var is honored")
+    void testCustomRedirectUriTemplate() {
+        MockEnvironment env = new MockEnvironment();
+        env.setProperty("GOOGLE_CLIENT_ID", "mock-client-id");
+        env.setProperty("GOOGLE_CLIENT_SECRET", "mock-client-secret");
+        env.setProperty("SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_REDIRECT_URI", "https://kisankhata-1.onrender.com/login/oauth2/code/google");
+
+        ClientRegistrationRepository repo = config.clientRegistrationRepository(env);
+        ClientRegistration reg = repo.findByRegistrationId("google");
+
+        assertThat(reg).isNotNull();
+        assertThat(reg.getRedirectUri()).isEqualTo("https://kisankhata-1.onrender.com/login/oauth2/code/google");
+    }
 }
