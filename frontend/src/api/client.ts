@@ -1,7 +1,25 @@
 // Centralized API Client with credentials, CSRF token handling, and typed backend endpoints
 
-const rawBase = import.meta.env.VITE_API_BASE_URL || '/api/v1';
-const API_BASE = rawBase.endsWith('/') ? rawBase.slice(0, -1) : rawBase;
+function resolveApiBase(): string {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!envUrl || typeof envUrl !== 'string' || envUrl.trim() === '') {
+    return '/api/v1';
+  }
+  let base = envUrl.trim();
+  if (base.endsWith('/')) {
+    base = base.slice(0, -1);
+  }
+  if (!base.endsWith('/api/v1')) {
+    if (base.endsWith('/api')) {
+      base = `${base}/v1`;
+    } else {
+      base = `${base}/api/v1`;
+    }
+  }
+  return base;
+}
+
+export const API_BASE = resolveApiBase();
 
 let cachedCsrfToken: string | null = null;
 
@@ -40,8 +58,15 @@ export async function apiRequest<T = any>(
     }
   }
 
+  // Timeout guard (8s) to prevent hanging during cold starts or offline states
+  let signal = options.signal;
+  if (!signal && typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+    signal = AbortSignal.timeout(8000);
+  }
+
   const response = await fetch(url, {
     ...options,
+    signal,
     headers,
     credentials: 'include', // Includes JSESSIONID session cookie
   });
@@ -90,7 +115,17 @@ export const api = {
 
   // Auth endpoints
   auth: {
-    csrf: () => api.get('/auth/csrf'),
+    csrf: async () => {
+      try {
+        const res = await api.get('/auth/csrf');
+        if (res && (res as any).token) {
+          cachedCsrfToken = (res as any).token;
+        }
+        return res;
+      } catch (err) {
+        return { success: false, error: err };
+      }
+    },
     me: () => api.get('/auth/me'),
     login: (credentials: { email: string; password: string }) => api.post('/auth/login', credentials),
     demo: () => api.post('/auth/demo'),

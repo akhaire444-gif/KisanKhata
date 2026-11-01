@@ -13,7 +13,8 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
     loginDemo,
     resetDemoData,
     todayReminders,
-    backendStatus
+    backendStatus,
+    showToast
   } = useApp();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -24,7 +25,10 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
     if (isDemoLoading) return;
     setIsDemoLoading(true);
     try {
-      await loginDemo();
+      const res = await loginDemo();
+      if (!res.success && res.error) {
+        showToast(res.error, 'error');
+      }
       setIsMobileMenuOpen(false);
     } finally {
       setIsDemoLoading(false);
@@ -72,32 +76,34 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
           <div
             title={
               backendStatus === 'connected'
-                ? 'Spring Boot 3.4 (Java 17) Backend is connected'
+                ? 'Spring Boot 3.4 Backend is live and connected'
                 : backendStatus === 'checking'
-                  ? 'Checking backend connection...'
-                  : 'Backend unreachable'
+                  ? 'Connecting to backend...'
+                  : 'Public Demo Mode is active and ready'
             }
-            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all border ${backendStatus === 'connected'
+            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all border ${
+              backendStatus === 'connected'
                 ? 'bg-[#1b4332]/10 text-[#116c4a] border-[#a1f4c8]'
                 : backendStatus === 'checking'
                   ? 'bg-amber-50 text-amber-700 border-amber-200'
-                  : 'bg-stone-100 text-stone-600 border-stone-200'
-              }`}
+                  : 'bg-emerald-50 text-emerald-800 border-emerald-300'
+            }`}
           >
             <span
-              className={`w-2 h-2 rounded-full ${backendStatus === 'connected'
+              className={`w-2 h-2 rounded-full ${
+                backendStatus === 'connected'
                   ? 'bg-[#116c4a] animate-pulse'
                   : backendStatus === 'checking'
                     ? 'bg-amber-500 animate-ping'
-                    : 'bg-stone-400'
-                }`}
+                    : 'bg-emerald-600'
+              }`}
             />
             <span>
               {backendStatus === 'connected'
                 ? 'API Live'
                 : backendStatus === 'checking'
                   ? 'Connecting...'
-                  : 'Offline'}
+                  : 'Demo Ready'}
             </span>
           </div>
 

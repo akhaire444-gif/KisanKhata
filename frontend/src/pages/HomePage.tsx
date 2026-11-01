@@ -5,7 +5,7 @@ import { KisanKhataLogo } from '../components/KisanKhataLogo';
 export const HomePage: React.FC<{
   onOpenAuthModal?: (isRegister?: boolean) => void;
 }> = ({ onOpenAuthModal }) => {
-  const { currentFarmer, setCurrentPath, loginDemo } = useApp();
+  const { currentFarmer, setCurrentPath, loginDemo, showToast } = useApp();
   const [isDemoLoading, setIsDemoLoading] = useState(false);
 
   const handleOpenLogin = () => {
@@ -25,7 +25,10 @@ export const HomePage: React.FC<{
     if (isDemoLoading) return;
     setIsDemoLoading(true);
     try {
-      await loginDemo();
+      const res = await loginDemo();
+      if (!res.success && res.error) {
+        showToast(res.error, 'error');
+      }
     } finally {
       setIsDemoLoading(false);
     }

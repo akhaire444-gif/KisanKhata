@@ -84,6 +84,302 @@ function toDisplayDate(isoOrDate: string): string {
   return isoOrDate;
 }
 
+const DEMO_FALLBACK_CROPS: Crop[] = [
+  {
+    id: 'crop-demo-soybean',
+    farmerId: 'demo-farmer-id',
+    name: 'Kharif Soybean (JS-335)',
+    category: 'Oilseeds',
+    plantationDate: '15-06-2026',
+    durationDays: 105,
+    description: 'Certified JS-335 seed plot, drip irrigated, high yield target',
+    acresPlanted: 10,
+    expectedYield: '28 Quintals',
+    createdAt: '15-06-2026'
+  },
+  {
+    id: 'crop-demo-onion',
+    farmerId: 'demo-farmer-id',
+    name: 'Rabi Onion (Gavran Garva)',
+    category: 'Vegetables',
+    plantationDate: '20-10-2026',
+    durationDays: 120,
+    description: 'Nashik red quality onion with raised bed & micro-sprinkler setup',
+    acresPlanted: 5,
+    expectedYield: '150 Quintals',
+    createdAt: '20-10-2026'
+  },
+  {
+    id: 'crop-demo-pomegranate',
+    farmerId: 'demo-farmer-id',
+    name: 'Pomegranate Orchard (Bhagwa)',
+    category: 'Fruit',
+    plantationDate: '10-01-2024',
+    durationDays: 180,
+    description: 'High-density Bhagwa orchard, export grade mrig-bahar treatment',
+    acresPlanted: 6,
+    expectedYield: '65 Quintals',
+    createdAt: '10-01-2024'
+  },
+  {
+    id: 'crop-demo-sugarcane',
+    farmerId: 'demo-farmer-id',
+    name: 'Sugarcane (Co-86032)',
+    category: 'Cash Crop',
+    plantationDate: '01-02-2026',
+    durationDays: 365,
+    description: 'Perennial sugar mill contract crop, 5 ft paired row planting',
+    acresPlanted: 4,
+    expectedYield: '380 Tonnes',
+    createdAt: '01-02-2026'
+  }
+];
+
+const DEMO_FALLBACK_EXPENSES: Expense[] = [
+  {
+    id: 'exp-demo-1',
+    farmerId: 'demo-farmer-id',
+    cropId: 'crop-demo-soybean',
+    cropName: 'Kharif Soybean (JS-335)',
+    category: 'Seeds',
+    details: 'Mahyco Certified Soybean Seed (6 bags)',
+    date: '16-06-2026',
+    amount: 18400,
+    quantity: '6 bags',
+    createdAt: '16-06-2026'
+  },
+  {
+    id: 'exp-demo-2',
+    farmerId: 'demo-farmer-id',
+    cropId: 'crop-demo-soybean',
+    cropName: 'Kharif Soybean (JS-335)',
+    category: 'Fertilizers',
+    details: 'IFFCO 10:26:26 & Urea Basal Dose',
+    date: '22-06-2026',
+    amount: 14500,
+    quantity: '10 bags',
+    createdAt: '22-06-2026'
+  },
+  {
+    id: 'exp-demo-3',
+    farmerId: 'demo-farmer-id',
+    cropId: 'crop-demo-pomegranate',
+    cropName: 'Pomegranate Orchard (Bhagwa)',
+    category: 'Pesticides & Sprays',
+    details: 'Ampligo & Nativo Protective Spray against fungal spots',
+    date: '10-07-2026',
+    amount: 7850,
+    quantity: '2 Litres',
+    createdAt: '10-07-2026'
+  },
+  {
+    id: 'exp-demo-4',
+    farmerId: 'demo-farmer-id',
+    cropId: 'crop-demo-onion',
+    cropName: 'Rabi Onion (Gavran Garva)',
+    category: 'Tractor & Diesel',
+    details: 'Tractor Ploughing, harrowing & raised bed diesel expense',
+    date: '18-10-2026',
+    amount: 9600,
+    quantity: '105 Litres',
+    createdAt: '18-10-2026'
+  },
+  {
+    id: 'exp-demo-5',
+    farmerId: 'demo-farmer-id',
+    cropId: 'crop-demo-soybean',
+    cropName: 'Kharif Soybean (JS-335)',
+    category: 'Crop Cutting / Harvesting',
+    details: 'Combine harvester & thresher machine rental',
+    date: '02-10-2026',
+    amount: 16500,
+    quantity: '10 acres',
+    createdAt: '02-10-2026'
+  },
+  {
+    id: 'exp-demo-6',
+    farmerId: 'demo-farmer-id',
+    cropId: 'crop-demo-onion',
+    cropName: 'Rabi Onion (Gavran Garva)',
+    category: 'Other',
+    details: 'Drip lateral repairs, flush valves & micro-emitters',
+    date: '21-10-2026',
+    amount: 6200,
+    quantity: '1 set',
+    createdAt: '21-10-2026'
+  },
+  {
+    id: 'exp-demo-7',
+    farmerId: 'demo-farmer-id',
+    cropId: 'crop-demo-pomegranate',
+    cropName: 'Pomegranate Orchard (Bhagwa)',
+    category: 'Other',
+    details: 'Bamboo stakes & fruit support wire bundles',
+    date: '15-08-2026',
+    amount: 4800,
+    quantity: '120 stakes',
+    createdAt: '15-08-2026'
+  },
+  {
+    id: 'exp-demo-8',
+    farmerId: 'demo-farmer-id',
+    cropId: 'crop-demo-soybean',
+    cropName: 'Kharif Soybean (JS-335)',
+    category: 'Transport',
+    details: 'APMC Lasalgaon Mandi transport tempo & octroi toll',
+    date: '12-10-2026',
+    amount: 5400,
+    quantity: '1 tempo trip',
+    createdAt: '12-10-2026'
+  }
+];
+
+const DEMO_FALLBACK_WORKERS: Worker[] = [
+  {
+    id: 'worker-demo-1',
+    farmerId: 'demo-farmer-id',
+    name: 'Rameshwar Chavan',
+    contact: '9822104521',
+    daysWorked: 24,
+    dailyWage: 450,
+    paymentAmount: 10800,
+    address: 'Sinnar, Nashik',
+    createdAt: '01-06-2026'
+  },
+  {
+    id: 'worker-demo-2',
+    farmerId: 'demo-farmer-id',
+    name: 'Sunita Tai Patil',
+    contact: '9822104522',
+    daysWorked: 20,
+    dailyWage: 350,
+    paymentAmount: 7000,
+    address: 'Sinnar, Nashik',
+    createdAt: '01-06-2026'
+  },
+  {
+    id: 'worker-demo-3',
+    farmerId: 'demo-farmer-id',
+    name: 'Bhaskar Rao Gite',
+    contact: '9822104523',
+    daysWorked: 22,
+    dailyWage: 450,
+    paymentAmount: 9900,
+    address: 'Dindori, Nashik',
+    createdAt: '05-06-2026'
+  },
+  {
+    id: 'worker-demo-4',
+    farmerId: 'demo-farmer-id',
+    name: 'Anita Dnyaneshwar Wagh',
+    contact: '9822104524',
+    daysWorked: 18,
+    dailyWage: 350,
+    paymentAmount: 6300,
+    address: 'Niphad, Nashik',
+    createdAt: '10-06-2026'
+  },
+  {
+    id: 'worker-demo-5',
+    farmerId: 'demo-farmer-id',
+    name: 'Datta Tukaram Shinde',
+    contact: '9822104525',
+    daysWorked: 26,
+    dailyWage: 500,
+    paymentAmount: 13000,
+    address: 'Yeola, Nashik',
+    createdAt: '01-06-2026'
+  },
+  {
+    id: 'worker-demo-6',
+    farmerId: 'demo-farmer-id',
+    name: 'Kailas Baburao Sanap',
+    contact: '9822104526',
+    daysWorked: 15,
+    dailyWage: 400,
+    paymentAmount: 6000,
+    address: 'Sinnar, Nashik',
+    createdAt: '15-06-2026'
+  }
+];
+
+const DEMO_FALLBACK_WATER: WaterRecord[] = [
+  {
+    id: 'water-demo-1',
+    farmerId: 'demo-farmer-id',
+    plotName: 'Onion Block 2',
+    withFertilizer: false,
+    quantity: 12000,
+    unit: 'Litres',
+    date: '24-10-2026',
+    createdAt: '24-10-2026'
+  },
+  {
+    id: 'water-demo-2',
+    farmerId: 'demo-farmer-id',
+    plotName: 'Pomegranate Block 1',
+    withFertilizer: true,
+    quantity: 4,
+    unit: 'Hours',
+    date: '25-10-2026',
+    createdAt: '25-10-2026'
+  },
+  {
+    id: 'water-demo-3',
+    farmerId: 'demo-farmer-id',
+    plotName: 'Sugarcane Plot',
+    withFertilizer: false,
+    quantity: 6,
+    unit: 'Hours',
+    date: '26-10-2026',
+    createdAt: '26-10-2026'
+  }
+];
+
+const DEMO_FALLBACK_FERT: FertilizerRecord[] = [
+  {
+    id: 'fert-demo-1',
+    farmerId: 'demo-farmer-id',
+    plotName: 'Pomegranate Orchard Block 1',
+    productName: '19:19:19 + Micronutrients Foliar Spray',
+    quantity: 5,
+    unit: 'kg',
+    date: '20-10-2026',
+    createdAt: '20-10-2026'
+  },
+  {
+    id: 'fert-demo-2',
+    farmerId: 'demo-farmer-id',
+    plotName: 'Onion Bed Block 2',
+    productName: '0:52:34 Water Soluble Drip Grade',
+    quantity: 10,
+    unit: 'kg',
+    date: '23-10-2026',
+    createdAt: '23-10-2026'
+  }
+];
+
+const DEMO_FALLBACK_REMINDERS: Reminder[] = [
+  {
+    id: 'rem-demo-1',
+    farmerId: 'demo-farmer-id',
+    description: 'Weeding & intercultural operations in Onion Block 2',
+    date: new Date().toISOString().split('T')[0],
+    time: '08:30',
+    isDone: false,
+    createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
+  },
+  {
+    id: 'rem-demo-2',
+    farmerId: 'demo-farmer-id',
+    description: 'Second dose of micronutrients for Pomegranate Mrig Bahar',
+    date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    time: '10:00',
+    isDone: false,
+    createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
+  }
+];
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Navigation
   const [currentPath, setCurrentPath] = useState<NavigationPath>('home');
@@ -237,17 +533,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
+  // Load preconfigured sample data into state for public demo exploration
+  const loadDemoFallbackData = useCallback(() => {
+    setCrops([...DEMO_FALLBACK_CROPS]);
+    setExpenses([...DEMO_FALLBACK_EXPENSES]);
+    setWorkers([...DEMO_FALLBACK_WORKERS]);
+    setWaterRecords([...DEMO_FALLBACK_WATER]);
+    setFertilizerRecords([...DEMO_FALLBACK_FERT]);
+    setReminders([...DEMO_FALLBACK_REMINDERS]);
+  }, []);
+
   // Session Check (Verifies real session with backend)
   const checkSession = useCallback(async (): Promise<boolean> => {
     setIsAuthChecking(true);
     try {
-      await api.auth.csrf();
-      setBackendStatus('connected');
+      const csrfRes = await api.auth.csrf();
+      if (csrfRes && (csrfRes as any).success !== false) {
+        setBackendStatus('connected');
+      } else {
+        setBackendStatus('offline');
+      }
       const res = await api.auth.me();
       if (res && res.success && res.data) {
         const farmer = mapUserToFarmer(res.data);
         setCurrentFarmer(farmer);
         setCurrentRole('farmer');
+        setBackendStatus('connected');
         await loadFarmerData();
         return true;
       } else {
@@ -256,6 +567,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return false;
       }
     } catch {
+      setBackendStatus('offline');
       setCurrentFarmer(null);
       setCurrentRole('visitor');
       return false;
@@ -278,6 +590,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await api.auth.login({ email, password: pass });
       if (res && res.success && res.data) {
+        setBackendStatus('connected');
         const liveFarmer = mapUserToFarmer(res.data);
         setCurrentFarmer(liveFarmer);
         setCurrentRole('farmer');
@@ -292,11 +605,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // One-Click Demo Login: Real backend session & isolated database tenant
+  // One-Click Demo Login: Real backend session & isolated database tenant with instant fallback
   const loginDemo = async () => {
     try {
       const res = await api.auth.demo();
       if (res && res.success && res.data) {
+        setBackendStatus('connected');
         const demoFarmer = mapUserToFarmer(res.data);
         setCurrentFarmer(demoFarmer);
         setCurrentRole('farmer');
@@ -305,10 +619,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         await loadFarmerData();
         return { success: true };
       }
-      return { success: false, error: res?.message || 'Demo login failed' };
+      throw new Error(res?.message || 'Backend rejected demo access');
     } catch (err: any) {
-      const msg = err.response?.message || err.message || 'Demo access failed';
-      return { success: false, error: msg };
+      console.warn('Backend unavailable, launching local demo preview mode:', err);
+      setBackendStatus('offline');
+      const fallbackDemoFarmer: Farmer = {
+        id: 'demo-farmer-session-001',
+        firstName: 'Demo',
+        lastName: 'Farmer',
+        mobile: '9876543210',
+        email: 'demo.farmer@kisankhata.in',
+        address: 'Sinnar, Nashik',
+        farmName: 'Green Valley Demonstration Farm',
+        state: 'Maharashtra',
+        tenantId: 'DEMO-MH-TENANT',
+        totalAcres: 25,
+        status: 'Active',
+        isDemo: true,
+        createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
+      };
+      setCurrentFarmer(fallbackDemoFarmer);
+      setCurrentRole('farmer');
+      setCurrentPath('dashboard');
+      loadDemoFallbackData();
+      showToast('Entered Demo Account: Green Valley Demonstration Farm', 'success');
+      return { success: true };
     }
   };
 
@@ -317,16 +652,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await api.auth.resetDemo();
       if (res && res.success && res.data) {
+        setBackendStatus('connected');
         const demoFarmer = mapUserToFarmer(res.data);
         setCurrentFarmer(demoFarmer);
         showToast('Sample agricultural data reset to original baseline.', 'info');
         await loadFarmerData();
         return { success: true };
       }
-      return { success: false, error: res?.message || 'Reset failed' };
-    } catch (err: any) {
-      const msg = err.response?.message || err.message || 'Reset failed';
-      return { success: false, error: msg };
+      throw new Error(res?.message || 'Reset failed');
+    } catch {
+      loadDemoFallbackData();
+      showToast('Sample agricultural data reset to original baseline.', 'info');
+      return { success: true };
     }
   };
 
@@ -431,6 +768,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Failed to save crop' };
     } catch (err: any) {
+      if (currentFarmer.isDemo) {
+        const localId = `demo-crop-${Date.now()}`;
+        const newCrop: Crop = {
+          ...data,
+          id: localId,
+          farmerId: currentFarmer.id,
+          plantationDate: data.plantationDate,
+          createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
+        };
+        setCrops(prev => [newCrop, ...prev]);
+        showToast('Crop saved to demo ledger!', 'success');
+        return { success: true };
+      }
       const msg = err.response?.message || err.message || 'Failed to add crop';
       return { success: false, error: msg };
     }
@@ -461,6 +811,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Update failed' };
     } catch (err: any) {
+      if (currentFarmer.isDemo) {
+        setCrops(prev => prev.map(c => (c.id === id ? { ...c, ...data } : c)));
+        showToast('Crop details updated in demo ledger.', 'success');
+        return { success: true };
+      }
       const msg = err.response?.message || err.message || 'Failed to update crop';
       return { success: false, error: msg };
     }
@@ -478,6 +833,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Delete failed' };
     } catch (err: any) {
+      if (currentFarmer.isDemo) {
+        setCrops(prev => prev.filter(c => c.id !== id));
+        showToast('Crop removed from demo ledger.', 'info');
+        return { success: true };
+      }
       const msg = err.response?.message || err.message || 'Cannot delete crop';
       return { success: false, error: msg };
     }
@@ -518,6 +878,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Failed to record expense' };
     } catch (err: any) {
+      if (currentFarmer.isDemo) {
+        const localId = `demo-exp-${Date.now()}`;
+        const newExp: Expense = {
+          ...data,
+          id: localId,
+          farmerId: currentFarmer.id,
+          date: data.date,
+          createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
+        };
+        setExpenses(prev => [newExp, ...prev]);
+        showToast('Expense saved in demo ledger!', 'success');
+        return { success: true };
+      }
       const msg = err.response?.message || err.message || 'Failed to record expense';
       return { success: false, error: msg };
     }
@@ -548,6 +921,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Update failed' };
     } catch (err: any) {
+      if (currentFarmer.isDemo) {
+        setExpenses(prev => prev.map(e => (e.id === id ? { ...e, ...data } : e)));
+        showToast('Expense updated in demo ledger.', 'success');
+        return { success: true };
+      }
       const msg = err.response?.message || err.message || 'Failed to update expense';
       return { success: false, error: msg };
     }
@@ -565,6 +943,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Delete failed' };
     } catch (err: any) {
+      if (currentFarmer.isDemo) {
+        setExpenses(prev => prev.filter(e => e.id !== id));
+        showToast('Expense removed from demo ledger.', 'info');
+        return { success: true };
+      }
       const msg = err.response?.message || err.message || 'Failed to delete expense';
       return { success: false, error: msg };
     }
@@ -600,6 +983,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Failed to add worker' };
     } catch (err: any) {
+      if (currentFarmer.isDemo) {
+        const localId = `demo-wrk-${Date.now()}`;
+        const newWorker: Worker = {
+          ...data,
+          id: localId,
+          farmerId: currentFarmer.id,
+          paymentAmount: data.daysWorked * data.dailyWage,
+          createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
+        };
+        setWorkers(prev => [newWorker, ...prev]);
+        showToast('Worker added with wage ledger.', 'success');
+        return { success: true };
+      }
       const msg = err.response?.message || err.message || 'Failed to add worker';
       return { success: false, error: msg };
     }
@@ -642,6 +1038,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Update failed' };
     } catch (err: any) {
+      if (currentFarmer.isDemo) {
+        setWorkers(prev =>
+          prev.map(w => {
+            if (w.id === id) {
+              const days = data.daysWorked !== undefined ? data.daysWorked : w.daysWorked;
+              const wage = data.dailyWage !== undefined ? data.dailyWage : w.dailyWage;
+              return {
+                ...w,
+                ...data,
+                daysWorked: days,
+                dailyWage: wage,
+                paymentAmount: days * wage
+              };
+            }
+            return w;
+          })
+        );
+        showToast('Worker wage roll updated.', 'success');
+        return { success: true };
+      }
       const msg = err.response?.message || err.message || 'Failed to update worker';
       return { success: false, error: msg };
     }
@@ -659,6 +1075,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Delete failed' };
     } catch (err: any) {
+      if (currentFarmer.isDemo) {
+        setWorkers(prev => prev.filter(w => w.id !== id));
+        showToast('Worker record deleted.', 'info');
+        return { success: true };
+      }
       const msg = err.response?.message || err.message || 'Failed to delete worker';
       return { success: false, error: msg };
     }
