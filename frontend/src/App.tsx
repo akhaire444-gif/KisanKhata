@@ -21,22 +21,6 @@ const MainApp: React.FC = () => {
     refreshData
   } = useApp();
 
-  // Listen for OAuth2 callback query parameters (?auth=success or ?auth=error)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const authStatus = params.get('auth');
-    if (authStatus === 'success') {
-      window.history.replaceState({}, document.title, window.location.pathname);
-      showToast('Signed in successfully with Google!', 'success');
-      setCurrentPath('farmer-dashboard');
-      refreshData();
-    } else if (authStatus === 'error') {
-      const err = params.get('message') || 'Google authentication failed';
-      window.history.replaceState({}, document.title, window.location.pathname);
-      showToast(`Sign in error: ${err}`, 'error');
-    }
-  }, [showToast, refreshData]);
-
   const [authModalConfig, setAuthModalConfig] = useState<{
     isOpen: boolean;
     isRegister?: boolean;

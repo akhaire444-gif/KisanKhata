@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { KisanKhataLogo } from '../components/KisanKhataLogo';
 
 export const HomePage: React.FC<{
   onOpenAuthModal?: (isRegister?: boolean) => void;
 }> = ({ onOpenAuthModal }) => {
-  const { currentFarmer, setCurrentPath } = useApp();
+  const { currentFarmer, setCurrentPath, loginDemo } = useApp();
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
 
   const handleOpenLogin = () => {
     if (onOpenAuthModal) onOpenAuthModal(false);
@@ -18,6 +19,16 @@ export const HomePage: React.FC<{
   const handleGoDashboard = () => {
     setCurrentPath('dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleExploreDemo = async () => {
+    if (isDemoLoading) return;
+    setIsDemoLoading(true);
+    try {
+      await loginDemo();
+    } finally {
+      setIsDemoLoading(false);
+    }
   };
 
   return (
@@ -61,19 +72,38 @@ export const HomePage: React.FC<{
                   <button
                     type="button"
                     onClick={handleOpenLogin}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#012d1d] text-white font-bold text-base hover:bg-[#1b4332] shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-[#012d1d] text-white font-bold text-base hover:bg-[#1b4332] shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[20px]">login</span>
-                    <span>Sign In to Your Khata</span>
+                    <span>Sign In</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleExploreDemo}
+                    disabled={isDemoLoading}
+                    className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-[#116c4a] to-[#1b724f] text-white font-bold text-base hover:from-[#0d593c] hover:to-[#166042] shadow-lg hover:shadow-xl border border-[#a1f4c8]/50 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {isDemoLoading ? (
+                      <>
+                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span>Entering Demo...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-[20px] text-[#a1f4c8]">rocket_launch</span>
+                        <span>Explore Demo Account</span>
+                      </>
+                    )}
                   </button>
 
                   <button
                     type="button"
                     onClick={handleOpenRegister}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-white text-[#012d1d] font-bold text-base hover:bg-[#f0f3ff] border border-[#d8e3fb] shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-white text-[#012d1d] font-bold text-base hover:bg-[#f0f3ff] border border-[#d8e3fb] shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[20px]">person_add</span>
-                    <span>Register New Farm (Free)</span>
+                    <span>Register Farm</span>
                   </button>
                 </>
               )}
@@ -91,7 +121,7 @@ export const HomePage: React.FC<{
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px] text-[#116c4a]">check_circle</span>
-                Zero Public Demo Access
+                1-Click Public Demo Available
               </span>
             </div>
           </div>

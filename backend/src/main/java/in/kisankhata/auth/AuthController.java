@@ -1,5 +1,6 @@
 package in.kisankhata.auth;
 
+import in.kisankhata.farm.DemoDataService;
 import in.kisankhata.user.AppUser;
 import in.kisankhata.user.Role;
 import in.kisankhata.user.UserRepository;
@@ -15,6 +16,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -36,17 +39,20 @@ public class AuthController {
     private final PasswordEncoder encoder;
     private final AuthenticationManager manager;
     private final LoginAttemptService loginAttemptService;
+    private final DemoDataService demoDataService;
 
     public AuthController(
         UserRepository users,
         PasswordEncoder encoder,
         org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration cfg,
-        LoginAttemptService loginAttemptService
+        LoginAttemptService loginAttemptService,
+        DemoDataService demoDataService
     ) throws Exception {
         this.users = users;
         this.encoder = encoder;
         this.manager = cfg.getAuthenticationManager();
         this.loginAttemptService = loginAttemptService;
+        this.demoDataService = demoDataService;
     }
 
     public record RegisterRequest(
@@ -87,7 +93,8 @@ public class AuthController {
         String address,
         String city,
         String pinCode,
-        String state
+        String state,
+        boolean isDemo
     ) {}
 
     @PostMapping("/register")
@@ -171,6 +178,44 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/demo")
+    public ResponseEntity<?> demoLogin(HttpServletRequest request) {
+        AppUser demoUser = demoDataService.ensureDemoDataInitialized();
+
+        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + demoUser.getRole().name()));
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+            demoUser.getEmail(),
+            null,
+            authorities
+        );
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(auth);
+        SecurityContextHolder.setContext(context);
+        request.getSession(true).setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+
+        return ResponseEntity.ok(Map.of("success", true, "data", view(demoUser)));
+    }
+
+    @PostMapping("/demo/reset")
+    public ResponseEntity<?> demoReset(HttpServletRequest request) {
+        AppUser demoUser = demoDataService.resetDemoData();
+
+        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + demoUser.getRole().name()));
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+            demoUser.getEmail(),
+            null,
+            authorities
+        );
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(auth);
+        SecurityContextHolder.setContext(context);
+        request.getSession(true).setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+
+        return ResponseEntity.ok(Map.of("success", true, "message", "Demo data reset successfully", "data", view(demoUser)));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<?> me(Authentication auth) {
         if (auth == null || !auth.isAuthenticated()) {
@@ -195,6 +240,7 @@ public class AuthController {
     }
 
     private UserView view(AppUser u) {
+        boolean isDemo = DemoDataService.DEMO_EMAIL.equalsIgnoreCase(u.getEmail());
         return new UserView(
             u.getId(),
             u.getFirstName(),
@@ -206,7 +252,8 @@ public class AuthController {
             u.getAddress(),
             u.getCity(),
             u.getPinCode(),
-            u.getState()
+            u.getState(),
+            isDemo
         );
     }
 

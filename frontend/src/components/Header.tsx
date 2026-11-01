@@ -10,12 +10,26 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
     currentRole,
     currentFarmer,
     logoutFarmer,
+    loginDemo,
+    resetDemoData,
     todayReminders,
     backendStatus
   } = useApp();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
+
+  const handleExploreDemo = async () => {
+    if (isDemoLoading) return;
+    setIsDemoLoading(true);
+    try {
+      await loginDemo();
+      setIsMobileMenuOpen(false);
+    } finally {
+      setIsDemoLoading(false);
+    }
+  };
 
   const authenticatedNavItems: { label: string; path: NavigationPath }[] = [
     { label: '📊 Dashboard', path: 'dashboard' },
@@ -60,40 +74,43 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
               backendStatus === 'connected'
                 ? 'Spring Boot 3.4 (Java 17) Backend is connected'
                 : backendStatus === 'checking'
-                ? 'Checking backend connection...'
-                : 'Backend unreachable'
+                  ? 'Checking backend connection...'
+                  : 'Backend unreachable'
             }
-            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all border ${
-              backendStatus === 'connected'
+            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all border ${backendStatus === 'connected'
                 ? 'bg-[#1b4332]/10 text-[#116c4a] border-[#a1f4c8]'
                 : backendStatus === 'checking'
-                ? 'bg-amber-50 text-amber-700 border-amber-200'
-                : 'bg-stone-100 text-stone-600 border-stone-200'
-            }`}
+                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                  : 'bg-stone-100 text-stone-600 border-stone-200'
+              }`}
           >
             <span
-              className={`w-2 h-2 rounded-full ${
-                backendStatus === 'connected'
+              className={`w-2 h-2 rounded-full ${backendStatus === 'connected'
                   ? 'bg-[#116c4a] animate-pulse'
                   : backendStatus === 'checking'
-                  ? 'bg-amber-500 animate-ping'
-                  : 'bg-stone-400'
-              }`}
+                    ? 'bg-amber-500 animate-ping'
+                    : 'bg-stone-400'
+                }`}
             />
             <span>
               {backendStatus === 'connected'
                 ? 'API Live'
                 : backendStatus === 'checking'
-                ? 'Connecting...'
-                : 'Offline'}
+                  ? 'Connecting...'
+                  : 'Offline'}
             </span>
           </div>
 
-          {/* Tenant Status Pill (Only for authenticated farmer) */}
+          {/* Tenant Status Pill / Demo Account Badge */}
           {currentFarmer && (
-            <div className="hidden xl:flex items-center px-3 py-1 rounded-full bg-[#a1f4c8] text-[#1b724f] text-[12px] font-semibold shadow-xs">
-              <span className="material-symbols-outlined text-[15px] mr-1">domain</span>
-              <span>Tenant: {currentFarmer.tenantId}</span>
+            <div className={`hidden xl:flex items-center px-3 py-1 rounded-full text-[12px] font-bold shadow-xs ${currentFarmer.isDemo
+                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                : 'bg-[#a1f4c8] text-[#1b724f]'
+              }`}>
+              <span className="material-symbols-outlined text-[15px] mr-1">
+                {currentFarmer.isDemo ? 'verified' : 'domain'}
+              </span>
+              <span>{currentFarmer.isDemo ? 'DEMO ACCOUNT' : `Tenant: ${currentFarmer.tenantId}`}</span>
             </div>
           )}
         </div>
@@ -106,11 +123,10 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
               <button
                 key={item.path}
                 onClick={() => handleNavClick(item.path)}
-                className={`relative px-3 py-1.5 text-[13px] font-semibold rounded-lg transition-all cursor-pointer ${
-                  isActive
+                className={`relative px-3 py-1.5 text-[13px] font-semibold rounded-lg transition-all cursor-pointer ${isActive
                     ? 'bg-[#1b4332] text-white shadow-xs'
                     : 'text-[#414844] hover:text-[#111c2d] hover:bg-[#e7eeff]/60'
-                }`}
+                  }`}
               >
                 {item.label}
                 {item.path === 'reminders' && todayReminders.length > 0 && (
@@ -210,13 +226,28 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
                       </button>
                     </div>
 
+                    {currentFarmer.isDemo && (
+                      <div className="border-t border-[#f0f3ff] mt-2 pt-2">
+                        <button
+                          onClick={async () => {
+                            await resetDemoData();
+                            setIsProfileOpen(false);
+                          }}
+                          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-bold text-[#116c4a] bg-[#e8f5e9] hover:bg-[#c8e6c9] transition-colors cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+                          <span>Reset Sample Data</span>
+                        </button>
+                      </div>
+                    )}
+
                     <div className="border-t border-[#f0f3ff] mt-2 pt-2">
                       <button
                         onClick={logoutFarmer}
                         className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-bold text-[#ba1a1a] bg-[#ffdad6]/40 hover:bg-[#ffdad6]/70 transition-colors cursor-pointer"
                       >
                         <span className="material-symbols-outlined text-[16px]">logout</span>
-                        <span>Sign Out of Khata</span>
+                        <span>{currentFarmer.isDemo ? 'Exit Demo Account' : 'Sign Out of Khata'}</span>
                       </button>
                     </div>
                   </div>
@@ -225,6 +256,15 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
             </>
           ) : (
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleExploreDemo}
+                disabled={isDemoLoading}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#116c4a] to-[#1b724f] text-white text-[12px] font-bold hover:from-[#0d593c] hover:to-[#166042] shadow-xs transition-all cursor-pointer disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-[16px]">rocket_launch</span>
+                <span>{isDemoLoading ? 'Loading...' : 'Explore Demo'}</span>
+              </button>
               <button
                 type="button"
                 onClick={() => onOpenAuthModal(false)}
@@ -272,11 +312,10 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
               <button
                 key={item.path}
                 onClick={() => handleNavClick(item.path)}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-semibold text-left ${
-                  currentPath === item.path
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-semibold text-left ${currentPath === item.path
                     ? 'bg-[#1b4332] text-white'
                     : 'bg-[#f0f3ff] text-[#111c2d]'
-                }`}
+                  }`}
               >
                 <span>{item.label}</span>
                 {item.path === 'reminders' && todayReminders.length > 0 && (
@@ -288,37 +327,62 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
             ))}
           </div>
 
-          <div className="pt-2 border-t border-[#f0f3ff]">
+          <div className="pt-2 border-t border-[#f0f3ff] space-y-2">
             {currentFarmer ? (
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  logoutFarmer();
-                }}
-                className="w-full py-2.5 rounded-xl bg-[#ffdad6]/60 text-[#ba1a1a] text-[13px] font-bold text-center cursor-pointer"
-              >
-                Sign Out ({currentFarmer.firstName})
-              </button>
+              <>
+                {currentFarmer.isDemo && (
+                  <button
+                    onClick={async () => {
+                      setIsMobileMenuOpen(false);
+                      await resetDemoData();
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-[#e8f5e9] text-[#116c4a] text-[13px] font-bold text-center cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+                    <span>Reset Sample Data</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    logoutFarmer();
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-[#ffdad6]/60 text-[#ba1a1a] text-[13px] font-bold text-center cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-[16px]">logout</span>
+                  <span>{currentFarmer.isDemo ? 'Exit Demo Account' : `Sign Out (${currentFarmer.firstName})`}</span>
+                </button>
+              </>
             ) : (
-              <div className="flex gap-2">
+              <div className="space-y-2">
                 <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    onOpenAuthModal(false);
-                  }}
-                  className="flex-1 py-2.5 rounded-xl bg-[#012d1d] text-white text-[13px] font-bold text-center cursor-pointer"
+                  onClick={handleExploreDemo}
+                  disabled={isDemoLoading}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#116c4a] to-[#1b724f] text-white text-[13px] font-bold text-center cursor-pointer flex items-center justify-center gap-2 shadow-xs disabled:opacity-50"
                 >
-                  Farmer Sign In
+                  <span className="material-symbols-outlined text-[18px]">rocket_launch</span>
+                  <span>{isDemoLoading ? 'Entering Demo...' : 'Explore Demo Account (1-Click)'}</span>
                 </button>
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    onOpenAuthModal(true);
-                  }}
-                  className="flex-1 py-2.5 rounded-xl bg-[#e7eeff] text-[#012d1d] text-[13px] font-bold text-center cursor-pointer"
-                >
-                  Register Farm
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onOpenAuthModal(false);
+                    }}
+                    className="flex-1 py-2.5 rounded-xl bg-[#012d1d] text-white text-[13px] font-bold text-center cursor-pointer"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onOpenAuthModal(true);
+                    }}
+                    className="flex-1 py-2.5 rounded-xl bg-[#e7eeff] text-[#012d1d] text-[13px] font-bold text-center cursor-pointer"
+                  >
+                    Register Farm
+                  </button>
+                </div>
               </div>
             )}
           </div>

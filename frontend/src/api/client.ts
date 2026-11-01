@@ -3,13 +3,6 @@
 const rawBase = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 const API_BASE = rawBase.endsWith('/') ? rawBase.slice(0, -1) : rawBase;
 
-export const getOAuth2GoogleUrl = (): string => {
-  if (API_BASE.startsWith('http')) {
-    return API_BASE.replace(/\/api\/v1\/?$/, '') + '/oauth2/authorization/google';
-  }
-  return '/oauth2/authorization/google';
-};
-
 let cachedCsrfToken: string | null = null;
 
 function getCookie(name: string): string | null {
@@ -100,6 +93,8 @@ export const api = {
     csrf: () => api.get('/auth/csrf'),
     me: () => api.get('/auth/me'),
     login: (credentials: { email: string; password: string }) => api.post('/auth/login', credentials),
+    demo: () => api.post('/auth/demo'),
+    resetDemo: () => api.post('/auth/demo/reset'),
     registerFarmer: (data: any) => api.post('/auth/register', data),
     registerBuyer: (data: any) => api.post('/auth/register-buyer', data),
     logout: () => api.post('/auth/logout'),

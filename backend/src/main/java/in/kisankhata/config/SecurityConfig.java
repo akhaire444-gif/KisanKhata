@@ -25,11 +25,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(
-        HttpSecurity http,
-        OAuth2SuccessHandler oauth2SuccessHandler,
-        Environment env
-    ) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
@@ -37,6 +33,8 @@ public class SecurityConfig {
                     "/api/v1/auth/register",
                     "/api/v1/auth/register-buyer",
                     "/api/v1/auth/login",
+                    "/api/v1/auth/demo",
+                    "/api/v1/auth/demo/reset",
                     "/api/v1/auth/logout",
                     "/actuator/health",
                     "/actuator/health/**"
@@ -61,12 +59,12 @@ public class SecurityConfig {
                     "/api/v1/auth/register",
                     "/api/v1/auth/register-buyer",
                     "/api/v1/auth/login",
+                    "/api/v1/auth/demo",
+                    "/api/v1/auth/demo/reset",
                     "/api/v1/auth/csrf",
                     "/actuator/health",
                     "/actuator/health/**",
-                    "/api/v1/files/**",
-                    "/oauth2/**",
-                    "/login/oauth2/**"
+                    "/api/v1/files/**"
                 ).permitAll()
 
                 // Public marketplace browsing
@@ -79,25 +77,6 @@ public class SecurityConfig {
 
                 // Everything else requires authentication
                 .anyRequest().authenticated()
-            )
-            .oauth2Login(oauth -> oauth
-                .successHandler(oauth2SuccessHandler)
-                .failureHandler((req, res, ex) -> {
-                    String redirect = env.getProperty("app.cors.allowed-origin");
-                    String serverName = req.getServerName();
-                    if (serverName != null && !serverName.equalsIgnoreCase("localhost") && !serverName.equals("127.0.0.1")) {
-                        if (redirect == null || redirect.contains("localhost") || redirect.contains("127.0.0.1")) {
-                            redirect = "https://kisan-khata-x1dp.vercel.app";
-                        }
-                    }
-                    if (redirect == null || redirect.isBlank()) {
-                        redirect = "http://localhost:3000";
-                    }
-                    if (redirect.endsWith("/")) {
-                        redirect = redirect.substring(0, redirect.length() - 1);
-                    }
-                    res.sendRedirect(redirect + "/?auth=error&message=oauth_failed");
-                })
             )
             .formLogin(f -> f.disable())
             .httpBasic(b -> b.disable())

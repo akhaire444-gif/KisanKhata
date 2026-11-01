@@ -19,6 +19,7 @@ export const FarmerDashboard: React.FC = () => {
     setCurrentPath,
     currentFarmer,
     logoutFarmer,
+    resetDemoData,
     crops,
     addCrop,
     updateCrop,
@@ -157,12 +158,64 @@ export const FarmerDashboard: React.FC = () => {
 
   return (
     <div className="w-full min-h-[calc(100vh-80px)] bg-[#f9f9ff] py-6 px-4 lg:px-8 max-w-7xl mx-auto">
+      {/* Professional Demo Account Notice Banner */}
+      {currentFarmer?.isDemo && (
+        <div className="mb-6 rounded-3xl bg-gradient-to-r from-amber-50 via-emerald-50/70 to-teal-50 border-2 border-emerald-600/30 p-5 shadow-sm">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <span className="material-symbols-outlined text-[24px]">verified</span>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-700 text-white font-extrabold text-[11px] tracking-wider uppercase shadow-2xs">
+                    DEMO ACCOUNT
+                  </span>
+                  <span className="text-xs font-semibold text-emerald-900">
+                    Live Isolated Tenant • Nashik, Maharashtra • Currency: INR (₹)
+                  </span>
+                </div>
+                <p className="text-[13px] text-[#2c3e35] leading-relaxed max-w-3xl">
+                  You are exploring <strong>{currentFarmer.farmName}</strong>. This demo interacts with the real backend and database. All additions, edits, wage computations, and reports run through actual APIs.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-stretch md:self-auto shrink-0">
+              <button
+                type="button"
+                onClick={async () => {
+                  await resetDemoData();
+                }}
+                className="flex-1 md:flex-initial px-3.5 py-2 rounded-xl bg-white text-[#116c4a] hover:bg-emerald-100/60 border border-emerald-300 font-bold text-[12px] flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+                title="Restore fresh preconfigured crops, workers, and expenses"
+              >
+                <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+                <span>Reset Sample Data</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={logoutFarmer}
+                className="flex-1 md:flex-initial px-3.5 py-2 rounded-xl bg-[#012d1d] text-white hover:bg-[#1b4332] font-bold text-[12px] flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+                title="Return to login page to sign in or register your own farm"
+              >
+                <span className="material-symbols-outlined text-[16px]">logout</span>
+                <span>Exit Demo</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Header Bar for Farmer */}
       <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#e7eeff] mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-3 py-1 rounded-full bg-[#a1f4c8] text-[#1b724f] font-bold text-[12px]">
-              Tenant: {currentFarmer?.tenantId || 'Farm Ledger'}
+            <span className={`px-3 py-1 rounded-full font-bold text-[12px] ${
+              currentFarmer?.isDemo ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-[#a1f4c8] text-[#1b724f]'
+            }`}>
+              {currentFarmer?.isDemo ? 'DEMO ACCOUNT' : `Tenant: ${currentFarmer?.tenantId || 'Farm Ledger'}`}
             </span>
             <span className="text-[12px] text-[#414844] font-medium">{todayFormatted}</span>
           </div>
@@ -190,7 +243,7 @@ export const FarmerDashboard: React.FC = () => {
             className="px-4 py-2.5 rounded-xl bg-[#ffdad6]/60 text-[#ba1a1a] hover:bg-[#ffdad6] font-bold text-[13px] flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
-            <span>Log Out</span>
+            <span>{currentFarmer?.isDemo ? 'Exit Demo' : 'Log Out'}</span>
           </button>
         </div>
       </div>

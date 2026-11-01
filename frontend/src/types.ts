@@ -23,6 +23,7 @@ export interface Farmer {
   totalAcres: number;
   status: 'Active' | 'Disabled';
   createdAt: string;
+  isDemo?: boolean;
 }
 
 export interface Crop {

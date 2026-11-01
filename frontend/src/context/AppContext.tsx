@@ -23,6 +23,8 @@ interface AppContextType {
   currentFarmer: Farmer | null;
   isAuthChecking: boolean;
   loginFarmer: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  loginDemo: () => Promise<{ success: boolean; error?: string }>;
+  resetDemoData: () => Promise<{ success: boolean; error?: string }>;
   registerFarmer: (data: Omit<Farmer, 'id' | 'createdAt' | 'status' | 'tenantId'> & { password?: string }) => Promise<{ success: boolean; error?: string }>;
   logoutFarmer: () => Promise<void>;
 
@@ -110,20 +112,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 3500);
   };
 
-  const mapUserToFarmer = (u: any): Farmer => ({
-    id: u.id,
-    firstName: u.firstName,
-    lastName: u.lastName,
-    mobile: u.mobile,
-    email: u.email,
-    address: u.address || '',
-    farmName: u.farmName || `${u.firstName} Krishi Farm`,
-    state: u.state || 'Maharashtra',
-    tenantId: `Farm-${(u.state || 'MH').substring(0, 2).toUpperCase()}-${u.id.substring(0, 4)}`,
-    totalAcres: 10,
-    status: 'Active',
-    createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
-  });
+  const mapUserToFarmer = (u: any): Farmer => {
+    const isDemo = Boolean(u.isDemo ?? (u.email?.toLowerCase() === 'demo.farmer@kisankhata.in'));
+    return {
+      id: u.id,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      mobile: u.mobile,
+      email: u.email,
+      address: u.address || (isDemo ? 'Sinnar, Nashik' : ''),
+      farmName: u.farmName || (isDemo ? 'Green Valley Demonstration Farm' : `${u.firstName} Krishi Farm`),
+      state: u.state || 'Maharashtra',
+      tenantId: isDemo ? 'DEMO-MH-TENANT' : `Farm-${(u.state || 'MH').substring(0, 2).toUpperCase()}-${u.id.substring(0, 4)}`,
+      totalAcres: isDemo ? 25 : 10,
+      status: 'Active',
+      isDemo,
+      createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
+    };
+  };
 
   // Fetch real data for authenticated farmer from backend
   const loadFarmerData = useCallback(async () => {
@@ -267,7 +273,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const todayStr = new Date().toISOString().split('T')[0];
   const todayReminders = reminders.filter(r => !r.isDone && (r.date === todayStr || toDisplayDate(r.date) === toDisplayDate(todayStr)));
 
-  // Farmer Login: Strict backend authentication. Never fallback to demo!
+  // Farmer Login: Strict backend authentication.
   const loginFarmer = async (email: string, pass: string) => {
     try {
       const res = await api.auth.login({ email, password: pass });
@@ -282,6 +288,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, error: res?.message || 'Login failed' };
     } catch (err: any) {
       const msg = err.response?.message || err.message || 'Invalid email or password';
+      return { success: false, error: msg };
+    }
+  };
+
+  // One-Click Demo Login: Real backend session & isolated database tenant
+  const loginDemo = async () => {
+    try {
+      const res = await api.auth.demo();
+      if (res && res.success && res.data) {
+        const demoFarmer = mapUserToFarmer(res.data);
+        setCurrentFarmer(demoFarmer);
+        setCurrentRole('farmer');
+        setCurrentPath('dashboard');
+        showToast('Entered Demo Account: Green Valley Demonstration Farm', 'success');
+        await loadFarmerData();
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Demo login failed' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Demo access failed';
+      return { success: false, error: msg };
+    }
+  };
+
+  // Reset Demo Data: Restore clean agricultural sample data in demo tenant
+  const resetDemoData = async () => {
+    try {
+      const res = await api.auth.resetDemo();
+      if (res && res.success && res.data) {
+        const demoFarmer = mapUserToFarmer(res.data);
+        setCurrentFarmer(demoFarmer);
+        showToast('Sample agricultural data reset to original baseline.', 'info');
+        await loadFarmerData();
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Reset failed' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Reset failed';
       return { success: false, error: msg };
     }
   };
@@ -815,6 +859,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentFarmer,
         isAuthChecking,
         loginFarmer,
+        loginDemo,
+        resetDemoData,
         registerFarmer,
         logoutFarmer,
         crops,
@@ -843,7 +889,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toastMessage,
         showToast,
         backendStatus,
-        refreshData: checkSession
+        refreshData: async () => {
+          await checkSession();
+        }
       }}
     >
       {children}
