@@ -87,6 +87,12 @@ function toDisplayDate(isoOrDate: string): string {
   return isoOrDate;
 }
 
+// Helper to inspect if an error originated from an actual HTTP response (e.g. 401, 403, 500) vs network/CORS/abort failure
+function hasHttpStatus(err: any): boolean {
+  const status = typeof err?.status === 'number' ? err.status : (typeof err?.response?.status === 'number' ? err.response.status : null);
+  return typeof status === 'number' && status > 0;
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Navigation
   const [currentPath, setCurrentPath] = useState<NavigationPath>('home');
@@ -123,6 +129,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setWaterRecords([]);
     setFertilizerRecords([]);
     setReminders([]);
+  }, []);
+
+  const updateBackendStatusOnError = useCallback((err: any) => {
+    if (hasHttpStatus(err)) {
+      setBackendStatus('connected');
+    } else {
+      setBackendStatus('offline');
+    }
   }, []);
 
   const mapUserToFarmer = (u: any): Farmer => {
@@ -162,6 +176,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         api.farmer.getInputRecords(),
         api.farmer.getReminders()
       ]);
+
+      const settledResults = [cropsRes, expRes, wrkRes, waterRes, inputRes, remRes];
+      const fulfillments = settledResults.filter(r => r.status === 'fulfilled');
+      const rejections = settledResults.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+
+      if (fulfillments.length > 0) {
+        setBackendStatus('connected');
+      } else if (rejections.length > 0) {
+        if (rejections.some(r => hasHttpStatus(r.reason))) {
+          setBackendStatus('connected');
+        } else {
+          setBackendStatus('offline');
+        }
+      }
 
       if (cropsRes.status === 'fulfilled' && cropsRes.value?.success && Array.isArray(cropsRes.value.data)) {
         const loadedCrops: Crop[] = cropsRes.value.data.map((c: any) => ({
@@ -252,21 +280,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }));
         setReminders(loadedReminders);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load farmer data:', err);
+      updateBackendStatusOnError(err);
     }
-  }, []);
+  }, [updateBackendStatusOnError]);
 
   // Session Check (Verifies real session with backend)
   const checkSession = useCallback(async (): Promise<boolean> => {
     setIsAuthChecking(true);
+    let csrfSucceeded = false;
     try {
       const csrfRes = await api.auth.csrf();
       if (csrfRes && (csrfRes as any).success !== false) {
+        csrfSucceeded = true;
         setBackendStatus('connected');
       } else {
-        setBackendStatus('offline');
+        const csrfErr = (csrfRes as any)?.error;
+        if (hasHttpStatus(csrfErr)) {
+          csrfSucceeded = true;
+          setBackendStatus('connected');
+        } else {
+          setBackendStatus('offline');
+        }
       }
+
       const res = await api.auth.me();
       if (res && res.success && res.data) {
         const farmer = mapUserToFarmer(res.data);
@@ -281,8 +319,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         clearUserData();
         return false;
       }
-    } catch {
-      setBackendStatus('offline');
+    } catch (err: any) {
+      if (hasHttpStatus(err) || csrfSucceeded) {
+        setBackendStatus('connected');
+      } else {
+        setBackendStatus('offline');
+      }
       setCurrentFarmer(null);
       setCurrentRole('visitor');
       clearUserData();
@@ -353,6 +395,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Login failed' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Invalid email or password';
       return { success: false, error: msg };
     }
@@ -375,6 +418,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const res = await api.auth.registerFarmer(payload);
       if (res && res.success) {
+        setBackendStatus('connected');
         const loginRes = await api.auth.login({ email: payload.email, password: payload.password });
         if (loginRes && loginRes.success && loginRes.data) {
           const liveFarmer = mapUserToFarmer(loginRes.data);
@@ -388,6 +432,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Registration failed' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Registration failed';
       return { success: false, error: msg };
     }
@@ -398,6 +443,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await api.auth.updateProfile(data);
       if (res && res.success && res.data) {
+        setBackendStatus('connected');
         const updated = mapUserToFarmer(res.data);
         setCurrentFarmer(updated);
         setIsProfileModalOpen(false);
@@ -406,6 +452,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Failed to update profile' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to update profile';
       return { success: false, error: msg };
     }
@@ -415,8 +462,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const logoutFarmer = async () => {
     try {
       await api.auth.logout();
-    } catch (e) {
+      setBackendStatus('connected');
+    } catch (e: any) {
       console.warn('Logout API error:', e);
+      updateBackendStatusOnError(e);
     } finally {
       setCurrentFarmer(null);
       setCurrentRole('visitor');
@@ -460,6 +509,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Failed to save crop' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to add crop';
       return { success: false, error: msg };
     }
@@ -490,6 +540,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Update failed' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to update crop';
       return { success: false, error: msg };
     }
@@ -507,6 +558,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Delete failed' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Cannot delete crop';
       return { success: false, error: msg };
     }
@@ -547,6 +599,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Failed to record expense' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to record expense';
       return { success: false, error: msg };
     }
@@ -577,6 +630,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Update failed' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to update expense';
       return { success: false, error: msg };
     }
@@ -594,6 +648,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Delete failed' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to delete expense';
       return { success: false, error: msg };
     }
@@ -629,6 +684,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Failed to add worker' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to add worker';
       return { success: false, error: msg };
     }
@@ -671,6 +727,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Update failed' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to update worker';
       return { success: false, error: msg };
     }
@@ -688,6 +745,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Delete failed' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to delete worker';
       return { success: false, error: msg };
     }
@@ -729,6 +787,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Failed to save water record' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to save water record';
       return { success: false, error: msg };
     }
@@ -746,6 +805,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Delete failed' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to delete record';
       return { success: false, error: msg };
     }
@@ -787,6 +847,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Failed to save record' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to save record';
       return { success: false, error: msg };
     }
@@ -804,6 +865,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Delete failed' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to delete record';
       return { success: false, error: msg };
     }
@@ -839,6 +901,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Failed to schedule reminder' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to schedule reminder';
       return { success: false, error: msg };
     }
@@ -856,6 +919,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Delete failed' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to delete reminder';
       return { success: false, error: msg };
     }
@@ -873,6 +937,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Toggle failed' };
     } catch (err: any) {
+      updateBackendStatusOnError(err);
       const msg = err.response?.message || err.message || 'Failed to update reminder';
       return { success: false, error: msg };
     }
