@@ -23,9 +23,34 @@ export const API_BASE = resolveApiBase();
 
 let cachedCsrfToken: string | null = null;
 
-function getCookie(name: string): string | null {
+export function getCookie(name: string): string | null {
   const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
   return match ? decodeURIComponent(match[3]) : null;
+}
+
+export function getCsrfToken(): string | null {
+  return cachedCsrfToken || getCookie('XSRF-TOKEN');
+}
+
+export function setCachedCsrfToken(token: string | null): void {
+  cachedCsrfToken = token;
+}
+
+export async function refreshCsrfToken(): Promise<string | null> {
+  try {
+    const res = await api.auth.csrf();
+    if (res && (res as any).token) {
+      cachedCsrfToken = (res as any).token;
+      return cachedCsrfToken;
+    }
+  } catch {
+    // ignore
+  }
+  const cookie = getCookie('XSRF-TOKEN');
+  if (cookie) {
+    cachedCsrfToken = cookie;
+  }
+  return cachedCsrfToken;
 }
 
 export interface ApiResponse<T = any> {
@@ -39,7 +64,8 @@ export interface ApiResponse<T = any> {
 
 export async function apiRequest<T = any>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  isRetry: boolean = false
 ): Promise<ApiResponse<T>> {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const url = `${API_BASE}${cleanEndpoint}`;
@@ -51,8 +77,12 @@ export async function apiRequest<T = any>(
 
   // Auto-inject CSRF token for state-mutating HTTP methods
   const method = (options.method || 'GET').toUpperCase();
-  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
-    const xsrf = getCookie('XSRF-TOKEN') || cachedCsrfToken;
+  const isMutating = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+  if (isMutating && cleanEndpoint !== '/auth/csrf') {
+    if (!cachedCsrfToken) {
+      await refreshCsrfToken();
+    }
+    const xsrf = cachedCsrfToken || getCookie('XSRF-TOKEN');
     if (xsrf) {
       headers.set('X-XSRF-TOKEN', xsrf);
     }
@@ -80,6 +110,22 @@ export async function apiRequest<T = any>(
     body = await response.json();
   } catch {
     body = { success: response.ok, message: response.statusText };
+  }
+
+  // After a 403 with message "Access denied", fetch a fresh /auth/csrf once and retry the request one time
+  if (response.status === 403 && !isRetry) {
+    const isAccessDenied = body?.message === 'Access denied' || body?.code === 'FORBIDDEN';
+    if (isAccessDenied) {
+      const freshToken = await refreshCsrfToken();
+      const retryHeaders = new Headers(options.headers || {});
+      if (!retryHeaders.has('Content-Type') && !(options.body instanceof FormData)) {
+        retryHeaders.set('Content-Type', 'application/json');
+      }
+      if (freshToken) {
+        retryHeaders.set('X-XSRF-TOKEN', freshToken);
+      }
+      return apiRequest<T>(endpoint, { ...options, headers: retryHeaders }, true);
+    }
   }
 
   if (!response.ok) {
@@ -117,11 +163,26 @@ export const api = {
   auth: {
     csrf: async () => {
       try {
-        const res = await api.get('/auth/csrf');
-        if (res && (res as any).token) {
-          cachedCsrfToken = (res as any).token;
+        const res = await fetch(`${API_BASE}/auth/csrf`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+        let body: any = null;
+        try {
+          body = await res.json();
+        } catch {
+          body = { success: res.ok };
         }
-        return res;
+        if (body && body.token) {
+          cachedCsrfToken = body.token;
+        }
+        if (!res.ok) {
+          const err = new Error(body?.message || `CSRF check failed (${res.status})`) as Error & { status?: number; response?: any };
+          err.status = res.status;
+          err.response = body;
+          return { success: false, error: err };
+        }
+        return body;
       } catch (err) {
         return { success: false, error: err };
       }

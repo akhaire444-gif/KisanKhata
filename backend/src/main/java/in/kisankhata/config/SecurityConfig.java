@@ -24,6 +24,12 @@ public class SecurityConfig {
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final OAuth2FailureHandler oAuth2FailureHandler;
 
+    @org.springframework.beans.factory.annotation.Value("${SESSION_COOKIE_SAMESITE:${server.servlet.session.cookie.same-site:lax}}")
+    private String sameSiteProp;
+
+    @org.springframework.beans.factory.annotation.Value("${SESSION_COOKIE_SECURE:${server.servlet.session.cookie.secure:false}}")
+    private boolean secureProp;
+
     public SecurityConfig(OAuth2SuccessHandler oAuth2SuccessHandler, OAuth2FailureHandler oAuth2FailureHandler) {
         this.oAuth2SuccessHandler = oAuth2SuccessHandler;
         this.oAuth2FailureHandler = oAuth2FailureHandler;
@@ -36,9 +42,14 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        CookieCsrfTokenRepository repo = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        String sameSite = "none".equalsIgnoreCase(sameSiteProp) ? "None" : ("lax".equalsIgnoreCase(sameSiteProp) ? "Lax" : sameSiteProp);
+        boolean secure = secureProp || "None".equalsIgnoreCase(sameSite);
+        repo.setCookieCustomizer(c -> c.sameSite(sameSite).secure(secure).path("/"));
+
         http
             .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .csrfTokenRepository(repo)
                 .ignoringRequestMatchers(
                     "/api/v1/auth/register",
                     "/api/v1/auth/login",

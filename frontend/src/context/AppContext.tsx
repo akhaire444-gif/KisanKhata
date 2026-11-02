@@ -349,6 +349,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         if (authStatus === 'success') {
           showToast('Google sign-in successful! Welcome to KisanKhata.', 'success');
+          await api.auth.csrf();
           const authenticated = await checkSession();
           if (authenticated && profileIncomplete) {
             setIsProfileModalOpen(true);
@@ -385,6 +386,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       clearUserData();
       const res = await api.auth.login({ email, password: pass });
       if (res && res.success && res.data) {
+        await api.auth.csrf();
         setBackendStatus('connected');
         const liveFarmer = mapUserToFarmer(res.data);
         setCurrentFarmer(liveFarmer);
@@ -421,6 +423,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setBackendStatus('connected');
         const loginRes = await api.auth.login({ email: payload.email, password: payload.password });
         if (loginRes && loginRes.success && loginRes.data) {
+          await api.auth.csrf();
           const liveFarmer = mapUserToFarmer(loginRes.data);
           setCurrentFarmer(liveFarmer);
           setCurrentRole('farmer');
@@ -462,6 +465,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const logoutFarmer = async () => {
     try {
       await api.auth.logout();
+      await api.auth.csrf();
       setBackendStatus('connected');
     } catch (e: any) {
       console.warn('Logout API error:', e);
