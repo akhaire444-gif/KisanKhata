@@ -23,6 +23,9 @@ public class OAuth2ClientConfig {
     @Value("${spring.security.oauth2.client.registration.google.client-secret:}")
     private String googleClientSecret;
 
+    @Value("${spring.security.oauth2.client.registration.google.redirect-uri:{baseUrl}/login/oauth2/code/google}")
+    private String googleRedirectUri;
+
     public boolean isGoogleConfigured() {
         return googleClientId != null && !googleClientId.trim().isBlank()
             && googleClientSecret != null && !googleClientSecret.trim().isBlank();
@@ -30,14 +33,19 @@ public class OAuth2ClientConfig {
 
     @Bean
     public ClientRegistrationRepository clientRegistrationRepository() {
+        String redirectUri = (googleRedirectUri != null && !googleRedirectUri.trim().isBlank())
+            ? googleRedirectUri.trim()
+            : "{baseUrl}/login/oauth2/code/google";
+
         if (isGoogleConfigured()) {
-            log.info("Google OAuth2 client configured with Client ID: {}...",
-                googleClientId.substring(0, Math.min(12, googleClientId.length())));
+            log.info("Google OAuth2 client configured with Client ID: {}... and redirect URI: {}",
+                googleClientId.substring(0, Math.min(12, googleClientId.length())),
+                redirectUri);
             ClientRegistration googleRegistration = CommonOAuth2Provider.GOOGLE.getBuilder("google")
                 .clientId(googleClientId.trim())
                 .clientSecret(googleClientSecret.trim())
                 .scope("openid", "profile", "email")
-                .redirectUri("{baseUrl}/login/oauth2/code/google")
+                .redirectUri(redirectUri)
                 .build();
             return new InMemoryClientRegistrationRepository(googleRegistration);
         }
@@ -48,7 +56,7 @@ public class OAuth2ClientConfig {
             .clientSecret("placeholder-google-client-secret")
             .clientName("Google")
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-            .redirectUri("{baseUrl}/login/oauth2/code/google")
+            .redirectUri(redirectUri)
             .authorizationUri("https://accounts.google.com/o/oauth2/v2/auth")
             .tokenUri("https://oauth2.googleapis.com/token")
             .userInfoUri("https://openidconnect.googleapis.com/v1/userinfo")

@@ -25,6 +25,8 @@
 | `FRONTEND_ORIGIN` | `https://kisan-khata-x1dp.vercel.app` | Allowed CORS frontend origin |
 | `GOOGLE_CLIENT_ID` | `...apps.googleusercontent.com` | Google OAuth2 Web Client ID |
 | `GOOGLE_CLIENT_SECRET` | `GOCSPX-...` | Google OAuth2 Web Client Secret |
+| `GOOGLE_REDIRECT_URI` | `https://kisankhata-1.onrender.com/login/oauth2/code/google` | Explicit OAuth redirect URI (fixes `redirect_uri_mismatch` on Render; defaults to `{baseUrl}/login/oauth2/code/google`) |
+| `FORWARD_HEADERS_STRATEGY` | `native` | Proxy header strategy (`native` enables Tomcat's RemoteIpValve for `X-Forwarded-Proto`) |
 | `BOOTSTRAP_ADMIN_EMAIL` | `admin@kisankhata.in` | Initial admin account email (seeded on first boot) |
 | `BOOTSTRAP_ADMIN_PASSWORD` | *(min 12 characters)* | Initial admin account password |
 | `SESSION_COOKIE_SAMESITE` | `none` | Cross-site cookie attribute for Vercel <-> Render integration |
@@ -73,6 +75,8 @@ Kisan Khata provides authenticated multi-tenant isolation:
      java -jar target/kisankhata-backend-0.1.0.jar
      ```
 3. Set the required backend environment variables.
+   - Set `GOOGLE_REDIRECT_URI=https://<your-render-app>.onrender.com/login/oauth2/code/google` (guarantees HTTPS redirect URI behind Render's reverse proxy and avoids `redirect_uri_mismatch`).
+   - `FORWARD_HEADERS_STRATEGY=native` is used by default to enable Tomcat's `RemoteIpValve` for `X-Forwarded-Proto`.
 4. Add the backend redirect URI in Google Cloud Console:
    `https://<your-render-app>.onrender.com/login/oauth2/code/google`
 

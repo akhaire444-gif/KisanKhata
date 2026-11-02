@@ -59,6 +59,8 @@ Set the following variables on your backend host (Render, Railway, Docker, or lo
 | :--- | :--- | :--- |
 | `GOOGLE_CLIENT_ID` | `your-client-id.apps.googleusercontent.com` | `your-client-id.apps.googleusercontent.com` |
 | `GOOGLE_CLIENT_SECRET` | `GOCSPX-your-client-secret` | `GOCSPX-your-client-secret` |
+| `GOOGLE_REDIRECT_URI` | *(optional, defaults to `{baseUrl}...`)* | `https://kisankhata-1.onrender.com/login/oauth2/code/google` |
+| `FORWARD_HEADERS_STRATEGY` | `native` | `native` |
 | `FRONTEND_ORIGIN` | `http://localhost:3000` | `https://kisan-khata-x1dp.vercel.app` |
 | `SESSION_COOKIE_SAMESITE` | `lax` | `none` |
 | `SESSION_COOKIE_SECURE` | `false` | `true` |
@@ -104,7 +106,10 @@ When the frontend is deployed on Vercel (`https://kisan-khata-x1dp.vercel.app`) 
 1. **Third-Party Cookies:** Browsers treat cross-domain cookies as third-party. The backend must send `SameSite=None; Secure`.
    - Set `SESSION_COOKIE_SAMESITE=none`
    - Set `SESSION_COOKIE_SECURE=true`
-2. **Reverse Proxy Headers:** Render and Cloud Run terminate TLS at their edge proxy. Spring Boot has `server.forward-headers-strategy: framework` enabled in `application.yml`, ensuring that `X-Forwarded-Proto: https` is respected so the Google OAuth redirect URI is generated with `https://`.
+2. **Reverse Proxy Headers & Explicit Redirect URI (Fix for `redirect_uri_mismatch`):**
+   Render terminates TLS at its edge proxy and forwards plain HTTP traffic to the backend container on `$PORT`. If dynamic scheme resolution defaults to `http://`, Google will reject authentication with `redirect_uri_mismatch`.
+   - **Explicit Redirect URI:** Set `GOOGLE_REDIRECT_URI=https://<your-render-app>.onrender.com/login/oauth2/code/google` on Render. This forces Spring Security to provide the exact HTTPS redirect URI regardless of reverse proxy layer behaviour.
+   - **Native Header Strategy:** In `application.yml`, `server.forward-headers-strategy` is configured to `native` along with Tomcat `RemoteIpValve` (`protocol-header: X-Forwarded-Proto`, `internal-proxies: .*`) so standard forwarded headers are automatically respected.
 3. **CORS:** Ensure `FRONTEND_ORIGIN` matches the exact frontend origin (without trailing slash).
 
 ---

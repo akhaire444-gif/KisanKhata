@@ -1,6 +1,11 @@
 server:
   port: ${PORT:8080}
-  forward-headers-strategy: framework
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:native}
+  tomcat:
+    remoteip:
+      remote-ip-header: X-Forwarded-For
+      protocol-header: X-Forwarded-Proto
+      internal-proxies: ${TOMCAT_INTERNAL_PROXIES:.*}
   servlet:
     session:
       cookie:
@@ -41,7 +46,7 @@ spring:
             client-id: ${GOOGLE_CLIENT_ID:}
             client-secret: ${GOOGLE_CLIENT_SECRET:}
             scope: openid,profile,email
-            redirect-uri: "{baseUrl}/login/oauth2/code/google"
+            redirect-uri: ${GOOGLE_REDIRECT_URI:{baseUrl}/login/oauth2/code/google}
 management:
   endpoints:
     web:
