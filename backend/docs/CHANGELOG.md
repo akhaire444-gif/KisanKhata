@@ -2,6 +2,20 @@
 
 All notable changes to the KisanKhata backend and documentation are tracked here.
 
+## [1.3.0] - 2026-11-02 (Farmer-Only Sign-Up & Render Proxy Redirect Fix)
+
+### Changed
+- **Farmer-Only Registration:**
+  - Removed buyer registration endpoint (`POST /api/v1/auth/register-buyer`) and `RegisterBuyerRequest` DTO.
+  - Removed "Account Type" toggle (Farmer vs Buyer) and buyer-only form fields in frontend `AuthModals.tsx`.
+  - Google OAuth sign-in flow now strictly provisions users as `ROLE_FARMER`.
+  - Updated frontend `api.auth.getGoogleAuthUrl()` to omit role parameter.
+  - Simplified `CompleteProfileModal` to focus exclusively on farm and contact details (mobile, farm name, location).
+- **OAuth 2.0 Behind Reverse Proxy (Render Fix):**
+  - Added configurable `GOOGLE_REDIRECT_URI` environment variable (defaults to `{baseUrl}/login/oauth2/code/google`).
+  - Switched `server.forward-headers-strategy` to `native` with Tomcat `RemoteIpValve` (`X-Forwarded-Proto`, `X-Forwarded-For`).
+  - Updated deployment instructions and Google Auth setup guides for Render.
+
 ## [1.2.0] - 2026-11-02 (Google OAuth 2.0 Integration & Complete Demo Removal)
 
 ### Added

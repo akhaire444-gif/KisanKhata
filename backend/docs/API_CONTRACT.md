@@ -35,9 +35,8 @@ Authentication: Server-managed Session Cookie (`JSESSIONID`) + CSRF Token (`X-XS
 
 | Method | Path | Auth | Roles | Description | Request Body | Response (Success) |
 |---|---|---|---|---|---|---|
-| `GET` | `/auth/google/start` | Public | None | Start Google OAuth2 Flow | Query: `role=FARMER\|BUYER` | `302 Found` (redirect to Google) |
+| `GET` | `/auth/google/start` | Public | None | Start Google OAuth2 Flow | None (defaults to `FARMER`) | `302 Found` (redirect to Google) |
 | `POST` | `/auth/register` | Public | None | Register Farmer | `{ firstName, lastName, email, mobile, password, farmName?, address?, state? }` | `201 Created` `{ success: true, data: UserView }` |
-| `POST` | `/auth/register-buyer`| Public | None | Register Buyer | `{ firstName, lastName, email, mobile, password, address, city, pinCode }` | `201 Created` `{ success: true, data: UserView }` |
 | `POST` | `/auth/login` | Public | None | Login User | `{ email, password }` | `200 OK` `{ success: true, data: UserView }` |
 | `PUT` | `/auth/profile` | Session | Any | Update Profile & Mobile | `{ mobile?, farmName?, address?, city?, pinCode?, state? }` | `200 OK` `{ success: true, data: UserView }` |
 | `GET` | `/auth/me` | Session | Any | Get Current Profile | None | `200 OK` `{ success: true, data: UserView }` |

@@ -22,7 +22,7 @@ export const HomePage: React.FC<{
   };
 
   const handleGoogleAuth = () => {
-    window.location.href = api.auth.getGoogleAuthUrl('FARMER');
+    window.location.href = api.auth.getGoogleAuthUrl();
   };
 
   return (

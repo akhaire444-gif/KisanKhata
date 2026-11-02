@@ -108,8 +108,8 @@ public class OAuth2GoogleAuthTest {
     }
 
     @Test
-    @DisplayName("New Google user can register as BUYER when requested in session")
-    void testGoogleSignUpNewBuyer() throws Exception {
+    @DisplayName("New Google user is always created as FARMER even if BUYER role was previously in session")
+    void testGoogleSignUpAlwaysFarmer() throws Exception {
         String email = "google.buyer." + System.currentTimeMillis() + "@gmail.com";
         Map<String, Object> attrs = new HashMap<>();
         attrs.put("sub", "buyer-sub-" + System.currentTimeMillis());
@@ -139,7 +139,7 @@ public class OAuth2GoogleAuthTest {
 
         AppUser created = userRepo.findByEmailIgnoreCase(email).orElse(null);
         assertThat(created).isNotNull();
-        assertThat(created.getRole()).isEqualTo(Role.BUYER);
+        assertThat(created.getRole()).isEqualTo(Role.FARMER);
     }
 
     @Test

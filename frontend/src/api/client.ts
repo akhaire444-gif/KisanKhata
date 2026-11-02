@@ -129,9 +129,8 @@ export const api = {
     me: () => api.get('/auth/me'),
     login: (credentials: { email: string; password: string }) => api.post('/auth/login', credentials),
     updateProfile: (data: any) => api.put('/auth/profile', data),
-    getGoogleAuthUrl: (role: 'FARMER' | 'BUYER' = 'FARMER') => `${API_BASE}/auth/google/start?role=${role}`,
+    getGoogleAuthUrl: () => `${API_BASE}/auth/google/start`,
     registerFarmer: (data: any) => api.post('/auth/register', data),
-    registerBuyer: (data: any) => api.post('/auth/register-buyer', data),
     logout: () => api.post('/auth/logout'),
   },
 

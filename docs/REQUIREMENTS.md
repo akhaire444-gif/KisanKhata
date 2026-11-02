@@ -46,7 +46,7 @@ Source: `KisanKhata_PRD.pdf` (v1.0) and Architecture Blueprint.
 | FR-RPT-03 | Reports | P0 | Worker wage report | Worker days, daily wage, calculated total | To implement in `ReportController` |
 | FR-RPT-04 | Reports | P1 | Print view | A4-optimized print stylesheet | Implemented in frontend |
 | FR-MART-01 | Mart | P0 | Browse catalogue | Active products with image, name, price, stock | To implement in `ProductController` |
-| FR-MART-02 | Mart | P0 | Buyer registration | First/last name, mobile, delivery address, email, pass | To implement in `AuthController` |
+| FR-MART-02 | Mart | P0 | Buyer registration | Deprecated/Removed; sign-up is strictly Farmer-only | Removed |
 | FR-MART-03 | Mart | P0 | Buyer login/logout | Session auth for buyer | Implemented via role-aware auth |
 | FR-MART-04 | Mart | P0 | Add to cart | Server-validated stock check; auto-increment qty | To implement in `CartController` |
 | FR-MART-05 | Mart | P0 | View / update cart | Update qty, remove item, line totals & grand total | To implement in `CartController` |

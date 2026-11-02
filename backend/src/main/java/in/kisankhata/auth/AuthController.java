@@ -71,17 +71,6 @@ public class AuthController {
         @Size(max = 100) String state
     ) {}
 
-    public record RegisterBuyerRequest(
-        @NotBlank @Size(max = 120) String firstName,
-        @NotBlank @Size(max = 120) String lastName,
-        @Email @NotBlank String email,
-        @Pattern(regexp = "^[0-9]{10}$") String mobile,
-        @NotBlank @Size(min = 6, max = 72) String password,
-        @NotBlank @Size(max = 300) String address,
-        @NotBlank @Size(max = 100) String city,
-        @NotBlank @Pattern(regexp = "^[0-9]{6}$") String pinCode
-    ) {}
-
     public record LoginRequest(
         @Email @NotBlank String email,
         @NotBlank String password
@@ -115,7 +104,6 @@ public class AuthController {
 
     @GetMapping("/google/start")
     public void startGoogleAuth(
-        @RequestParam(required = false, defaultValue = "FARMER") String role,
         HttpServletRequest request,
         HttpServletResponse response
     ) throws IOException {
@@ -124,8 +112,7 @@ public class AuthController {
             return;
         }
 
-        String safeRole = "BUYER".equalsIgnoreCase(role) ? "BUYER" : "FARMER";
-        request.getSession(true).setAttribute("oauth2_auth_role", safeRole);
+        request.getSession(true).setAttribute("oauth2_auth_role", "FARMER");
         response.sendRedirect("/oauth2/authorization/google");
     }
 
@@ -148,31 +135,6 @@ public class AuthController {
             blankDefault(r.farmName(), r.firstName() + " Krishi Farm"),
             blankDefault(r.address(), "Nashik Rural"),
             blankDefault(r.state(), "Maharashtra")
-        ));
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("success", true, "data", view(u)));
-    }
-
-    @PostMapping("/register-buyer")
-    public ResponseEntity<?> registerBuyer(@Valid @RequestBody RegisterBuyerRequest r) {
-        if (users.existsByEmailIgnoreCase(r.email())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                "success", false,
-                "code", "EMAIL_EXISTS",
-                "message", "An account with this email already exists"
-            ));
-        }
-        AppUser u = users.save(new AppUser(
-            r.firstName().trim(),
-            r.lastName().trim(),
-            r.email(),
-            r.mobile(),
-            encoder.encode(r.password()),
-            Role.BUYER,
-            null,
-            r.address().trim(),
-            r.city().trim(),
-            r.pinCode().trim(),
-            "Maharashtra"
         ));
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("success", true, "data", view(u)));
     }

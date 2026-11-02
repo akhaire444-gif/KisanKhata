@@ -20,7 +20,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   } = useApp();
 
   const [isRegister, setIsRegister] = useState(initialIsRegister);
-  const [selectedRole, setSelectedRole] = useState<'FARMER' | 'BUYER'>('FARMER');
 
   // Form Fields
   const [email, setEmail] = useState('');
@@ -30,8 +29,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [lastName, setLastName] = useState('');
   const [mobile, setMobile] = useState('');
   const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [pinCode, setPinCode] = useState('');
   const [farmName, setFarmName] = useState('');
   const [state, setState] = useState('Maharashtra');
 
@@ -39,8 +36,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleGoogleAuth = () => {
-    // Server-side Authorization Code Flow
-    const authUrl = api.auth.getGoogleAuthUrl(selectedRole);
+    // Server-side Authorization Code Flow (Farmer only)
+    const authUrl = api.auth.getGoogleAuthUrl();
     window.location.href = authUrl;
   };
 
@@ -69,67 +66,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       setIsSubmitting(true);
       try {
-        if (selectedRole === 'BUYER') {
-          if (!address.trim()) {
-            setError('Delivery address is required for buyers');
-            setIsSubmitting(false);
-            return;
-          }
-          if (!city.trim()) {
-            setError('City is required');
-            setIsSubmitting(false);
-            return;
-          }
-          if (pinCode.trim().length !== 6 || !/^\d{6}$/.test(pinCode.trim())) {
-            setError('Pin code must be a valid 6-digit number');
-            setIsSubmitting(false);
-            return;
-          }
+        // Farmer registration
+        const res = await registerFarmer({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          mobile: mobile.trim(),
+          email: email.trim().toLowerCase(),
+          address: address.trim() || 'Rural Maharashtra',
+          farmName: farmName.trim() || `${firstName.trim()} Krishi Farm`,
+          state,
+          totalAcres: 10,
+          password: password.trim()
+        } as any);
 
-          const buyerPayload = {
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
-            email: email.trim().toLowerCase(),
-            mobile: mobile.trim(),
-            password: password.trim(),
-            address: address.trim(),
-            city: city.trim(),
-            pinCode: pinCode.trim()
-          };
-
-          const regRes = await api.auth.registerBuyer(buyerPayload);
-          if (regRes && regRes.success) {
-            // Auto login
-            const loginRes = await loginFarmer(buyerPayload.email, buyerPayload.password);
-            if (loginRes.success) {
-              if (onSuccess) onSuccess();
-              onClose();
-              return;
-            }
-          }
-          setError(regRes?.message || 'Registration failed');
-        } else {
-          // Farmer registration
-          const res = await registerFarmer({
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
-            mobile: mobile.trim(),
-            email: email.trim().toLowerCase(),
-            address: address.trim() || 'Rural Maharashtra',
-            farmName: farmName.trim() || `${firstName.trim()} Krishi Farm`,
-            state,
-            totalAcres: 10,
-            password: password.trim()
-          } as any);
-
-          if (!res.success) {
-            setError(res.error || 'Registration failed');
-            return;
-          }
-
-          if (onSuccess) onSuccess();
-          onClose();
+        if (!res.success) {
+          setError(res.error || 'Registration failed');
+          return;
         }
+
+        if (onSuccess) onSuccess();
+        onClose();
       } catch (err: any) {
         setError(err.message || 'Registration failed');
       } finally {
@@ -165,10 +121,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200/60">
           <div>
             <h3 className="font-bold text-[22px] text-[#012d1d]">
-              {isRegister ? 'Create KisanKhata Account' : 'Sign In to KisanKhata'}
+              {isRegister ? 'Register Farm Account' : 'Sign In to KisanKhata'}
             </h3>
             <span className="text-[12px] text-[#414844]">
-              {isRegister ? 'Choose your account type and get started' : 'Access your farm ledger or marketplace account'}
+              {isRegister ? 'Create your digital farm ledger account' : 'Access your farm ledger and financial records'}
             </span>
           </div>
 
@@ -187,39 +143,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <span>{error}</span>
           </div>
         )}
-
-        {/* Role Segmented Selector */}
-        <div className="mb-4">
-          <label className="block text-[11px] font-bold text-[#414844] uppercase tracking-wider mb-1.5">
-            Account Type
-          </label>
-          <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100/80 rounded-2xl border border-slate-200/60">
-            <button
-              type="button"
-              onClick={() => setSelectedRole('FARMER')}
-              className={`py-2 px-3 rounded-xl font-bold text-[13px] flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                selectedRole === 'FARMER'
-                  ? 'bg-white text-[#012d1d] shadow-sm border border-slate-200/60'
-                  : 'text-[#414844] hover:text-[#012d1d]'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px] text-[#116c4a]">agriculture</span>
-              <span>Farmer (Khata)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedRole('BUYER')}
-              className={`py-2 px-3 rounded-xl font-bold text-[13px] flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                selectedRole === 'BUYER'
-                  ? 'bg-white text-[#012d1d] shadow-sm border border-slate-200/60'
-                  : 'text-[#414844] hover:text-[#012d1d]'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px] text-[#116c4a]">shopping_cart</span>
-              <span>Buyer (Mart)</span>
-            </button>
-          </div>
-        </div>
 
         {/* Google Sign-In Button */}
         <button
@@ -303,76 +226,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 />
               </div>
 
-              {selectedRole === 'FARMER' ? (
-                <>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[12px] font-bold text-[#012d1d] mb-1">Farm Name</label>
-                      <input
-                        type="text"
-                        value={farmName}
-                        onChange={e => setFarmName(e.target.value)}
-                        placeholder="Krishi Farm"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[12px] font-bold text-[#012d1d] mb-1">Village / Location</label>
-                      <input
-                        type="text"
-                        value={address}
-                        onChange={e => setAddress(e.target.value)}
-                        placeholder="e.g. Sinnar, Nashik"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-[12px] font-bold text-[#012d1d] mb-1">Delivery Address *</label>
-                    <input
-                      type="text"
-                      value={address}
-                      onChange={e => setAddress(e.target.value)}
-                      placeholder="Street, Building, Landmark"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
-                      required
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[12px] font-bold text-[#012d1d] mb-1">City *</label>
-                      <input
-                        type="text"
-                        value={city}
-                        onChange={e => setCity(e.target.value)}
-                        placeholder="e.g. Nashik"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
-                        required
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[12px] font-bold text-[#012d1d] mb-1">Pin Code *</label>
-                      <input
-                        type="text"
-                        maxLength={6}
-                        value={pinCode}
-                        onChange={e => setPinCode(e.target.value)}
-                        placeholder="422001"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
-                        required
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[12px] font-bold text-[#012d1d] mb-1">Farm Name</label>
+                  <input
+                    type="text"
+                    value={farmName}
+                    onChange={e => setFarmName(e.target.value)}
+                    placeholder="Krishi Farm"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-bold text-[#012d1d] mb-1">Village / Location</label>
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={e => setAddress(e.target.value)}
+                    placeholder="e.g. Sinnar, Nashik"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
             </>
           )}
 
@@ -475,13 +352,9 @@ export const CompleteProfileModal: React.FC<{
 }> = ({ isOpen, onClose }) => {
   const { currentFarmer, completeProfile } = useApp();
 
-  const isBuyer = currentFarmer?.role === 'BUYER';
-
   const [mobile, setMobile] = useState(currentFarmer?.mobile || '');
   const [farmName, setFarmName] = useState(currentFarmer?.farmName || '');
   const [address, setAddress] = useState(currentFarmer?.address || '');
-  const [city, setCity] = useState(currentFarmer?.city || '');
-  const [pinCode, setPinCode] = useState(currentFarmer?.pinCode || '');
   const [state, setState] = useState(currentFarmer?.state || 'Maharashtra');
 
   const [error, setError] = useState('');
@@ -499,29 +372,12 @@ export const CompleteProfileModal: React.FC<{
       return;
     }
 
-    if (isBuyer) {
-      if (!address.trim()) {
-        setError('Address is required');
-        return;
-      }
-      if (!city.trim()) {
-        setError('City is required');
-        return;
-      }
-      if (pinCode.trim().length !== 6 || !/^\d{6}$/.test(pinCode.trim())) {
-        setError('Pin code must be exactly 6 digits');
-        return;
-      }
-    }
-
     setIsSubmitting(true);
     try {
       const res = await completeProfile({
         mobile: mobile.trim(),
-        farmName: isBuyer ? undefined : farmName.trim(),
+        farmName: farmName.trim(),
         address: address.trim(),
-        city: city.trim(),
-        pinCode: pinCode.trim(),
         state: state.trim()
       });
 
@@ -544,7 +400,7 @@ export const CompleteProfileModal: React.FC<{
           <div>
             <h3 className="font-bold text-[20px] text-[#012d1d]">Complete Your Profile</h3>
             <p className="text-[12px] text-[#414844]">
-              {isBuyer ? 'Address & contact required for delivery' : 'Add your mobile and farm details'}
+              Add your mobile number and farm details
             </p>
           </div>
           <button
@@ -578,74 +434,28 @@ export const CompleteProfileModal: React.FC<{
             />
           </div>
 
-          {!isBuyer ? (
-            <>
-              <div>
-                <label className="block text-[12px] font-bold text-[#012d1d] mb-1">Farm Name</label>
-                <input
-                  type="text"
-                  value={farmName}
-                  onChange={e => setFarmName(e.target.value)}
-                  placeholder="Krishi Farm"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
-                  disabled={isSubmitting}
-                />
-              </div>
-              <div>
-                <label className="block text-[12px] font-bold text-[#012d1d] mb-1">Village / Region</label>
-                <input
-                  type="text"
-                  value={address}
-                  onChange={e => setAddress(e.target.value)}
-                  placeholder="e.g. Sinnar, Nashik"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
-                  disabled={isSubmitting}
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <label className="block text-[12px] font-bold text-[#012d1d] mb-1">Shipping Address *</label>
-                <input
-                  type="text"
-                  value={address}
-                  onChange={e => setAddress(e.target.value)}
-                  placeholder="Street / Building / Area"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
-                  required
-                  disabled={isSubmitting}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[12px] font-bold text-[#012d1d] mb-1">City *</label>
-                  <input
-                    type="text"
-                    value={city}
-                    onChange={e => setCity(e.target.value)}
-                    placeholder="e.g. Nashik"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
-                    required
-                    disabled={isSubmitting}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-bold text-[#012d1d] mb-1">Pin Code (6 Digits) *</label>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    value={pinCode}
-                    onChange={e => setPinCode(e.target.value)}
-                    placeholder="422001"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
-                    required
-                    disabled={isSubmitting}
-                  />
-                </div>
-              </div>
-            </>
-          )}
+          <div>
+            <label className="block text-[12px] font-bold text-[#012d1d] mb-1">Farm Name</label>
+            <input
+              type="text"
+              value={farmName}
+              onChange={e => setFarmName(e.target.value)}
+              placeholder="Krishi Farm"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+              disabled={isSubmitting}
+            />
+          </div>
+          <div>
+            <label className="block text-[12px] font-bold text-[#012d1d] mb-1">Village / Region</label>
+            <input
+              type="text"
+              value={address}
+              onChange={e => setAddress(e.target.value)}
+              placeholder="e.g. Sinnar, Nashik"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+              disabled={isSubmitting}
+            />
+          </div>
 
           <div className="pt-2 flex items-center justify-between gap-3">
             <button

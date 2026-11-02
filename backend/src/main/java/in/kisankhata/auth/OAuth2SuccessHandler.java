@@ -99,11 +99,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             user = users.save(user);
             log.info("Linked Google authentication for existing user: {} with role: {}", email, user.getRole());
         } else {
-            // New user registration
-            HttpSession session = request.getSession(false);
-            String requestedRole = session != null ? (String) session.getAttribute("oauth2_auth_role") : null;
-            Role assignedRole = "BUYER".equalsIgnoreCase(requestedRole) ? Role.BUYER : Role.FARMER;
-
+            // New user registration — always FARMER
             String firstName = (givenName != null && !givenName.isBlank()) ? givenName.trim() : null;
             String lastName = (familyName != null && !familyName.isBlank()) ? familyName.trim() : null;
 
@@ -128,27 +124,19 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             newUser.setFirstName(firstName);
             newUser.setLastName(lastName);
             newUser.setEmail(email);
-            newUser.setRole(assignedRole);
+            newUser.setRole(Role.FARMER);
             newUser.setAuthProvider(AuthProvider.GOOGLE);
             newUser.setGoogleSub(sub);
             newUser.setPictureUrl(picture);
             newUser.setPasswordHash(null);
             newUser.setMobile(""); // Needs profile completion
             newUser.setActive(true);
-
-            if (assignedRole == Role.FARMER) {
-                newUser.setFarmName(firstName + " Krishi Farm");
-                newUser.setAddress("Nashik Rural");
-                newUser.setState("Maharashtra");
-            } else {
-                newUser.setAddress("");
-                newUser.setCity("");
-                newUser.setPinCode("");
-                newUser.setState("Maharashtra");
-            }
+            newUser.setFarmName(firstName + " Krishi Farm");
+            newUser.setAddress("Nashik Rural");
+            newUser.setState("Maharashtra");
 
             user = users.save(newUser);
-            log.info("Created new user via Google OAuth2: {} with role: {}", email, assignedRole);
+            log.info("Created new user via Google OAuth2: {} with role: FARMER", email);
         }
 
         // Replace OAuth2 token with standard UsernamePasswordAuthenticationToken for app consistency

@@ -57,7 +57,8 @@ npm run dev
 Frontend runs at `http://localhost:3000` (auto-proxies `/api` to `http://localhost:8080`).
 
 ### Authentication & Security
-- **Google OAuth 2.0 ("Continue with Google"):** Server-side Authorization Code flow with Client ID + Secret. See [docs/GOOGLE_AUTH_SETUP.md](docs/GOOGLE_AUTH_SETUP.md).
-- **Email & Password:** Available for both Farmers and Buyers.
+- **Google OAuth 2.0 ("Continue with Google"):** Server-side Authorization Code flow with Client ID + Secret. Automatic Farmer account provisioning and session management. See [docs/GOOGLE_AUTH_SETUP.md](docs/GOOGLE_AUTH_SETUP.md).
+- **Email & Password:** Secure local registration and authentication for Farmers.
+- **Farmer-Only Sign-Up:** New user onboarding is farmer-centric for digital farm accounting and crop ledger management.
 - **Tenant Isolation:** Every farmer ledger is isolated by authenticated user ID; no demo bypass exists.
 - **Admin Provisioning:** Configure `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD` as environment variables.

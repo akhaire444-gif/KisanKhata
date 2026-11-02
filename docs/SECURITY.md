@@ -6,7 +6,7 @@
   - Google Client Secret is strictly kept on the backend server; never exposed to browser clients or frontend code.
   - Requires `email_verified == true`; unverified Google accounts are rejected with error redirect.
   - Session fixation mitigation: calls `request.changeSessionId()` upon successful Google authentication.
-  - Role escalation prevention: Google signup accepts only `FARMER` or `BUYER`; `ADMIN` role is rejected/ignored.
+  - Role escalation prevention: Google signup provisions only `FARMER` accounts; `ADMIN` and other roles cannot be obtained through Google flow.
 - **Local Hashing:** Passwords hashed with BCrypt (12 rounds) with individual salts. Google-only accounts have `passwordHash = null`, which safely returns 401 `BAD_CREDENTIALS` if email/password login is attempted.
 - **Session Protection:**
   - Standard cookie name: `JSESSIONID`
@@ -37,7 +37,7 @@
 - Spring Security CSRF filter enabled using `CookieCsrfTokenRepository.withHttpOnlyFalse()`.
 - Safe methods (`GET`, `HEAD`, `OPTIONS`, `TRACE`) require no token.
 - Mutating methods (`POST`, `PUT`, `PATCH`, `DELETE`) require header `X-XSRF-TOKEN` matching cookie `XSRF-TOKEN`.
-- Public endpoints (`/api/v1/auth/register`, `/api/v1/auth/register-buyer`, `/api/v1/auth/login`, `/actuator/health`) are specifically handled or exempted from CSRF checks before initial authentication.
+- Public endpoints (`/api/v1/auth/register`, `/api/v1/auth/login`, `/actuator/health`) are specifically handled or exempted from CSRF checks before initial authentication.
 
 ## 4. Cross-Origin Resource Sharing (CORS)
 - Strict origin whitelist controlled by environment variable `app.cors.allowed-origin` (default: `http://localhost:5173` or production domain).

@@ -41,7 +41,6 @@ public class SecurityConfig {
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .ignoringRequestMatchers(
                     "/api/v1/auth/register",
-                    "/api/v1/auth/register-buyer",
                     "/api/v1/auth/login",
                     "/api/v1/auth/logout",
                     "/actuator/health",
@@ -65,7 +64,6 @@ public class SecurityConfig {
                 // Public authentication & health endpoints
                 .requestMatchers(
                     "/api/v1/auth/register",
-                    "/api/v1/auth/register-buyer",
                     "/api/v1/auth/login",
                     "/api/v1/auth/google/start",
                     "/oauth2/**",
