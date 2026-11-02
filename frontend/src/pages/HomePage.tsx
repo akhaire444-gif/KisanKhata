@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useApp } from '../context/AppContext';
 import { KisanKhataLogo } from '../components/KisanKhataLogo';
+import { api } from '../api/client';
 
 export const HomePage: React.FC<{
   onOpenAuthModal?: (isRegister?: boolean) => void;
 }> = ({ onOpenAuthModal }) => {
-  const { currentFarmer, setCurrentPath, loginDemo, showToast } = useApp();
-  const [isDemoLoading, setIsDemoLoading] = useState(false);
+  const { currentFarmer, setCurrentPath } = useApp();
 
   const handleOpenLogin = () => {
     if (onOpenAuthModal) onOpenAuthModal(false);
@@ -21,17 +21,8 @@ export const HomePage: React.FC<{
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleExploreDemo = async () => {
-    if (isDemoLoading) return;
-    setIsDemoLoading(true);
-    try {
-      const res = await loginDemo();
-      if (!res.success && res.error) {
-        showToast(res.error, 'error');
-      }
-    } finally {
-      setIsDemoLoading(false);
-    }
+  const handleGoogleAuth = () => {
+    window.location.href = api.auth.getGoogleAuthUrl('FARMER');
   };
 
   return (
@@ -74,30 +65,25 @@ export const HomePage: React.FC<{
                 <>
                   <button
                     type="button"
+                    onClick={handleGoogleAuth}
+                    className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-white hover:bg-slate-50 text-[#111c2d] font-bold text-base border border-slate-200 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer"
+                  >
+                    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                    <span>Continue with Google</span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={handleOpenLogin}
                     className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-[#012d1d]/90 hover:bg-[#012d1d] text-white font-bold text-base shadow-[0_6px_22px_rgba(1,45,29,0.3),inset_0_1px_0_rgba(255,255,255,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[20px]">login</span>
                     <span>Sign In</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleExploreDemo}
-                    disabled={isDemoLoading}
-                    className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-[#116c4a] to-[#1b724f] text-white font-bold text-base hover:from-[#0d593c] hover:to-[#166042] shadow-[0_6px_22px_rgba(17,108,74,0.35),inset_0_1px_0_rgba(255,255,255,0.35)] border border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    {isDemoLoading ? (
-                      <>
-                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        <span>Entering Demo...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="material-symbols-outlined text-[20px] text-[#a1f4c8]">rocket_launch</span>
-                        <span>Explore Demo Account</span>
-                      </>
-                    )}
                   </button>
 
                   <button
@@ -124,7 +110,7 @@ export const HomePage: React.FC<{
               </span>
               <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/55 backdrop-blur-md border border-white/75 shadow-2xs">
                 <span className="material-symbols-outlined text-[18px] text-[#116c4a]">check_circle</span>
-                1-Click Public Demo Available
+                Google & Email Auth
               </span>
             </div>
           </div>
@@ -138,64 +124,64 @@ export const HomePage: React.FC<{
             Built for Real Farm Workflows
           </span>
           <h2 className="text-2xl sm:text-3xl font-bold text-[#012d1d] tracking-tight">
-            Complete Agricultural Accounting in Your Pocket
+            Designed for Indian Agriculture & Farmland Records
           </h2>
           <p className="text-sm sm:text-base text-[#414844] mt-2">
-            Engineered with high contrast and oversized buttons for outdoor sunlight operations.
+            Every feature is calibrated to the realities of farming seasons, local Mandi accounting, and field-hand payments.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {/* Card 1: Crop Expense Ledger */}
+          {/* Card 1: Crop Sowing */}
           <div className="bg-white/75 hover:bg-white/92 backdrop-blur-xl p-7 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_18px_42px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#c1ecd4]/90 text-[#1b724f] flex items-center justify-center shadow-2xs border border-white/60">
+            <div className="w-12 h-12 rounded-2xl bg-[#c1ecd4]/90 text-[#012d1d] flex items-center justify-center shadow-2xs border border-white/60">
+              <span className="material-symbols-outlined text-[26px]">potted_plant</span>
+            </div>
+            <h3 className="text-lg font-bold text-[#012d1d]">Crop Sowing & Yield Timeline</h3>
+            <p className="text-sm text-[#414844] leading-relaxed">
+              Track Kharif, Rabi, and Zaid parcels with plantation dates, acreage planted, duration, and projected harvesting windows.
+            </p>
+          </div>
+
+          {/* Card 2: Daily Expenses */}
+          <div className="bg-white/75 hover:bg-white/92 backdrop-blur-xl p-7 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_18px_42px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-[#c1ecd4]/90 text-[#012d1d] flex items-center justify-center shadow-2xs border border-white/60">
               <span className="material-symbols-outlined text-[26px]">receipt_long</span>
             </div>
-            <h3 className="text-lg font-bold text-[#012d1d]">Daily Expense Ledger</h3>
+            <h3 className="text-lg font-bold text-[#012d1d]">Daily Agri-Expense Ledger</h3>
             <p className="text-sm text-[#414844] leading-relaxed">
-              Record diesel, tractor rental, seeds, bio-sprays, and manure with one tap. Automatic category breakdowns and real-time total spend tracking.
+              Log diesel receipts, fertilizer bags, certified seeds, tractor ploughing, and mandi transport with category tags and bill notes.
             </p>
           </div>
 
-          {/* Card 2: Worker Wage Khata */}
+          {/* Card 3: Worker Attendance */}
           <div className="bg-white/75 hover:bg-white/92 backdrop-blur-xl p-7 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_18px_42px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#ffdcc3]/90 text-[#6e3900] flex items-center justify-center shadow-2xs border border-white/60">
-              <span className="material-symbols-outlined text-[26px]">badge</span>
+            <div className="w-12 h-12 rounded-2xl bg-[#c1ecd4]/90 text-[#012d1d] flex items-center justify-center shadow-2xs border border-white/60">
+              <span className="material-symbols-outlined text-[26px]">group</span>
             </div>
-            <h3 className="text-lg font-bold text-[#012d1d]">Worker Wages & Attendance</h3>
+            <h3 className="text-lg font-bold text-[#012d1d]">Worker Attendance & Daily Rozi</h3>
             <p className="text-sm text-[#414844] leading-relaxed">
-              Track daily rozi-roti labour rolls, days worked, daily wages, and pending balances with direct UPI integration for instant cashless settlements.
+              Maintain daily attendance rozi records for field hands, weeders, and harvesters. Auto-computes total wages and payment rolls.
             </p>
           </div>
 
-          {/* Card 3: Crop Management */}
+          {/* Card 4: Sprays & Irrigation */}
           <div className="bg-white/75 hover:bg-white/92 backdrop-blur-xl p-7 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_18px_42px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#e7eeff]/90 text-[#004e7c] flex items-center justify-center shadow-2xs border border-white/60">
-              <span className="material-symbols-outlined text-[26px]">agriculture</span>
-            </div>
-            <h3 className="text-lg font-bold text-[#012d1d]">Crop Lifecycle Tracker</h3>
-            <p className="text-sm text-[#414844] leading-relaxed">
-              Track plantation dates, crop duration days, and acreage for grapes, pomegranates, wheat, and cash crops to calculate net profit per acre at harvest.
-            </p>
-          </div>
-
-          {/* Card 4: Water & Spray Log */}
-          <div className="bg-white/75 hover:bg-white/92 backdrop-blur-xl p-7 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_18px_42px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#d0e4ff]/90 text-[#004787] flex items-center justify-center shadow-2xs border border-white/60">
+            <div className="w-12 h-12 rounded-2xl bg-[#c1ecd4]/90 text-[#012d1d] flex items-center justify-center shadow-2xs border border-white/60">
               <span className="material-symbols-outlined text-[26px]">water_drop</span>
             </div>
-            <h3 className="text-lg font-bold text-[#012d1d]">Irrigation & Spray Schedules</h3>
+            <h3 className="text-lg font-bold text-[#012d1d]">Sprays & Irrigation Logs</h3>
             <p className="text-sm text-[#414844] leading-relaxed">
-              Maintain precise records of pump run hours, canal water cycles, and pesticide applications with scheduled reminders before critical spray windows.
+              Keep precise history of foliar sprays, micronutrient doses, drip fertigation, and canal watering hours per parcel.
             </p>
           </div>
 
-          {/* Card 5: Bank Certified Reports */}
+          {/* Card 5: Bank Audits */}
           <div className="bg-white/75 hover:bg-white/92 backdrop-blur-xl p-7 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_18px_42px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#f0f3ff]/90 text-[#116c4a] flex items-center justify-center shadow-2xs border border-white/60">
+            <div className="w-12 h-12 rounded-2xl bg-[#c1ecd4]/90 text-[#012d1d] flex items-center justify-center shadow-2xs border border-white/60">
               <span className="material-symbols-outlined text-[26px]">print</span>
             </div>
-            <h3 className="text-lg font-bold text-[#012d1d]">A4 Certified Reports</h3>
+            <h3 className="text-lg font-bold text-[#012d1d]">Certified Audit Balance Sheets</h3>
             <p className="text-sm text-[#414844] leading-relaxed">
               Generate date-wise, crop-wise, and worker wage statement sheets in standard ₹ INR formatting ready to present to bank loan officers and insurance assessors.
             </p>
@@ -208,13 +194,13 @@ export const HomePage: React.FC<{
             </div>
             <h3 className="text-lg font-bold text-[#012d1d]">Private Multi-Tenant Security</h3>
             <p className="text-sm text-[#414844] leading-relaxed">
-              Your farm records are strictly isolated. No public demo bypasses, no cross-farmer data leakage, and BCrypt encrypted authentication.
+              Your farm records are strictly isolated. No cross-farmer data leakage, secure Spring session cookies, and BCrypt encrypted authentication.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Security & Anti-Demo Notice Banner */}
+      {/* Security Notice Banner */}
       <section className="py-10 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-br from-[#0a4d34]/95 via-[#012d1d]/95 to-[#053221]/95 backdrop-blur-2xl p-8 rounded-3xl border border-[#a1f4c8]/30 shadow-2xl">
@@ -224,10 +210,10 @@ export const HomePage: React.FC<{
                 <span>Protected Production Environment</span>
               </div>
               <h3 className="text-xl sm:text-2xl font-bold">
-                Zero Public Demo Access • 100% Private Ledger
+                100% Private Multi-Tenant Farm Ledger
               </h3>
               <p className="text-xs sm:text-sm text-[#a1f4c8]/90 max-w-xl">
-                Every farmer ledger on KisanKhata is protected behind mandatory sign-in and backend tenant authorization. Your financial data is private to your account only.
+                Every farm ledger on KisanKhata is protected behind authenticated Spring sessions and database tenant isolation. Your financial data belongs to you alone.
               </p>
             </div>
 

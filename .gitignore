@@ -1,0 +1,32 @@
+# Environment & Secrets
+.env
+*.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Databases & local data
+backend/data/
+*.mv.db
+*.trace.db
+
+# Dependencies & Build artifacts
+node_modules/
+target/
+dist/
+backend/target/
+frontend/dist/
+
+# IDE & OS
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+

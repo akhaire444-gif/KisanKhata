@@ -33,6 +33,15 @@ spring:
   h2:
     console:
       enabled: false
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            scope: openid,profile,email
+            redirect-uri: "{baseUrl}/login/oauth2/code/google"
 management:
   endpoints:
     web:
@@ -43,8 +52,9 @@ management:
       probes:
         enabled: true
 app:
+  frontend-url: ${FRONTEND_ORIGIN:http://localhost:3000}
   cors:
-    allowed-origin: ${FRONTEND_ORIGIN:http://localhost:5173}
+    allowed-origin: ${FRONTEND_ORIGIN:http://localhost:3000}
   upload:
     dir: ${UPLOAD_DIR:./data/uploads}
   bootstrap-admin:

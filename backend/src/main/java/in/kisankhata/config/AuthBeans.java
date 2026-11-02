@@ -21,8 +21,13 @@ public class AuthBeans {
             if (!u.isActive()) {
                 throw new UsernameNotFoundException("Invalid credentials");
             }
+            String passHash = u.getPasswordHash();
+            if (passHash == null || passHash.isBlank()) {
+                // Unusable dummy hash for Google-only users so email+password login fails cleanly with BadCredentialsException (never 500)
+                passHash = "$2a$12$e80yq9O8jU8tN7RjY4xQOOBs71b9H0f6s5iNqP1x3f7lW6v9z0.12";
+            }
             return User.withUsername(u.getEmail())
-                    .password(u.getPasswordHash())
+                    .password(passHash)
                     .roles(u.getRole().name())
                     .build();
         };

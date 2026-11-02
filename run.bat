@@ -1,10 +1,22 @@
 @echo off
+setlocal enabledelayedexpansion
 echo ========================================================
 echo   Starting KisanKhata (Spring Boot 8080 + Vite 3000)
 echo ========================================================
 
 set "JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot"
 set "PATH=%JAVA_HOME%\bin;%~dp0backend\maven\apache-maven-3.9.6\bin;%PATH%"
+
+:: Load backend .env if present (git-ignored)
+if exist "%~dp0backend\.env" (
+    echo Loading environment variables from backend\.env...
+    for /f "usebackq tokens=1* delims==" %%A in ("%~dp0backend\.env") do (
+        set "line=%%A"
+        if not "!line:~0,1!"=="#" (
+            if not "%%B"=="" set "%%A=%%B"
+        )
+    )
+)
 
 echo [1/2] Starting Spring Boot Backend on http://localhost:8080...
 start "KisanKhata Backend" cmd /k "cd /d %~dp0backend && mvnw.cmd spring-boot:run"

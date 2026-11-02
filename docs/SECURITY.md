@@ -1,16 +1,25 @@
 # KisanKhata Application Security & Hardening Policy
 
 ## 1. Authentication & Session Security
-- **Hashing:** Passwords hashed with BCrypt (12 rounds) with individual salts.
+- **Google OAuth 2.0 (Authorization Code Flow):**
+  - Uses server-side authorization code exchange (`spring-boot-starter-oauth2-client`).
+  - Google Client Secret is strictly kept on the backend server; never exposed to browser clients or frontend code.
+  - Requires `email_verified == true`; unverified Google accounts are rejected with error redirect.
+  - Session fixation mitigation: calls `request.changeSessionId()` upon successful Google authentication.
+  - Role escalation prevention: Google signup accepts only `FARMER` or `BUYER`; `ADMIN` role is rejected/ignored.
+- **Local Hashing:** Passwords hashed with BCrypt (12 rounds) with individual salts. Google-only accounts have `passwordHash = null`, which safely returns 401 `BAD_CREDENTIALS` if email/password login is attempted.
 - **Session Protection:**
   - Standard cookie name: `JSESSIONID`
-  - Flags: `HttpOnly = true`, `Secure = true` (in production/HTTPS), `SameSite = Lax`.
+  - Flags: `HttpOnly = true`, `Secure = true` (in production/HTTPS), `SameSite = Lax` (or `None` for cross-origin).
   - Max concurrent sessions per user: 3.
   - Session inactivity timeout: 30 minutes (`server.servlet.session.timeout=30m`).
 - **Brute Force Rate Limiting:**
   - Track failed login attempts by email address.
   - 5 failed attempts in 10 minutes locks login for that email for 10 minutes (`FR-AUTH-06`).
   - Constant-time verification prevents username enumeration timing attacks.
+- **Demo Account Elimination:**
+  - Complete removal of demo endpoints and mock accounts.
+  - Startup `DemoCleanupRunner` permanently wipes legacy demo accounts from persistent databases.
 
 ## 2. Authorization & Tenant Isolation
 - **Role-Based Access Control (RBAC):**

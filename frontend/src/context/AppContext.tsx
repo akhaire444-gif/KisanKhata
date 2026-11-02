@@ -23,10 +23,13 @@ interface AppContextType {
   currentFarmer: Farmer | null;
   isAuthChecking: boolean;
   loginFarmer: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
-  loginDemo: () => Promise<{ success: boolean; error?: string }>;
-  resetDemoData: () => Promise<{ success: boolean; error?: string }>;
   registerFarmer: (data: Omit<Farmer, 'id' | 'createdAt' | 'status' | 'tenantId'> & { password?: string }) => Promise<{ success: boolean; error?: string }>;
   logoutFarmer: () => Promise<void>;
+  completeProfile: (data: { mobile?: string; farmName?: string; address?: string; city?: string; pinCode?: string; state?: string }) => Promise<{ success: boolean; error?: string }>;
+
+  // Profile completion modal control
+  isProfileModalOpen: boolean;
+  setIsProfileModalOpen: (open: boolean) => void;
 
   // Crops
   crops: Crop[];
@@ -84,310 +87,15 @@ function toDisplayDate(isoOrDate: string): string {
   return isoOrDate;
 }
 
-const DEMO_FALLBACK_CROPS: Crop[] = [
-  {
-    id: 'crop-demo-soybean',
-    farmerId: 'demo-farmer-id',
-    name: 'Kharif Soybean (JS-335)',
-    category: 'Oilseeds',
-    plantationDate: '15-06-2026',
-    durationDays: 105,
-    description: 'Certified JS-335 seed plot, drip irrigated, high yield target',
-    acresPlanted: 10,
-    expectedYield: '28 Quintals',
-    createdAt: '15-06-2026'
-  },
-  {
-    id: 'crop-demo-onion',
-    farmerId: 'demo-farmer-id',
-    name: 'Rabi Onion (Gavran Garva)',
-    category: 'Vegetables',
-    plantationDate: '20-10-2026',
-    durationDays: 120,
-    description: 'Nashik red quality onion with raised bed & micro-sprinkler setup',
-    acresPlanted: 5,
-    expectedYield: '150 Quintals',
-    createdAt: '20-10-2026'
-  },
-  {
-    id: 'crop-demo-pomegranate',
-    farmerId: 'demo-farmer-id',
-    name: 'Pomegranate Orchard (Bhagwa)',
-    category: 'Fruit',
-    plantationDate: '10-01-2024',
-    durationDays: 180,
-    description: 'High-density Bhagwa orchard, export grade mrig-bahar treatment',
-    acresPlanted: 6,
-    expectedYield: '65 Quintals',
-    createdAt: '10-01-2024'
-  },
-  {
-    id: 'crop-demo-sugarcane',
-    farmerId: 'demo-farmer-id',
-    name: 'Sugarcane (Co-86032)',
-    category: 'Cash Crop',
-    plantationDate: '01-02-2026',
-    durationDays: 365,
-    description: 'Perennial sugar mill contract crop, 5 ft paired row planting',
-    acresPlanted: 4,
-    expectedYield: '380 Tonnes',
-    createdAt: '01-02-2026'
-  }
-];
-
-const DEMO_FALLBACK_EXPENSES: Expense[] = [
-  {
-    id: 'exp-demo-1',
-    farmerId: 'demo-farmer-id',
-    cropId: 'crop-demo-soybean',
-    cropName: 'Kharif Soybean (JS-335)',
-    category: 'Seeds',
-    details: 'Mahyco Certified Soybean Seed (6 bags)',
-    date: '16-06-2026',
-    amount: 18400,
-    quantity: '6 bags',
-    createdAt: '16-06-2026'
-  },
-  {
-    id: 'exp-demo-2',
-    farmerId: 'demo-farmer-id',
-    cropId: 'crop-demo-soybean',
-    cropName: 'Kharif Soybean (JS-335)',
-    category: 'Fertilizers',
-    details: 'IFFCO 10:26:26 & Urea Basal Dose',
-    date: '22-06-2026',
-    amount: 14500,
-    quantity: '10 bags',
-    createdAt: '22-06-2026'
-  },
-  {
-    id: 'exp-demo-3',
-    farmerId: 'demo-farmer-id',
-    cropId: 'crop-demo-pomegranate',
-    cropName: 'Pomegranate Orchard (Bhagwa)',
-    category: 'Pesticides & Sprays',
-    details: 'Ampligo & Nativo Protective Spray against fungal spots',
-    date: '10-07-2026',
-    amount: 7850,
-    quantity: '2 Litres',
-    createdAt: '10-07-2026'
-  },
-  {
-    id: 'exp-demo-4',
-    farmerId: 'demo-farmer-id',
-    cropId: 'crop-demo-onion',
-    cropName: 'Rabi Onion (Gavran Garva)',
-    category: 'Tractor & Diesel',
-    details: 'Tractor Ploughing, harrowing & raised bed diesel expense',
-    date: '18-10-2026',
-    amount: 9600,
-    quantity: '105 Litres',
-    createdAt: '18-10-2026'
-  },
-  {
-    id: 'exp-demo-5',
-    farmerId: 'demo-farmer-id',
-    cropId: 'crop-demo-soybean',
-    cropName: 'Kharif Soybean (JS-335)',
-    category: 'Crop Cutting / Harvesting',
-    details: 'Combine harvester & thresher machine rental',
-    date: '02-10-2026',
-    amount: 16500,
-    quantity: '10 acres',
-    createdAt: '02-10-2026'
-  },
-  {
-    id: 'exp-demo-6',
-    farmerId: 'demo-farmer-id',
-    cropId: 'crop-demo-onion',
-    cropName: 'Rabi Onion (Gavran Garva)',
-    category: 'Other',
-    details: 'Drip lateral repairs, flush valves & micro-emitters',
-    date: '21-10-2026',
-    amount: 6200,
-    quantity: '1 set',
-    createdAt: '21-10-2026'
-  },
-  {
-    id: 'exp-demo-7',
-    farmerId: 'demo-farmer-id',
-    cropId: 'crop-demo-pomegranate',
-    cropName: 'Pomegranate Orchard (Bhagwa)',
-    category: 'Other',
-    details: 'Bamboo stakes & fruit support wire bundles',
-    date: '15-08-2026',
-    amount: 4800,
-    quantity: '120 stakes',
-    createdAt: '15-08-2026'
-  },
-  {
-    id: 'exp-demo-8',
-    farmerId: 'demo-farmer-id',
-    cropId: 'crop-demo-soybean',
-    cropName: 'Kharif Soybean (JS-335)',
-    category: 'Transport',
-    details: 'APMC Lasalgaon Mandi transport tempo & octroi toll',
-    date: '12-10-2026',
-    amount: 5400,
-    quantity: '1 tempo trip',
-    createdAt: '12-10-2026'
-  }
-];
-
-const DEMO_FALLBACK_WORKERS: Worker[] = [
-  {
-    id: 'worker-demo-1',
-    farmerId: 'demo-farmer-id',
-    name: 'Rameshwar Chavan',
-    contact: '9822104521',
-    daysWorked: 24,
-    dailyWage: 450,
-    paymentAmount: 10800,
-    address: 'Sinnar, Nashik',
-    createdAt: '01-06-2026'
-  },
-  {
-    id: 'worker-demo-2',
-    farmerId: 'demo-farmer-id',
-    name: 'Sunita Tai Patil',
-    contact: '9822104522',
-    daysWorked: 20,
-    dailyWage: 350,
-    paymentAmount: 7000,
-    address: 'Sinnar, Nashik',
-    createdAt: '01-06-2026'
-  },
-  {
-    id: 'worker-demo-3',
-    farmerId: 'demo-farmer-id',
-    name: 'Bhaskar Rao Gite',
-    contact: '9822104523',
-    daysWorked: 22,
-    dailyWage: 450,
-    paymentAmount: 9900,
-    address: 'Dindori, Nashik',
-    createdAt: '05-06-2026'
-  },
-  {
-    id: 'worker-demo-4',
-    farmerId: 'demo-farmer-id',
-    name: 'Anita Dnyaneshwar Wagh',
-    contact: '9822104524',
-    daysWorked: 18,
-    dailyWage: 350,
-    paymentAmount: 6300,
-    address: 'Niphad, Nashik',
-    createdAt: '10-06-2026'
-  },
-  {
-    id: 'worker-demo-5',
-    farmerId: 'demo-farmer-id',
-    name: 'Datta Tukaram Shinde',
-    contact: '9822104525',
-    daysWorked: 26,
-    dailyWage: 500,
-    paymentAmount: 13000,
-    address: 'Yeola, Nashik',
-    createdAt: '01-06-2026'
-  },
-  {
-    id: 'worker-demo-6',
-    farmerId: 'demo-farmer-id',
-    name: 'Kailas Baburao Sanap',
-    contact: '9822104526',
-    daysWorked: 15,
-    dailyWage: 400,
-    paymentAmount: 6000,
-    address: 'Sinnar, Nashik',
-    createdAt: '15-06-2026'
-  }
-];
-
-const DEMO_FALLBACK_WATER: WaterRecord[] = [
-  {
-    id: 'water-demo-1',
-    farmerId: 'demo-farmer-id',
-    plotName: 'Onion Block 2',
-    withFertilizer: false,
-    quantity: 12000,
-    unit: 'Litres',
-    date: '24-10-2026',
-    createdAt: '24-10-2026'
-  },
-  {
-    id: 'water-demo-2',
-    farmerId: 'demo-farmer-id',
-    plotName: 'Pomegranate Block 1',
-    withFertilizer: true,
-    quantity: 4,
-    unit: 'Hours',
-    date: '25-10-2026',
-    createdAt: '25-10-2026'
-  },
-  {
-    id: 'water-demo-3',
-    farmerId: 'demo-farmer-id',
-    plotName: 'Sugarcane Plot',
-    withFertilizer: false,
-    quantity: 6,
-    unit: 'Hours',
-    date: '26-10-2026',
-    createdAt: '26-10-2026'
-  }
-];
-
-const DEMO_FALLBACK_FERT: FertilizerRecord[] = [
-  {
-    id: 'fert-demo-1',
-    farmerId: 'demo-farmer-id',
-    plotName: 'Pomegranate Orchard Block 1',
-    productName: '19:19:19 + Micronutrients Foliar Spray',
-    quantity: 5,
-    unit: 'kg',
-    date: '20-10-2026',
-    createdAt: '20-10-2026'
-  },
-  {
-    id: 'fert-demo-2',
-    farmerId: 'demo-farmer-id',
-    plotName: 'Onion Bed Block 2',
-    productName: '0:52:34 Water Soluble Drip Grade',
-    quantity: 10,
-    unit: 'kg',
-    date: '23-10-2026',
-    createdAt: '23-10-2026'
-  }
-];
-
-const DEMO_FALLBACK_REMINDERS: Reminder[] = [
-  {
-    id: 'rem-demo-1',
-    farmerId: 'demo-farmer-id',
-    description: 'Weeding & intercultural operations in Onion Block 2',
-    date: new Date().toISOString().split('T')[0],
-    time: '08:30',
-    isDone: false,
-    createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
-  },
-  {
-    id: 'rem-demo-2',
-    farmerId: 'demo-farmer-id',
-    description: 'Second dose of micronutrients for Pomegranate Mrig Bahar',
-    date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-    time: '10:00',
-    isDone: false,
-    createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
-  }
-];
-
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Navigation
   const [currentPath, setCurrentPath] = useState<NavigationPath>('home');
   const [currentRole, setCurrentRole] = useState<Role>('visitor');
 
-  // Auth: Start completely unauthenticated. NEVER default to demo user!
+  // Auth: Start completely unauthenticated with real backend data
   const [currentFarmer, setCurrentFarmer] = useState<Farmer | null>(null);
   const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
 
   // Data Collections: Start EMPTY. Real data loaded only after authentication!
   const [crops, setCrops] = useState<Crop[]>([]);
@@ -401,28 +109,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [backendStatus, setBackendStatus] = useState<'connected' | 'offline' | 'checking'>('checking');
 
-  const showToast = (text: string, type: 'success' | 'error' | 'info' = 'success') => {
+  const showToast = useCallback((text: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToastMessage({ text, type });
     setTimeout(() => {
       setToastMessage(prev => (prev?.text === text ? null : prev));
-    }, 3500);
-  };
+    }, 4000);
+  }, []);
+
+  const clearUserData = useCallback(() => {
+    setCrops([]);
+    setExpenses([]);
+    setWorkers([]);
+    setWaterRecords([]);
+    setFertilizerRecords([]);
+    setReminders([]);
+  }, []);
 
   const mapUserToFarmer = (u: any): Farmer => {
-    const isDemo = Boolean(u.isDemo ?? (u.email?.toLowerCase() === 'demo.farmer@kisankhata.in'));
+    const stateStr = u.state || 'Maharashtra';
+    const stateCode = (stateStr.length >= 2 ? stateStr.substring(0, 2) : 'KK').toUpperCase();
+    const idPrefix = u.id ? String(u.id).substring(0, 4) : '0000';
     return {
       id: u.id,
-      firstName: u.firstName,
-      lastName: u.lastName,
-      mobile: u.mobile,
-      email: u.email,
-      address: u.address || (isDemo ? 'Sinnar, Nashik' : ''),
-      farmName: u.farmName || (isDemo ? 'Green Valley Demonstration Farm' : `${u.firstName} Krishi Farm`),
-      state: u.state || 'Maharashtra',
-      tenantId: isDemo ? 'DEMO-MH-TENANT' : `Farm-${(u.state || 'MH').substring(0, 2).toUpperCase()}-${u.id.substring(0, 4)}`,
-      totalAcres: isDemo ? 25 : 10,
+      firstName: u.firstName || '',
+      lastName: u.lastName || '',
+      mobile: u.mobile || '',
+      email: u.email || '',
+      address: u.address || '',
+      farmName: u.farmName || `${u.firstName || 'My'} Krishi Farm`,
+      state: stateStr,
+      city: u.city || '',
+      pinCode: u.pinCode || '',
+      tenantId: `Farm-${stateCode}-${idPrefix}`,
+      totalAcres: 10,
       status: 'Active',
-      isDemo,
+      profileComplete: Boolean(u.profileComplete),
+      pictureUrl: u.pictureUrl || undefined,
+      authProvider: u.authProvider || 'LOCAL',
+      role: u.role || 'FARMER',
       createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
     };
   };
@@ -533,16 +257,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  // Load preconfigured sample data into state for public demo exploration
-  const loadDemoFallbackData = useCallback(() => {
-    setCrops([...DEMO_FALLBACK_CROPS]);
-    setExpenses([...DEMO_FALLBACK_EXPENSES]);
-    setWorkers([...DEMO_FALLBACK_WORKERS]);
-    setWaterRecords([...DEMO_FALLBACK_WATER]);
-    setFertilizerRecords([...DEMO_FALLBACK_FERT]);
-    setReminders([...DEMO_FALLBACK_REMINDERS]);
-  }, []);
-
   // Session Check (Verifies real session with backend)
   const checkSession = useCallback(async (): Promise<boolean> => {
     setIsAuthChecking(true);
@@ -564,30 +278,69 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } else {
         setCurrentFarmer(null);
         setCurrentRole('visitor');
+        clearUserData();
         return false;
       }
     } catch {
       setBackendStatus('offline');
       setCurrentFarmer(null);
       setCurrentRole('visitor');
+      clearUserData();
       return false;
     } finally {
       setIsAuthChecking(false);
     }
-  }, [loadFarmerData]);
+  }, [loadFarmerData, clearUserData]);
 
-  // Initial Session Check on Mount
+  // Initial Session Check & Google OAuth Redirect Callback Handler on Mount
   useEffect(() => {
-    checkSession();
-  }, [checkSession]);
+    const handleAuthRedirectAndCheckSession = async () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const authStatus = searchParams.get('auth');
+      const authCode = searchParams.get('code');
+      const profileIncomplete = searchParams.get('profile') === 'incomplete';
+
+      if (authStatus) {
+        // Clean URL parameters from the address bar without page reload
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+
+        if (authStatus === 'success') {
+          showToast('Google sign-in successful! Welcome to KisanKhata.', 'success');
+          const authenticated = await checkSession();
+          if (authenticated && profileIncomplete) {
+            setIsProfileModalOpen(true);
+          }
+          return;
+        }
+
+        if (authStatus === 'error') {
+          if (authCode === 'GOOGLE_NOT_CONFIGURED') {
+            showToast('Google Sign-In is not configured on the backend server.', 'error');
+          } else if (authCode === 'EMAIL_NOT_VERIFIED') {
+            showToast('Google account email is not verified.', 'error');
+          } else if (authCode === 'ACCOUNT_DISABLED') {
+            showToast('Your account is deactivated. Please contact support.', 'error');
+          } else {
+            showToast('Google Sign-In was cancelled or failed.', 'error');
+          }
+        }
+      }
+
+      await checkSession();
+    };
+
+    handleAuthRedirectAndCheckSession();
+  }, [checkSession, showToast]);
 
   // Today's reminders calculation
   const todayStr = new Date().toISOString().split('T')[0];
   const todayReminders = reminders.filter(r => !r.isDone && (r.date === todayStr || toDisplayDate(r.date) === toDisplayDate(todayStr)));
 
-  // Farmer Login: Strict backend authentication.
+  // Farmer Login: Strict backend authentication
   const loginFarmer = async (email: string, pass: string) => {
     try {
+      clearUserData();
       const res = await api.auth.login({ email, password: pass });
       if (res && res.success && res.data) {
         setBackendStatus('connected');
@@ -605,71 +358,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // One-Click Demo Login: Real backend session & isolated database tenant with instant fallback
-  const loginDemo = async () => {
-    try {
-      const res = await api.auth.demo();
-      if (res && res.success && res.data) {
-        setBackendStatus('connected');
-        const demoFarmer = mapUserToFarmer(res.data);
-        setCurrentFarmer(demoFarmer);
-        setCurrentRole('farmer');
-        setCurrentPath('dashboard');
-        showToast('Entered Demo Account: Green Valley Demonstration Farm', 'success');
-        await loadFarmerData();
-        return { success: true };
-      }
-      throw new Error(res?.message || 'Backend rejected demo access');
-    } catch (err: any) {
-      console.warn('Backend unavailable, launching local demo preview mode:', err);
-      setBackendStatus('offline');
-      const fallbackDemoFarmer: Farmer = {
-        id: 'demo-farmer-session-001',
-        firstName: 'Demo',
-        lastName: 'Farmer',
-        mobile: '9876543210',
-        email: 'demo.farmer@kisankhata.in',
-        address: 'Sinnar, Nashik',
-        farmName: 'Green Valley Demonstration Farm',
-        state: 'Maharashtra',
-        tenantId: 'DEMO-MH-TENANT',
-        totalAcres: 25,
-        status: 'Active',
-        isDemo: true,
-        createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
-      };
-      setCurrentFarmer(fallbackDemoFarmer);
-      setCurrentRole('farmer');
-      setCurrentPath('dashboard');
-      loadDemoFallbackData();
-      showToast('Entered Demo Account: Green Valley Demonstration Farm', 'success');
-      return { success: true };
-    }
-  };
-
-  // Reset Demo Data: Restore clean agricultural sample data in demo tenant
-  const resetDemoData = async () => {
-    try {
-      const res = await api.auth.resetDemo();
-      if (res && res.success && res.data) {
-        setBackendStatus('connected');
-        const demoFarmer = mapUserToFarmer(res.data);
-        setCurrentFarmer(demoFarmer);
-        showToast('Sample agricultural data reset to original baseline.', 'info');
-        await loadFarmerData();
-        return { success: true };
-      }
-      throw new Error(res?.message || 'Reset failed');
-    } catch {
-      loadDemoFallbackData();
-      showToast('Sample agricultural data reset to original baseline.', 'info');
-      return { success: true };
-    }
-  };
-
-  // Farmer Registration: Strict backend registration. Never fallback to mock data!
+  // Farmer Registration: Strict backend registration
   const registerFarmer = async (data: Omit<Farmer, 'id' | 'createdAt' | 'status' | 'tenantId'> & { password?: string }) => {
     try {
+      clearUserData();
       const payload = {
         firstName: data.firstName.trim(),
         lastName: data.lastName.trim(),
@@ -683,17 +375,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const res = await api.auth.registerFarmer(payload);
       if (res && res.success) {
-        // Auto sign-in or prompt
         const loginRes = await api.auth.login({ email: payload.email, password: payload.password });
         if (loginRes && loginRes.success && loginRes.data) {
           const liveFarmer = mapUserToFarmer(loginRes.data);
           setCurrentFarmer(liveFarmer);
           setCurrentRole('farmer');
-          showToast('Farm registered successfully! Welcome to KisanKhata.', 'success');
+          showToast(`Welcome to KisanKhata, ${liveFarmer.firstName} ji! Farm ledger created.`, 'success');
           await loadFarmerData();
           return { success: true };
         }
-        showToast('Account created! Please sign in with your password.', 'success');
         return { success: true };
       }
       return { success: false, error: res?.message || 'Registration failed' };
@@ -703,34 +393,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Logout: Invalidate backend session and clear client memory & storage
+  // Profile update / completion
+  const completeProfile = async (data: { mobile?: string; farmName?: string; address?: string; city?: string; pinCode?: string; state?: string }) => {
+    try {
+      const res = await api.auth.updateProfile(data);
+      if (res && res.success && res.data) {
+        const updated = mapUserToFarmer(res.data);
+        setCurrentFarmer(updated);
+        setIsProfileModalOpen(false);
+        showToast('Profile updated successfully!', 'success');
+        return { success: true };
+      }
+      return { success: false, error: res?.message || 'Failed to update profile' };
+    } catch (err: any) {
+      const msg = err.response?.message || err.message || 'Failed to update profile';
+      return { success: false, error: msg };
+    }
+  };
+
+  // Farmer Logout
   const logoutFarmer = async () => {
     try {
       await api.auth.logout();
-    } catch {
-      // Ignore network errors on logout
+    } catch (e) {
+      console.warn('Logout API error:', e);
+    } finally {
+      setCurrentFarmer(null);
+      setCurrentRole('visitor');
+      setCurrentPath('home');
+      clearUserData();
+      showToast('Logged out successfully', 'info');
     }
-
-    // Clear state
-    setCurrentFarmer(null);
-    setCurrentRole('visitor');
-    setCrops([]);
-    setExpenses([]);
-    setWorkers([]);
-    setWaterRecords([]);
-    setFertilizerRecords([]);
-    setReminders([]);
-
-    // Clear any leftover local storage
-    localStorage.removeItem('kk_crops');
-    localStorage.removeItem('kk_expenses');
-    localStorage.removeItem('kk_workers');
-    localStorage.removeItem('kk_water');
-    localStorage.removeItem('kk_fert');
-    localStorage.removeItem('kk_reminders');
-
-    setCurrentPath('home');
-    showToast('Logged out securely from farm khata.', 'info');
   };
 
   // Crop Management
@@ -738,18 +431,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!currentFarmer) return { success: false, error: 'Authentication required' };
 
     try {
-      // Format plantation date to YYYY-MM-DD for backend
       let plantationIso = data.plantationDate;
-      if (data.plantationDate.includes('-') && data.plantationDate.split('-')[0].length === 2) {
-        const [d, m, y] = data.plantationDate.split('-');
+      if (plantationIso.includes('-') && plantationIso.split('-')[0].length === 2) {
+        const [d, m, y] = plantationIso.split('-');
         plantationIso = `${y}-${m}-${d}`;
       }
 
       const res = await api.farmer.createCrop({
         name: data.name.trim(),
-        category: data.category || 'Crop',
+        category: data.category,
         plantationDate: plantationIso,
-        durationDays: data.durationDays || 120,
+        durationDays: data.durationDays,
         description: data.description || ''
       });
 
@@ -768,19 +460,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Failed to save crop' };
     } catch (err: any) {
-      if (currentFarmer.isDemo) {
-        const localId = `demo-crop-${Date.now()}`;
-        const newCrop: Crop = {
-          ...data,
-          id: localId,
-          farmerId: currentFarmer.id,
-          plantationDate: data.plantationDate,
-          createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
-        };
-        setCrops(prev => [newCrop, ...prev]);
-        showToast('Crop saved to demo ledger!', 'success');
-        return { success: true };
-      }
       const msg = err.response?.message || err.message || 'Failed to add crop';
       return { success: false, error: msg };
     }
@@ -811,11 +490,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Update failed' };
     } catch (err: any) {
-      if (currentFarmer.isDemo) {
-        setCrops(prev => prev.map(c => (c.id === id ? { ...c, ...data } : c)));
-        showToast('Crop details updated in demo ledger.', 'success');
-        return { success: true };
-      }
       const msg = err.response?.message || err.message || 'Failed to update crop';
       return { success: false, error: msg };
     }
@@ -833,11 +507,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Delete failed' };
     } catch (err: any) {
-      if (currentFarmer.isDemo) {
-        setCrops(prev => prev.filter(c => c.id !== id));
-        showToast('Crop removed from demo ledger.', 'info');
-        return { success: true };
-      }
       const msg = err.response?.message || err.message || 'Cannot delete crop';
       return { success: false, error: msg };
     }
@@ -878,19 +547,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Failed to record expense' };
     } catch (err: any) {
-      if (currentFarmer.isDemo) {
-        const localId = `demo-exp-${Date.now()}`;
-        const newExp: Expense = {
-          ...data,
-          id: localId,
-          farmerId: currentFarmer.id,
-          date: data.date,
-          createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
-        };
-        setExpenses(prev => [newExp, ...prev]);
-        showToast('Expense saved in demo ledger!', 'success');
-        return { success: true };
-      }
       const msg = err.response?.message || err.message || 'Failed to record expense';
       return { success: false, error: msg };
     }
@@ -921,11 +577,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Update failed' };
     } catch (err: any) {
-      if (currentFarmer.isDemo) {
-        setExpenses(prev => prev.map(e => (e.id === id ? { ...e, ...data } : e)));
-        showToast('Expense updated in demo ledger.', 'success');
-        return { success: true };
-      }
       const msg = err.response?.message || err.message || 'Failed to update expense';
       return { success: false, error: msg };
     }
@@ -943,11 +594,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Delete failed' };
     } catch (err: any) {
-      if (currentFarmer.isDemo) {
-        setExpenses(prev => prev.filter(e => e.id !== id));
-        showToast('Expense removed from demo ledger.', 'info');
-        return { success: true };
-      }
       const msg = err.response?.message || err.message || 'Failed to delete expense';
       return { success: false, error: msg };
     }
@@ -983,19 +629,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Failed to add worker' };
     } catch (err: any) {
-      if (currentFarmer.isDemo) {
-        const localId = `demo-wrk-${Date.now()}`;
-        const newWorker: Worker = {
-          ...data,
-          id: localId,
-          farmerId: currentFarmer.id,
-          paymentAmount: data.daysWorked * data.dailyWage,
-          createdAt: toDisplayDate(new Date().toISOString().split('T')[0])
-        };
-        setWorkers(prev => [newWorker, ...prev]);
-        showToast('Worker added with wage ledger.', 'success');
-        return { success: true };
-      }
       const msg = err.response?.message || err.message || 'Failed to add worker';
       return { success: false, error: msg };
     }
@@ -1038,26 +671,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Update failed' };
     } catch (err: any) {
-      if (currentFarmer.isDemo) {
-        setWorkers(prev =>
-          prev.map(w => {
-            if (w.id === id) {
-              const days = data.daysWorked !== undefined ? data.daysWorked : w.daysWorked;
-              const wage = data.dailyWage !== undefined ? data.dailyWage : w.dailyWage;
-              return {
-                ...w,
-                ...data,
-                daysWorked: days,
-                dailyWage: wage,
-                paymentAmount: days * wage
-              };
-            }
-            return w;
-          })
-        );
-        showToast('Worker wage roll updated.', 'success');
-        return { success: true };
-      }
       const msg = err.response?.message || err.message || 'Failed to update worker';
       return { success: false, error: msg };
     }
@@ -1075,11 +688,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return { success: false, error: res?.message || 'Delete failed' };
     } catch (err: any) {
-      if (currentFarmer.isDemo) {
-        setWorkers(prev => prev.filter(w => w.id !== id));
-        showToast('Worker record deleted.', 'info');
-        return { success: true };
-      }
       const msg = err.response?.message || err.message || 'Failed to delete worker';
       return { success: false, error: msg };
     }
@@ -1280,10 +888,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentFarmer,
         isAuthChecking,
         loginFarmer,
-        loginDemo,
-        resetDemoData,
         registerFarmer,
         logoutFarmer,
+        completeProfile,
+        isProfileModalOpen,
+        setIsProfileModalOpen,
         crops,
         addCrop,
         updateCrop,

@@ -2,6 +2,33 @@
 
 All notable changes to the KisanKhata backend and documentation are tracked here.
 
+## [1.2.0] - 2026-11-02 (Google OAuth 2.0 Integration & Complete Demo Removal)
+
+### Added
+- **Google OAuth 2.0 Authentication (Server-Side Authorization Code Flow):**
+  - Integrated `spring-boot-starter-oauth2-client` in `backend/pom.xml`.
+  - Added `OAuth2ClientConfig` with conditional / safe placeholder client registration ensuring the backend boots cleanly even when Google credentials are not yet configured.
+  - Implemented `GET /api/v1/auth/google/start?role=FARMER|BUYER` redirecting to `/oauth2/authorization/google` with session-scoped role preservation.
+  - Implemented `OAuth2SuccessHandler` to verify `email_verified`, link existing accounts or register new accounts as `FARMER` / `BUYER`, prevent privilege escalation, issue Spring Security sessions (`JSESSIONID`), and redirect to the frontend with `profile=incomplete` if required.
+  - Implemented `OAuth2FailureHandler` redirecting to the frontend with generic error codes.
+  - Added `PUT /api/v1/auth/profile` allowing Google users and existing users to update/complete mobile, farmName, address, city, pinCode, state with validation.
+  - Added "Continue with Google" button with official multicolor Google G logo SVG on both Sign In and Register views.
+  - Added role picker (Farmer vs Buyer) in frontend registration.
+  - Added `CompleteProfileModal` in frontend for instant post-login mobile and address completion.
+  - Created setup guide: `docs/GOOGLE_AUTH_SETUP.md`.
+
+### Removed
+- **Complete Demo Account Purge:**
+  - Removed `POST /api/v1/auth/demo` and `POST /api/v1/auth/demo/reset`.
+  - Removed `DemoDataService.java`, `DemoAuthIntegrationTest.java`, and `DemoDataServiceTest.java`.
+  - Added `DemoCleanupRunner` to automatically delete any existing `demo.farmer@kisankhata.in` user and all associated crops, expenses, workers, records, and orders on startup.
+  - Removed all demo fallback constants, `loginDemo`, `resetDemoData`, and `isDemo` flags across the frontend (`AppContext.tsx`, `Header.tsx`, `HomePage.tsx`, `FarmerDashboard.tsx`, `types.ts`).
+
+### Updated
+- `AppUser` entity: added `googleSub`, `authProvider`, `pictureUrl`, nullable `passwordHash` and `mobile`, and `isProfileComplete()` helper.
+- `SecurityConfig`: added OAuth2 login, updated permitAll and CSRF ignores, added cross-origin support for Google auth redirects.
+- Test suite: added `OAuth2GoogleAuthTest.java` with 9 comprehensive integration tests (all 23 backend tests passing).
+
 ## [1.1.0] - 2026-10-21 (Full Core Backend, Marketplace, Admin & Integration)
 
 ### Added

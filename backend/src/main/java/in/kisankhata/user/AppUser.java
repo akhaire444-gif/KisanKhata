@@ -5,7 +5,8 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "app_users", indexes = {
-    @Index(name = "ux_user_email", columnList = "email", unique = true)
+    @Index(name = "ux_user_email", columnList = "email", unique = true),
+    @Index(name = "ux_user_google_sub", columnList = "googleSub", unique = true)
 })
 public class AppUser {
 
@@ -22,10 +23,10 @@ public class AppUser {
     @Column(nullable = false, length = 254, unique = true)
     private String email;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = true, length = 20)
     private String mobile;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = true, length = 100)
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
@@ -47,13 +48,23 @@ public class AppUser {
     @Column(length = 100)
     private String state = "Maharashtra";
 
+    @Column(length = 100, unique = true)
+    private String googleSub;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+
+    @Column(length = 500)
+    private String pictureUrl;
+
     @Column(nullable = false)
     private boolean active = true;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
-    protected AppUser() {}
+    public AppUser() {}
 
     public AppUser(String firstName, String lastName, String email, String mobile, String passwordHash,
                    Role role, String farmName, String address, String state) {
@@ -64,7 +75,7 @@ public class AppUser {
                    Role role, String farmName, String address, String city, String pinCode, String state) {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.email = email.toLowerCase().trim();
+        this.email = email != null ? email.toLowerCase().trim() : null;
         this.mobile = mobile;
         this.passwordHash = passwordHash;
         this.role = role;
@@ -73,8 +84,24 @@ public class AppUser {
         this.city = city;
         this.pinCode = pinCode;
         this.state = state;
+        this.authProvider = AuthProvider.LOCAL;
         this.active = true;
         this.createdAt = Instant.now();
+    }
+
+    public boolean isProfileComplete() {
+        if (role == Role.ADMIN) {
+            return true;
+        }
+        if (mobile == null || !mobile.trim().matches("^[0-9]{10}$")) {
+            return false;
+        }
+        if (role == Role.BUYER) {
+            return address != null && !address.trim().isBlank()
+                && city != null && !city.trim().isBlank()
+                && pinCode != null && pinCode.trim().matches("^[0-9]{6}$");
+        }
+        return true;
     }
 
     public String getId() { return id; }
@@ -89,11 +116,15 @@ public class AppUser {
     public String getCity() { return city; }
     public String getPinCode() { return pinCode; }
     public String getState() { return state; }
+    public String getGoogleSub() { return googleSub; }
+    public AuthProvider getAuthProvider() { return authProvider; }
+    public String getPictureUrl() { return pictureUrl; }
     public boolean isActive() { return active; }
     public Instant getCreatedAt() { return createdAt; }
 
     public void setFirstName(String firstName) { this.firstName = firstName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
+    public void setEmail(String email) { this.email = email != null ? email.toLowerCase().trim() : null; }
     public void setMobile(String mobile) { this.mobile = mobile; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public void setRole(Role role) { this.role = role; }
@@ -102,5 +133,8 @@ public class AppUser {
     public void setCity(String city) { this.city = city; }
     public void setPinCode(String pinCode) { this.pinCode = pinCode; }
     public void setState(String state) { this.state = state; }
+    public void setGoogleSub(String googleSub) { this.googleSub = googleSub; }
+    public void setAuthProvider(AuthProvider authProvider) { this.authProvider = authProvider; }
+    public void setPictureUrl(String pictureUrl) { this.pictureUrl = pictureUrl; }
     public void setActive(boolean active) { this.active = active; }
 }

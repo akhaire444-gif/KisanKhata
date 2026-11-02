@@ -19,11 +19,16 @@ export interface Farmer {
   address: string;
   farmName: string;
   state: string;
+  city?: string;
+  pinCode?: string;
   tenantId: string;
   totalAcres: number;
   status: 'Active' | 'Disabled';
   createdAt: string;
-  isDemo?: boolean;
+  profileComplete?: boolean;
+  pictureUrl?: string;
+  authProvider?: 'LOCAL' | 'GOOGLE';
+  role?: string;
 }
 
 export interface Crop {

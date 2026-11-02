@@ -1,32 +1,36 @@
-# KisanKhata Deployment & Operational Runbook
+# KisanKhata — Deployment & Environment Configuration
 
-## 1. System Requirements & Platform Support
-- **Backend Platform:** Render (Web Service), Railway, VPS (Ubuntu 22.04 LTS), or Windows Server.
-- **Frontend Platform:** Vercel, Netlify, or Cloudflare Pages.
-- **Java Runtime:** Eclipse Temurin OpenJDK 17 LTS or later (`java -version`).
-- **Node.js Runtime (Frontend):** Node.js 18 LTS or later with npm 9+.
-- **Database:** PostgreSQL (Render PostgreSQL / Supabase) or embedded persistent H2.
-- **Memory:** Minimum 512 MB RAM (1 GB recommended).
+## 1. Architecture Overview
+
+- **Frontend:** React 19 + TypeScript + Vite + Tailwind CSS (hosted on Vercel at `https://kisan-khata-x1dp.vercel.app/`).
+- **Backend:** Spring Boot 3.4.5 + Java 17 + Spring Security 6 (hosted on Render at `https://kisankhata-1.onrender.com/`).
+- **Authentication:**
+  - **Google OAuth 2.0:** Server-side Authorization Code flow with Client ID + Secret.
+  - **Local Email/Password:** Available for both Farmers and Marketplace Buyers.
+  - **Session Model:** Spring Security session cookie (`JSESSIONID`, `HttpOnly`) with CSRF protection (`CookieCsrfTokenRepository.withHttpOnlyFalse()`).
+- **Database:** H2 file-mode (local/dev) or managed PostgreSQL on production with `ddl-auto: update`.
 
 ---
 
-## 2. Configuration & Environment Variables
+## 2. Environment Variables
 
-### Backend Environment Variables (Render / Host)
+### Backend Environment Variables (Render / Production Host)
 
-| Variable | Default Value | Description |
+| Variable | Example Value | Description |
 |---|---|---|
-| `PORT` | `8080` (or dynamically assigned by Render) | Backend HTTP listening port |
-| `DATABASE_URL` | `jdbc:h2:file:./data/kisankhata;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE` | Database JDBC URL (Render sets PostgreSQL `jdbc:postgresql://...`) |
-| `DATABASE_USERNAME` | `sa` | Database username |
-| `DATABASE_PASSWORD` | *(empty)* | Database password |
-| `FRONTEND_ORIGIN` | `https://kisan-khata-x1dp.vercel.app` | Allowed CORS origin (comma-separated for local dev: `http://localhost:5173,http://localhost:3000`) |
+| `PORT` | `8080` | Internal server port (assigned automatically by Render) |
+| `DATABASE_URL` | `jdbc:postgresql://host:5432/dbname` | Database JDBC URL |
+| `DATABASE_USERNAME` | `dbuser` | Database username |
+| `DATABASE_PASSWORD` | `dbpassword` | Database password |
+| `FRONTEND_ORIGIN` | `https://kisan-khata-x1dp.vercel.app` | Allowed CORS frontend origin |
+| `GOOGLE_CLIENT_ID` | `...apps.googleusercontent.com` | Google OAuth2 Web Client ID |
+| `GOOGLE_CLIENT_SECRET` | `GOCSPX-...` | Google OAuth2 Web Client Secret |
 | `BOOTSTRAP_ADMIN_EMAIL` | `admin@kisankhata.in` | Initial admin account email (seeded on first boot) |
 | `BOOTSTRAP_ADMIN_PASSWORD` | *(min 12 characters)* | Initial admin account password |
-| `SESSION_COOKIE_SAMESITE` | `lax` (set to `none` for cross-origin Vercel) | SameSite attribute for `JSESSIONID` cookie (`none` required when frontend is on Vercel and backend is on Render) |
-| `SESSION_COOKIE_SECURE` | `false` (set to `true` on Render HTTPS) | Secure attribute for cookie (`true` required when `SameSite=none`) |
+| `SESSION_COOKIE_SAMESITE` | `none` | Cross-site cookie attribute for Vercel <-> Render integration |
+| `SESSION_COOKIE_SECURE` | `true` | Secure HTTPS cookie flag |
 
-> **Note on Authentication:** Google OAuth 2.0 has been completely removed. No Google Client ID, Google Secret, or Google Redirect URIs are required. Authentication operates via robust session cookies (`JSESSIONID`) supporting standard Farmer registration/login and the instantaneous One-Click Demo Mode.
+> **Note on Authentication:** Google OAuth 2.0 operates via Spring Security's server-side Authorization Code flow. The Client Secret remains strictly on the backend. When users click "Continue with Google", the browser redirects to `/api/v1/auth/google/start?role=FARMER|BUYER`, connects to Google, receives the callback at `/login/oauth2/code/google`, exchanges the code, creates/links the user record, and establishes the authenticated Spring session.
 
 ### Frontend Environment Variables (Vercel)
 
@@ -34,25 +38,22 @@
 |---|---|---|
 | `VITE_API_BASE_URL` | `https://kisankhata-1.onrender.com` | Production backend API base URL |
 
+*(The client secret must NEVER be set on the frontend or in `VITE_*` variables).*
+
 ---
 
-## 3. Demo Account & Tenant Isolation Architecture
+## 3. Google OAuth & Tenant Isolation Architecture
 
-Kisan Khata provides a zero-barrier **One-Click Demo Account** for agricultural demonstrations:
+Kisan Khata provides authenticated multi-tenant isolation:
 
-- **Endpoint:** `POST /api/v1/auth/demo` (public, requires no credentials or OTP).
-- **Reset Endpoint:** `POST /api/v1/auth/demo/reset` (authenticated as demo user).
-- **Tenant ID:** Dedicated demo tenant `DEMO-MH-TENANT`.
-- **Demo User:** `demo.farmer@kisankhata.in` (Name: *Demo Farmer*, Farm: *Green Valley Demonstration Farm*, Sinnar, Nashik, Maharashtra).
-- **Realistic Seeded Data:**
-  - 4 Crops (Kharif Soybean, Rabi Onion, Pomegranate Orchard, Sugarcane Co-86032).
-  - 8 Agricultural Expenses across Seeds, Fertilizers, Pesticides, Diesel, Machinery, Irrigation, and Other.
-  - 6 Realistic Farm Workers (Rameshwar Chavan, Sunita Tai Patil, Bhaskar Rao Gite, Anita Dnyaneshwar Wagh, Datta Tukaram Shinde, Kailas Baburao Sanap) with daily wage rates (₹350 - ₹500/day) and attendance/wage records.
-  - 7 Field Activity Records (irrigation logs, spray logs, crop reminders).
+- **Start Endpoint:** `GET /api/v1/auth/google/start?role=FARMER|BUYER` (initiates Google OAuth2 code flow).
+- **Callback Endpoint:** `GET /login/oauth2/code/google` (Spring Security OAuth2 client callback).
+- **Profile Completion:** `PUT /api/v1/auth/profile` (authenticated, updates mobile, farmName, address, city, pinCode).
+- **Tenant ID:** Assigned per user (`Farm-MH-XXXX`).
 - **Security & Isolation:**
-  - Demo user holds `ROLE_FARMER` and cannot access `/api/v1/admin/**` (returns HTTP 403 Forbidden).
-  - All database queries filter strictly by `farmerId = demoUser.getId()`. Real farmer accounts are completely isolated and immune to demo modifications.
-  - A convenient "Reset Sample Data" action allows restoring sample state at any point.
+  - Zero demo accounts: Demo access and mock users are completely removed.
+  - All database queries filter strictly by `farmerId` / `buyerId` from the authenticated session.
+  - ADMIN role cannot be assigned through Google registration.
 
 ---
 
@@ -69,60 +70,26 @@ Kisan Khata provides a zero-barrier **One-Click Demo Account** for agricultural 
      ```
    - **Start Command:**
      ```bash
-     java -Dserver.port=$PORT -jar target/kisankhata-backend-0.1.0.jar
+     java -jar target/kisankhata-backend-0.1.0.jar
      ```
-3. **Set Environment Variables in Render Dashboard:**
-   - `PORT`: Automatically set by Render
-   - `FRONTEND_ORIGIN`: `https://kisan-khata-x1dp.vercel.app`
-   - `SESSION_COOKIE_SAMESITE`: `none`
-   - `SESSION_COOKIE_SECURE`: `true`
-   - `BOOTSTRAP_ADMIN_EMAIL`: `admin@kisankhata.in`
-   - `BOOTSTRAP_ADMIN_PASSWORD`: `<strong-secret-password>`
-   - (Optional) `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` if connecting a Render PostgreSQL database.
-4. **Health Check Path:** `/actuator/health`
+3. Set the required backend environment variables.
+4. Add the backend redirect URI in Google Cloud Console:
+   `https://<your-render-app>.onrender.com/login/oauth2/code/google`
 
 ### B. Frontend Deployment (Vercel)
 
-1. **Repository:** Connect the repository to Vercel.
-2. **Framework Preset:** Vite
-3. **Root Directory:** `frontend`
-4. **Build & Output Settings:**
-   - **Build Command:** `npm run build`
-   - **Output Directory:** `dist`
-   - **Install Command:** `npm install`
-5. **Environment Variables in Vercel Dashboard:**
-   - `VITE_API_BASE_URL`: `https://kisankhata-1.onrender.com`
-6. Deploy!
+1. **Root Directory:** `frontend`
+2. **Build Command:** `npm run build`
+3. **Output Directory:** `dist`
+4. **Environment Variable:** `VITE_API_BASE_URL=https://<your-render-app>.onrender.com`
 
 ---
 
-## 5. Local Development Quickstart
+## 5. Verification Checklist
 
-### Backend
-```bash
-cd backend
-mvn clean package -DskipTests
-java -jar target/kisankhata-backend-0.1.0.jar
-```
-Backend runs on `http://localhost:8080`.
-
-### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Frontend runs on `http://localhost:5173`.
-
----
-
-## 6. Verification Checklist
-
-- [x] Login page loads with "Sign In", "Register Farm", and "Explore Demo Account" buttons.
-- [x] Google Sign-In elements and callback handlers completely removed.
-- [x] Clicking "Explore Demo Account" grants immediate access to the dashboard without credentials.
-- [x] Demo farm information displays *Green Valley Demonstration Farm* (Nashik, Maharashtra).
-- [x] Full CRUD operations on agricultural expenses, crops, and farm workers work as expected.
-- [x] Worker rozi wage calculations and pending payments calculate dynamically from database records.
-- [x] Demo data isolation verified: Demo user cannot access admin APIs or real farmer data.
-- [x] Demo reset button restores clean agricultural demo dataset on demand.
+- [x] Login page loads with "Continue with Google", "Sign In", and "Register" buttons.
+- [x] Demo account endpoints and UI elements completely removed.
+- [x] Google sign-in works for Farmers and Buyers, establishing a real Spring session.
+- [x] Profile completion modal triggers for users with missing mobile/delivery details.
+- [x] Tenant data isolation verified: Users only access their own records.
+- [x] Session restores cleanly on page refresh via `/api/v1/auth/me`.

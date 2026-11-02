@@ -2,37 +2,23 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { NavigationPath } from '../types';
 import { KisanKhataLogo } from './KisanKhataLogo';
+import { api } from '../api/client';
 
 export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void }> = ({ onOpenAuthModal }) => {
   const {
     currentPath,
     setCurrentPath,
-    currentRole,
     currentFarmer,
     logoutFarmer,
-    loginDemo,
-    resetDemoData,
     todayReminders,
-    backendStatus,
-    showToast
+    backendStatus
   } = useApp();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isDemoLoading, setIsDemoLoading] = useState(false);
 
-  const handleExploreDemo = async () => {
-    if (isDemoLoading) return;
-    setIsDemoLoading(true);
-    try {
-      const res = await loginDemo();
-      if (!res.success && res.error) {
-        showToast(res.error, 'error');
-      }
-      setIsMobileMenuOpen(false);
-    } finally {
-      setIsDemoLoading(false);
-    }
+  const handleGoogleQuickAuth = () => {
+    window.location.href = api.auth.getGoogleAuthUrl('FARMER');
   };
 
   const authenticatedNavItems: { label: string; path: NavigationPath }[] = [
@@ -79,14 +65,14 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
                 ? 'Spring Boot 3.4 Backend is live and connected'
                 : backendStatus === 'checking'
                   ? 'Connecting to backend...'
-                  : 'Public Demo Mode is active and ready'
+                  : 'Backend is offline'
             }
             className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all border backdrop-blur-md shadow-2xs ${
               backendStatus === 'connected'
                 ? 'bg-[#1b4332]/10 text-[#116c4a] border-emerald-500/25'
                 : backendStatus === 'checking'
                   ? 'bg-amber-500/10 text-amber-800 border-amber-300/40'
-                  : 'bg-emerald-500/15 text-emerald-900 border-emerald-400/40 shadow-[0_0_12px_rgba(16,185,129,0.12)]'
+                  : 'bg-red-500/10 text-red-800 border-red-300/40'
             }`}
           >
             <span
@@ -95,7 +81,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
                   ? 'bg-[#116c4a] animate-pulse'
                   : backendStatus === 'checking'
                     ? 'bg-amber-500 animate-ping'
-                    : 'bg-emerald-600'
+                    : 'bg-red-500'
               }`}
             />
             <span>
@@ -103,20 +89,17 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
                 ? 'API Live'
                 : backendStatus === 'checking'
                   ? 'Connecting...'
-                  : 'Demo Ready'}
+                  : 'Offline'}
             </span>
           </div>
 
-          {/* Tenant Status Pill / Demo Account Badge */}
+          {/* Tenant Status Pill */}
           {currentFarmer && (
-            <div className={`hidden xl:flex items-center px-3.5 py-1 rounded-full text-[12px] font-bold shadow-xs backdrop-blur-md ${currentFarmer.isDemo
-                ? 'bg-amber-100/80 text-amber-950 border border-amber-300/80 shadow-[0_2px_8px_rgba(245,158,11,0.15)]'
-                : 'bg-[#a1f4c8]/80 text-[#0f5135] border border-emerald-300/80'
-              }`}>
+            <div className="hidden xl:flex items-center px-3.5 py-1 rounded-full text-[12px] font-bold shadow-xs backdrop-blur-md bg-[#a1f4c8]/80 text-[#0f5135] border border-emerald-300/80">
               <span className="material-symbols-outlined text-[15px] mr-1">
-                {currentFarmer.isDemo ? 'verified' : 'domain'}
+                verified
               </span>
-              <span>{currentFarmer.isDemo ? 'DEMO ACCOUNT' : `Tenant: ${currentFarmer.tenantId}`}</span>
+              <span>Tenant: {currentFarmer.tenantId}</span>
             </div>
           )}
         </div>
@@ -129,10 +112,11 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
               <button
                 key={item.path}
                 onClick={() => handleNavClick(item.path)}
-                className={`relative px-3.5 py-1.5 text-[13px] font-semibold rounded-xl transition-all cursor-pointer ${isActive
+                className={`relative px-3.5 py-1.5 text-[13px] font-semibold rounded-xl transition-all cursor-pointer ${
+                  isActive
                     ? 'bg-[#012d1d]/90 text-white shadow-[0_3px_12px_rgba(1,45,29,0.28),inset_0_1px_0_rgba(255,255,255,0.3)] backdrop-blur-md'
                     : 'text-[#414844] hover:text-[#012d1d] hover:bg-white/70'
-                  }`}
+                }`}
               >
                 {item.label}
                 {item.path === 'reminders' && todayReminders.length > 0 && (
@@ -145,65 +129,69 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
           })}
         </nav>
 
-        {/* Right Actions: Currency, Notification, Profile Switcher */}
+        {/* Right: Currency & Actions / Profile */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* INR Indicator */}
-          <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white/60 backdrop-blur-md text-[#414844] text-[12px] font-semibold border border-white/80 shadow-2xs">
-            <span className="material-symbols-outlined text-[16px]">currency_rupee</span>
+          <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/60 backdrop-blur-md border border-white/80 text-[12px] font-bold text-[#012d1d] shadow-2xs">
+            <span>₹</span>
             <span>INR</span>
           </div>
 
           {currentFarmer ? (
             <>
-              {/* Notifications */}
+              {/* Notification Bell */}
               <button
                 onClick={() => handleNavClick('reminders')}
-                title={todayReminders.length > 0 ? `${todayReminders.length} reminder(s) due today` : 'Farm Reminders'}
-                className="relative w-9 h-9 rounded-full flex items-center justify-center text-[#414844] bg-white/50 hover:bg-white/85 border border-white/70 backdrop-blur-md shadow-2xs transition-all cursor-pointer"
+                className="relative p-2 rounded-xl text-[#012d1d] bg-white/60 hover:bg-white/90 backdrop-blur-md border border-white/80 shadow-2xs transition-all cursor-pointer"
+                title="Reminders"
+                aria-label="View Reminders"
               >
-                <span className="material-symbols-outlined text-[21px]">notifications</span>
+                <span className="material-symbols-outlined text-[20px]">notifications</span>
                 {todayReminders.length > 0 && (
-                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-[#ba1a1a] rounded-full ring-2 ring-white"></span>
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-[#ba1a1a] rounded-full ring-2 ring-white animate-pulse" />
                 )}
               </button>
 
-              {/* Profile Dropdown */}
+              {/* Profile Menu Capsule */}
               <div className="relative">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 bg-white/65 backdrop-blur-md rounded-full border border-white/80 shadow-2xs hover:bg-white/90 hover:shadow-xs transition-all cursor-pointer"
+                  className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-2xl bg-white/75 hover:bg-white/95 backdrop-blur-md border border-white/85 shadow-2xs hover:shadow-xs transition-all cursor-pointer"
+                  aria-expanded={isProfileOpen}
+                  aria-label="User profile menu"
                 >
-                  <div className="w-8 h-8 rounded-full bg-[#012d1d] flex items-center justify-center text-white text-[16px] shadow-2xs">
-                    <span className="material-symbols-outlined text-[18px]">agriculture</span>
-                  </div>
-                  <div className="hidden md:flex flex-col text-left">
-                    <span className="text-[12px] font-bold text-[#111c2d] leading-tight">
-                      {`${currentFarmer.firstName} ${currentFarmer.lastName}`.trim()}
-                    </span>
-                    <span className="text-[10px] font-medium text-[#116c4a] leading-none">
-                      {currentFarmer.tenantId}
-                    </span>
-                  </div>
-                  <span className="material-symbols-outlined text-[#414844] text-[18px] hidden md:inline-block">
+                  {currentFarmer.pictureUrl ? (
+                    <img
+                      src={currentFarmer.pictureUrl}
+                      alt={currentFarmer.firstName}
+                      className="w-7 h-7 rounded-full object-cover border border-emerald-400"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-xl bg-[#012d1d] text-[#a1f4c8] flex items-center justify-center font-bold text-[12px] shadow-2xs">
+                      {currentFarmer.firstName ? currentFarmer.firstName.charAt(0).toUpperCase() : 'K'}
+                    </div>
+                  )}
+                  <span className="hidden sm:inline font-bold text-[13px] text-[#012d1d]">
+                    {currentFarmer.firstName || 'Farmer'}
+                  </span>
+                  <span className="material-symbols-outlined text-[16px] text-[#717973]">
                     expand_more
                   </span>
                 </button>
 
+                {/* Profile Popover Window */}
                 {isProfileOpen && (
-                  <div
-                    className="absolute right-0 mt-2 w-72 bg-white/90 backdrop-blur-2xl rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white/85 p-3 z-50 animate-in fade-in slide-in-from-top-2"
-                    onClick={() => setIsProfileOpen(false)}
-                  >
-                    <div className="p-2 border-b border-[#f0f3ff] mb-2">
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#116c4a]">
-                        Active Farm Account
+                  <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-white/80 p-3 z-50 animate-in fade-in-50 zoom-in-95">
+                    <div className="px-3 py-2 border-b border-slate-100 mb-2">
+                      <p className="font-bold text-[14px] text-[#012d1d] truncate">
+                        {currentFarmer.firstName} {currentFarmer.lastName}
                       </p>
-                      <p className="text-[14px] font-bold text-[#012d1d]">
-                        {`${currentFarmer.firstName} ${currentFarmer.lastName}`.trim()}
+                      <p className="text-[12px] text-[#717973] truncate">{currentFarmer.email}</p>
+                      <p className="text-[11px] font-semibold text-[#116c4a] mt-0.5 truncate">
+                        {currentFarmer.farmName}
                       </p>
-                      <p className="text-[12px] text-[#414844]">
-                        {currentFarmer.farmName} • {currentFarmer.email}
-                      </p>
+                      <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#a1f4c8]/60 text-[#0f5135]">
+                        Tenant: {currentFarmer.tenantId}
+                      </span>
                     </div>
 
                     <div className="space-y-1">
@@ -211,8 +199,8 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
                         onClick={() => handleNavClick('dashboard')}
                         className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-[13px] font-semibold text-[#012d1d] hover:bg-[#f0f3ff] transition-colors cursor-pointer"
                       >
-                        <span className="material-symbols-outlined text-[18px]">grid_view</span>
-                        <span>Farmer Dashboard</span>
+                        <span className="material-symbols-outlined text-[18px]">dashboard</span>
+                        <span>Farm Dashboard</span>
                       </button>
 
                       <button
@@ -232,28 +220,13 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
                       </button>
                     </div>
 
-                    {currentFarmer.isDemo && (
-                      <div className="border-t border-[#f0f3ff] mt-2 pt-2">
-                        <button
-                          onClick={async () => {
-                            await resetDemoData();
-                            setIsProfileOpen(false);
-                          }}
-                          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-bold text-[#116c4a] bg-[#e8f5e9] hover:bg-[#c8e6c9] transition-colors cursor-pointer"
-                        >
-                          <span className="material-symbols-outlined text-[16px]">restart_alt</span>
-                          <span>Reset Sample Data</span>
-                        </button>
-                      </div>
-                    )}
-
                     <div className="border-t border-[#f0f3ff] mt-2 pt-2">
                       <button
                         onClick={logoutFarmer}
                         className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-bold text-[#ba1a1a] bg-[#ffdad6]/40 hover:bg-[#ffdad6]/70 transition-colors cursor-pointer"
                       >
                         <span className="material-symbols-outlined text-[16px]">logout</span>
-                        <span>{currentFarmer.isDemo ? 'Exit Demo Account' : 'Sign Out of Khata'}</span>
+                        <span>Sign Out of Khata</span>
                       </button>
                     </div>
                   </div>
@@ -264,12 +237,17 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={handleExploreDemo}
-                disabled={isDemoLoading}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white text-[12px] font-bold shadow-[0_4px_14px_rgba(16,185,129,0.3),inset_0_1px_0_rgba(255,255,255,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+                onClick={handleGoogleQuickAuth}
+                className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-[#111c2d] text-[12px] font-semibold border border-slate-200 shadow-2xs hover:shadow-xs transition-all cursor-pointer"
+                title="Continue with Google"
               >
-                <span className="material-symbols-outlined text-[16px]">rocket_launch</span>
-                <span>{isDemoLoading ? 'Loading...' : 'Explore Demo'}</span>
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                <span>Google</span>
               </button>
               <button
                 type="button"
@@ -283,7 +261,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
                 onClick={() => onOpenAuthModal(true)}
                 className="px-3.5 py-1.5 rounded-xl bg-[#012d1d]/90 hover:bg-[#012d1d] text-white text-[13px] font-bold shadow-[0_4px_14px_rgba(1,45,29,0.25),inset_0_1px_0_rgba(255,255,255,0.25)] hover:shadow-[0_6px_20px_rgba(1,45,29,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
               >
-                Register Farm
+                Get Started
               </button>
             </div>
           )}
@@ -318,10 +296,11 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
               <button
                 key={item.path}
                 onClick={() => handleNavClick(item.path)}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-semibold text-left transition-all ${currentPath === item.path
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-semibold text-left transition-all ${
+                  currentPath === item.path
                     ? 'bg-[#012d1d] text-white shadow-xs'
                     : 'bg-white/60 hover:bg-white/85 border border-white/70 text-[#111c2d]'
-                  }`}
+                }`}
               >
                 <span>{item.label}</span>
                 {item.path === 'reminders' && todayReminders.length > 0 && (
@@ -335,39 +314,32 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
 
           <div className="pt-2 border-t border-[#f0f3ff] space-y-2">
             {currentFarmer ? (
-              <>
-                {currentFarmer.isDemo && (
-                  <button
-                    onClick={async () => {
-                      setIsMobileMenuOpen(false);
-                      await resetDemoData();
-                    }}
-                    className="w-full py-2.5 rounded-xl bg-[#e8f5e9] text-[#116c4a] text-[13px] font-bold text-center cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">restart_alt</span>
-                    <span>Reset Sample Data</span>
-                  </button>
-                )}
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    logoutFarmer();
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-[#ffdad6]/60 text-[#ba1a1a] text-[13px] font-bold text-center cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <span className="material-symbols-outlined text-[16px]">logout</span>
-                  <span>{currentFarmer.isDemo ? 'Exit Demo Account' : `Sign Out (${currentFarmer.firstName})`}</span>
-                </button>
-              </>
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  logoutFarmer();
+                }}
+                className="w-full py-2.5 rounded-xl bg-[#ffdad6]/60 text-[#ba1a1a] text-[13px] font-bold text-center cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-[16px]">logout</span>
+                <span>Sign Out ({currentFarmer.firstName})</span>
+              </button>
             ) : (
               <div className="space-y-2">
                 <button
-                  onClick={handleExploreDemo}
-                  disabled={isDemoLoading}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#116c4a] to-[#1b724f] text-white text-[13px] font-bold text-center cursor-pointer flex items-center justify-center gap-2 shadow-xs disabled:opacity-50"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleGoogleQuickAuth();
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-white border border-slate-200 text-[#111c2d] text-[13px] font-bold text-center cursor-pointer flex items-center justify-center gap-2 shadow-xs"
                 >
-                  <span className="material-symbols-outlined text-[18px]">rocket_launch</span>
-                  <span>{isDemoLoading ? 'Entering Demo...' : 'Explore Demo Account (1-Click)'}</span>
+                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                  </svg>
+                  <span>Continue with Google</span>
                 </button>
                 <div className="flex gap-2">
                   <button

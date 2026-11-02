@@ -1,34 +1,30 @@
 package in.kisankhata.auth;
 
-import in.kisankhata.farm.DemoDataService;
 import in.kisankhata.user.AppUser;
 import in.kisankhata.user.Role;
 import in.kisankhata.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -39,20 +35,29 @@ public class AuthController {
     private final PasswordEncoder encoder;
     private final AuthenticationManager manager;
     private final LoginAttemptService loginAttemptService;
-    private final DemoDataService demoDataService;
+    private final OAuth2ClientConfig oAuth2ClientConfig;
+    private final String frontendUrl;
 
     public AuthController(
         UserRepository users,
         PasswordEncoder encoder,
         org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration cfg,
         LoginAttemptService loginAttemptService,
-        DemoDataService demoDataService
+        OAuth2ClientConfig oAuth2ClientConfig,
+        @Value("${app.frontend-url:${FRONTEND_ORIGIN:http://localhost:3000}}") String frontendUrl
     ) throws Exception {
         this.users = users;
         this.encoder = encoder;
         this.manager = cfg.getAuthenticationManager();
         this.loginAttemptService = loginAttemptService;
-        this.demoDataService = demoDataService;
+        this.oAuth2ClientConfig = oAuth2ClientConfig;
+        this.frontendUrl = normalizeFrontendUrl(frontendUrl);
+    }
+
+    private static String normalizeFrontendUrl(String url) {
+        if (url == null || url.isBlank()) return "http://localhost:3000";
+        String trimmed = url.trim();
+        return trimmed.endsWith("/") ? trimmed.substring(0, trimmed.length() - 1) : trimmed;
     }
 
     public record RegisterRequest(
@@ -82,6 +87,15 @@ public class AuthController {
         @NotBlank String password
     ) {}
 
+    public record UpdateProfileRequest(
+        @Pattern(regexp = "^[0-9]{10}$", message = "Mobile must be a 10-digit number") String mobile,
+        @Size(max = 180) String farmName,
+        @Size(max = 300) String address,
+        @Size(max = 100) String city,
+        @Pattern(regexp = "^[0-9]{6}$", message = "Pin code must be a 6-digit number") String pinCode,
+        @Size(max = 100) String state
+    ) {}
+
     public record UserView(
         String id,
         String firstName,
@@ -94,8 +108,26 @@ public class AuthController {
         String city,
         String pinCode,
         String state,
-        boolean isDemo
+        boolean profileComplete,
+        String authProvider,
+        String pictureUrl
     ) {}
+
+    @GetMapping("/google/start")
+    public void startGoogleAuth(
+        @RequestParam(required = false, defaultValue = "FARMER") String role,
+        HttpServletRequest request,
+        HttpServletResponse response
+    ) throws IOException {
+        if (!oAuth2ClientConfig.isGoogleConfigured()) {
+            response.sendRedirect(frontendUrl + "/?auth=error&code=GOOGLE_NOT_CONFIGURED");
+            return;
+        }
+
+        String safeRole = "BUYER".equalsIgnoreCase(role) ? "BUYER" : "FARMER";
+        request.getSession(true).setAttribute("oauth2_auth_role", safeRole);
+        response.sendRedirect("/oauth2/authorization/google");
+    }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest r) {
@@ -178,42 +210,56 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/demo")
-    public ResponseEntity<?> demoLogin(HttpServletRequest request) {
-        AppUser demoUser = demoDataService.ensureDemoDataInitialized();
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@Valid @RequestBody UpdateProfileRequest r, Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "success", false,
+                "code", "UNAUTHORIZED",
+                "message", "Authentication required"
+            ));
+        }
 
-        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + demoUser.getRole().name()));
-        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-            demoUser.getEmail(),
-            null,
-            authorities
-        );
+        AppUser u = users.findByEmailIgnoreCase(auth.getName()).orElseThrow();
 
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(auth);
-        SecurityContextHolder.setContext(context);
-        request.getSession(true).setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+        if (r.mobile() != null && !r.mobile().isBlank()) {
+            String mob = r.mobile().trim();
+            if (!mob.matches("^[0-9]{10}$")) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "code", "INVALID_MOBILE",
+                    "message", "Mobile must be exactly 10 digits"
+                ));
+            }
+            u.setMobile(mob);
+        }
 
-        return ResponseEntity.ok(Map.of("success", true, "data", view(demoUser)));
-    }
+        if (r.farmName() != null) {
+            u.setFarmName(r.farmName().trim());
+        }
+        if (r.address() != null) {
+            u.setAddress(r.address().trim());
+        }
+        if (r.city() != null) {
+            u.setCity(r.city().trim());
+        }
+        if (r.pinCode() != null && !r.pinCode().isBlank()) {
+            String pin = r.pinCode().trim();
+            if (!pin.matches("^[0-9]{6}$")) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "code", "INVALID_PIN_CODE",
+                    "message", "Pin code must be exactly 6 digits"
+                ));
+            }
+            u.setPinCode(pin);
+        }
+        if (r.state() != null && !r.state().isBlank()) {
+            u.setState(r.state().trim());
+        }
 
-    @PostMapping("/demo/reset")
-    public ResponseEntity<?> demoReset(HttpServletRequest request) {
-        AppUser demoUser = demoDataService.resetDemoData();
-
-        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + demoUser.getRole().name()));
-        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-            demoUser.getEmail(),
-            null,
-            authorities
-        );
-
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(auth);
-        SecurityContextHolder.setContext(context);
-        request.getSession(true).setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
-
-        return ResponseEntity.ok(Map.of("success", true, "message", "Demo data reset successfully", "data", view(demoUser)));
+        AppUser saved = users.save(u);
+        return ResponseEntity.ok(Map.of("success", true, "data", view(saved)));
     }
 
     @GetMapping("/me")
@@ -239,8 +285,7 @@ public class AuthController {
         ));
     }
 
-    private UserView view(AppUser u) {
-        boolean isDemo = DemoDataService.DEMO_EMAIL.equalsIgnoreCase(u.getEmail());
+    public UserView view(AppUser u) {
         return new UserView(
             u.getId(),
             u.getFirstName(),
@@ -253,7 +298,9 @@ public class AuthController {
             u.getCity(),
             u.getPinCode(),
             u.getState(),
-            isDemo
+            u.isProfileComplete(),
+            u.getAuthProvider() != null ? u.getAuthProvider().name() : "LOCAL",
+            u.getPictureUrl()
         );
     }
 

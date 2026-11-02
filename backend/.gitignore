@@ -3,6 +3,8 @@ data/
 *.mv.db
 *.trace.db
 .env
+*.env
+.env.*
 .idea/
 .vscode/
 .DS_Store

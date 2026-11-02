@@ -19,7 +19,6 @@ export const FarmerDashboard: React.FC = () => {
     setCurrentPath,
     currentFarmer,
     logoutFarmer,
-    resetDemoData,
     crops,
     addCrop,
     updateCrop,
@@ -158,64 +157,12 @@ export const FarmerDashboard: React.FC = () => {
 
   return (
     <div className="w-full min-h-[calc(100vh-80px)] py-6 px-4 lg:px-8 max-w-7xl mx-auto">
-      {/* Professional Demo Account Notice Banner */}
-      {currentFarmer?.isDemo && (
-        <div className="mb-6 rounded-3xl bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 backdrop-blur-2xl border border-emerald-500/30 p-5 shadow-[0_8px_32px_rgba(17,108,74,0.08)] relative overflow-hidden">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-2xl bg-[#012d1d] text-white flex items-center justify-center shrink-0 shadow-sm">
-                <span className="material-symbols-outlined text-[24px]">verified</span>
-              </div>
-              <div>
-                <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-700 text-white font-extrabold text-[11px] tracking-wider uppercase shadow-xs">
-                    DEMO ACCOUNT
-                  </span>
-                  <span className="text-xs font-semibold text-emerald-950">
-                    Live Isolated Tenant • Nashik, Maharashtra • Currency: INR (₹)
-                  </span>
-                </div>
-                <p className="text-[13px] text-[#2c3e35] leading-relaxed max-w-3xl">
-                  You are exploring <strong>{currentFarmer.farmName}</strong>. This demo interacts with the real backend and database. All additions, edits, wage computations, and reports run through actual APIs.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 self-stretch md:self-auto shrink-0">
-              <button
-                type="button"
-                onClick={async () => {
-                  await resetDemoData();
-                }}
-                className="flex-1 md:flex-initial px-3.5 py-2 rounded-xl bg-white/80 hover:bg-white text-[#116c4a] backdrop-blur-md border border-emerald-300/80 font-bold text-[12px] flex items-center justify-center gap-1.5 shadow-xs hover:shadow-sm transition-all cursor-pointer"
-                title="Restore fresh preconfigured crops, workers, and expenses"
-              >
-                <span className="material-symbols-outlined text-[16px]">restart_alt</span>
-                <span>Reset Sample Data</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={logoutFarmer}
-                className="flex-1 md:flex-initial px-3.5 py-2 rounded-xl bg-[#012d1d]/90 hover:bg-[#012d1d] text-white font-bold text-[12px] flex items-center justify-center gap-1.5 shadow-xs hover:shadow-sm backdrop-blur-md transition-all cursor-pointer"
-                title="Return to login page to sign in or register your own farm"
-              >
-                <span className="material-symbols-outlined text-[16px]">logout</span>
-                <span>Exit Demo</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Top Header Bar for Farmer */}
       <div className="bg-white/75 hover:bg-white/85 backdrop-blur-2xl rounded-3xl p-6 shadow-[0_8px_32px_rgba(0,0,0,0.03)] border border-white/80 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all duration-300">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className={`px-3 py-1 rounded-full font-bold text-[12px] backdrop-blur-md ${
-              currentFarmer?.isDemo ? 'bg-amber-500/15 text-amber-950 border border-amber-300/70 shadow-xs' : 'bg-emerald-500/15 text-[#1b724f] border border-emerald-500/25 shadow-xs'
-            }`}>
-              {currentFarmer?.isDemo ? 'DEMO ACCOUNT' : `Tenant: ${currentFarmer?.tenantId || 'Farm Ledger'}`}
+            <span className="px-3 py-1 rounded-full font-bold text-[12px] backdrop-blur-md bg-emerald-500/15 text-[#1b724f] border border-emerald-500/25 shadow-xs">
+              Tenant: {currentFarmer?.tenantId || 'Farm Ledger'}
             </span>
             <span className="text-[12px] text-[#414844] font-medium">{todayFormatted}</span>
           </div>
@@ -243,7 +190,7 @@ export const FarmerDashboard: React.FC = () => {
             className="px-4 py-2.5 rounded-xl bg-red-500/10 text-[#ba1a1a] hover:bg-red-500/20 border border-red-200/60 font-bold text-[13px] flex items-center gap-1.5 backdrop-blur-md transition-all cursor-pointer shadow-xs"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
-            <span>{currentFarmer?.isDemo ? 'Exit Demo' : 'Log Out'}</span>
+            <span>Log Out</span>
           </button>
         </div>
       </div>

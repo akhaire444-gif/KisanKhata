@@ -6,6 +6,21 @@ Write-Host "========================================================" -Foregroun
 $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot"
 $env:Path = "$env:JAVA_HOME\bin;$PSScriptRoot\backend\maven\apache-maven-3.9.6\bin;$env:Path"
 
+# Load backend .env if present (git-ignored)
+$envFile = Join-Path $PSScriptRoot "backend\.env"
+if (Test-Path $envFile) {
+    Write-Host "Loading environment variables from backend\.env..." -ForegroundColor Gray
+    Get-Content $envFile | ForEach-Object {
+        $line = $_.Trim()
+        if ($line -and -not $line.StartsWith("#") -and $line.Contains("=")) {
+            $parts = $line.Split("=", 2)
+            $name = $parts[0].Trim()
+            $value = $parts[1].Trim()
+            [System.Environment]::SetEnvironmentVariable($name, $value, "Process")
+        }
+    }
+}
+
 Write-Host "[1/2] Starting Spring Boot Backend on http://localhost:8080..." -ForegroundColor Cyan
 Start-Process -FilePath "cmd.exe" -ArgumentList "/k cd /d `"$PSScriptRoot\backend`" && mvnw.cmd spring-boot:run"
 

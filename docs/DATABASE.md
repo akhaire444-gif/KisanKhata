@@ -13,12 +13,17 @@
 - `first_name` (VARCHAR(120), NOT NULL)
 - `last_name` (VARCHAR(120), NOT NULL)
 - `email` (VARCHAR(254), NOT NULL, UNIQUE, INDEX: `ux_user_email`)
-- `mobile` (VARCHAR(20), NOT NULL)
-- `password_hash` (VARCHAR(100), NOT NULL): BCrypt hash
+- `mobile` (VARCHAR(20), NULLABLE for Google users until profile complete)
+- `password_hash` (VARCHAR(100), NULLABLE for Google-only users): BCrypt hash
 - `role` (VARCHAR(20), NOT NULL): `FARMER`, `BUYER`, `ADMIN`
 - `farm_name` (VARCHAR(180))
-- `address` (VARCHAR(240))
+- `address` (VARCHAR(300))
+- `city` (VARCHAR(100))
+- `pin_code` (VARCHAR(10))
 - `state` (VARCHAR(100))
+- `google_sub` (VARCHAR(100), UNIQUE, INDEX: `ux_user_google_sub`): Google subject identifier
+- `auth_provider` (VARCHAR(20), NOT NULL, DEFAULT 'LOCAL'): `LOCAL` or `GOOGLE`
+- `picture_url` (VARCHAR(500)): Profile picture URL from Google
 - `active` (BOOLEAN, NOT NULL, DEFAULT true)
 - `created_at` (TIMESTAMP WITH TIME ZONE, NOT NULL)
 

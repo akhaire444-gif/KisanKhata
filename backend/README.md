@@ -1,33 +1,45 @@
 # KisanKhata Spring Boot Backend
 
-Initial Java 17 / Spring Boot modular-monolith backend foundation. Current APIs cover authentication and core farmer records. This is not yet a complete implementation of every PRD module and must not be considered production-certified until TODO items and tests are completed.
+Java 17 / Spring Boot 3.4.5 multi-tenant modular-monolith agricultural ledger backend.
 
 ## Requirements
-- Java 17+
-- Maven 3.9+
+- Java 17+ (Eclipse Adoptium OpenJDK 17 recommended)
+- Maven 3.9+ (bundled in `./mvnw` / `mvnw.cmd` and `maven/`)
 
-## Run
+## Environment Variables
+Configure these in `backend/.env` or in your host environment:
+
+| Variable | Description | Default |
+| :--- | :--- | :--- |
+| `PORT` | Server listening port | `8080` |
+| `DATABASE_URL` | JDBC Connection URL | H2 file under `./data/` |
+| `FRONTEND_ORIGIN` | Allowed CORS frontend origin | `http://localhost:3000` |
+| `GOOGLE_CLIENT_ID` | Google OAuth2 Web Client ID | `(empty)` |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth2 Web Client Secret | `(empty)` |
+| `SESSION_COOKIE_SAMESITE`| Session cookie SameSite policy | `lax` (use `none` in cross-site prod) |
+| `SESSION_COOKIE_SECURE` | Secure flag for JSESSIONID cookie | `false` (use `true` in HTTPS prod) |
+| `BOOTSTRAP_ADMIN_EMAIL` | Optional initial admin email | `(empty)` |
+| `BOOTSTRAP_ADMIN_PASSWORD` | Optional initial admin password | `(empty)` |
+
+## Run Locally
 ```bash
 cp .env.example .env
-mvn spring-boot:run
+# Edit .env with your Google Client ID and Secret if testing Google Sign-In
+.\mvnw.cmd spring-boot:run
 ```
-Spring Boot does not automatically load `.env`; export variables in your shell or configure your IDE/run environment. The default local database is H2 file mode under `./data/`.
 
-## Build and test
+## Build and Test
 ```bash
-mvn clean test
-mvn clean package
-java -jar target/kisankhata-backend-0.1.0.jar
+.\mvnw.cmd clean test
+.\mvnw.cmd clean package
 ```
 
-## Current API
-See `docs/API_CONTRACT.md`. Health: `GET /actuator/health`.
-
-## Security notes
-Public registration creates FARMER only. To bootstrap an admin, set `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD` (12+ characters). Do not deploy until CSRF/frontend session integration, secure cookie settings, complete tests, database decision and backup restore tests are done.
-
-## Frontend
-The supplied React frontend currently uses in-memory state in `src/context/AppContext.tsx`; it is not yet wired to these endpoints. API integration is a required next step.
+## Authentication Architecture
+- **Google OAuth 2.0:** Server-side Authorization Code flow (`/api/v1/auth/google/start` -> `/oauth2/authorization/google` -> `/login/oauth2/code/google`). Generates verified session and links `AppUser`.
+- **Local Email/Password:** `/api/v1/auth/register` (Farmer), `/api/v1/auth/register-buyer` (Buyer), `/api/v1/auth/login`.
+- **Profile Completion:** `PUT /api/v1/auth/profile` (authenticated, updates mobile/farmName/address/pinCode with strict regex checks).
+- **Session Management:** Spring Security session cookie (`JSESSIONID`, `HttpOnly`) with CSRF protection (`CookieCsrfTokenRepository.withHttpOnlyFalse()`).
+- **No Demo Account:** The obsolete demo account has been completely removed; `DemoCleanupRunner` purges any legacy demo tenant on startup.
 
 ## Documentation
-See `/docs` for requirements, decisions, API, database, security, deployment and TODO.
+See `/docs` and `docs/GOOGLE_AUTH_SETUP.md` for complete API contract, architecture, and setup instructions.

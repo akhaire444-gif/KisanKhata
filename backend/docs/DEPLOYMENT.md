@@ -1,108 +1,95 @@
-# KisanKhata Deployment & Operational Runbook
+# KisanKhata — Deployment & Environment Configuration
 
-## 1. System Requirements
-- **Host OS:** Linux (Ubuntu 22.04 LTS recommended), macOS, or Windows Server.
-- **Java Runtime:** Eclipse Temurin OpenJDK 17 LTS or later (`java -version`).
-- **Memory:** Minimum 512 MB RAM (1 GB recommended).
-- **Disk:** Minimum 5 GB persistent disk space for `./data` (database and uploads).
+## 1. Architecture Overview
 
-## 2. Configuration & Environment Variables
+- **Frontend:** React 19 + TypeScript + Vite + Tailwind CSS (hosted on Vercel at `https://kisan-khata-x1dp.vercel.app/`).
+- **Backend:** Spring Boot 3.4.5 + Java 17 + Spring Security 6 (hosted on Render at `https://kisankhata-1.onrender.com/`).
+- **Authentication:**
+  - **Google OAuth 2.0:** Server-side Authorization Code flow with Client ID + Secret.
+  - **Local Email/Password:** Available for both Farmers and Marketplace Buyers.
+  - **Session Model:** Spring Security session cookie (`JSESSIONID`, `HttpOnly`) with CSRF protection (`CookieCsrfTokenRepository.withHttpOnlyFalse()`).
+- **Database:** H2 file-mode (local/dev) or managed PostgreSQL on production with `ddl-auto: update`.
 
-| Variable | Default Value | Description |
+---
+
+## 2. Environment Variables
+
+### Backend Environment Variables (Render / Production Host)
+
+| Variable | Example Value | Description |
 |---|---|---|
-| `PORT` | `8080` | HTTP listening port |
-| `DATABASE_URL` | `jdbc:h2:file:./data/kisankhata;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;AUTO_SERVER=TRUE` | Database connection string |
-| `DATABASE_USERNAME`| `sa` | Database username |
-| `DATABASE_PASSWORD`| *(empty)* | Database password |
-| `FRONTEND_ORIGIN` | `http://localhost:5173` | Allowed CORS origin (production domain, e.g. `https://kisankhata.in`) |
-| `BOOTSTRAP_ADMIN_EMAIL` | *(empty)* | Initial admin email address (required for first start) |
-| `BOOTSTRAP_ADMIN_PASSWORD` | *(empty)* | Initial admin password (min 12 characters, required for first start) |
+| `PORT` | `8080` | Internal server port (assigned automatically by Render) |
+| `DATABASE_URL` | `jdbc:postgresql://host:5432/dbname` | Database JDBC URL |
+| `DATABASE_USERNAME` | `dbuser` | Database username |
+| `DATABASE_PASSWORD` | `dbpassword` | Database password |
+| `FRONTEND_ORIGIN` | `https://kisan-khata-x1dp.vercel.app` | Allowed CORS frontend origin |
+| `GOOGLE_CLIENT_ID` | `...apps.googleusercontent.com` | Google OAuth2 Web Client ID |
+| `GOOGLE_CLIENT_SECRET` | `GOCSPX-...` | Google OAuth2 Web Client Secret |
+| `BOOTSTRAP_ADMIN_EMAIL` | `admin@kisankhata.in` | Initial admin account email (seeded on first boot) |
+| `BOOTSTRAP_ADMIN_PASSWORD` | *(min 12 characters)* | Initial admin account password |
+| `SESSION_COOKIE_SAMESITE` | `none` | Cross-site cookie attribute for Vercel <-> Render integration |
+| `SESSION_COOKIE_SECURE` | `true` | Secure HTTPS cookie flag |
 
-## 3. Build & Packaging Instructions
+> **Note on Authentication:** Google OAuth 2.0 operates via Spring Security's server-side Authorization Code flow. The Client Secret remains strictly on the backend. When users click "Continue with Google", the browser redirects to `/api/v1/auth/google/start?role=FARMER|BUYER`, connects to Google, receives the callback at `/login/oauth2/code/google`, exchanges the code, creates/links the user record, and establishes the authenticated Spring session.
 
-```bash
-# Navigate to backend directory
-cd backend
+### Frontend Environment Variables (Vercel)
 
-# Build runnable JAR package (skipping tests if offline)
-mvn clean package -DskipTests
+| Variable | Example Value | Description |
+|---|---|---|
+| `VITE_API_BASE_URL` | `https://kisankhata-1.onrender.com` | Production backend API base URL |
 
-# Output executable JAR:
-# target/kisankhata-backend-0.1.0.jar
-```
+*(The client secret must NEVER be set on the frontend or in `VITE_*` variables).*
 
-## 4. Running the Single-JAR Application
+---
 
-```bash
-# Run locally with embedded database and automatic bootstrap admin
-export PORT=8080
-export FRONTEND_ORIGIN="http://localhost:3000"
-export BOOTSTRAP_ADMIN_EMAIL="admin@kisankhata.in"
-export BOOTSTRAP_ADMIN_PASSWORD="SecureAdminPassword2026!"
+## 3. Google OAuth & Tenant Isolation Architecture
 
-java -jar target/kisankhata-backend-0.1.0.jar
-```
+Kisan Khata provides authenticated multi-tenant isolation:
 
-## 5. Production Reverse Proxy Configuration (Nginx)
+- **Start Endpoint:** `GET /api/v1/auth/google/start?role=FARMER|BUYER` (initiates Google OAuth2 code flow).
+- **Callback Endpoint:** `GET /login/oauth2/code/google` (Spring Security OAuth2 client callback).
+- **Profile Completion:** `PUT /api/v1/auth/profile` (authenticated, updates mobile, farmName, address, city, pinCode).
+- **Tenant ID:** Assigned per user (`Farm-MH-XXXX`).
+- **Security & Isolation:**
+  - Zero demo accounts: Demo access and mock users are completely removed.
+  - All database queries filter strictly by `farmerId` / `buyerId` from the authenticated session.
+  - ADMIN role cannot be assigned through Google registration.
 
-```nginx
-server {
-    listen 80;
-    server_name app.kisankhata.in;
-    return 301 https://$host$request_uri;
-}
+---
 
-server {
-    listen 443 ssl http2;
-    server_name app.kisankhata.in;
+## 4. Build & Deployment Instructions
 
-    ssl_certificate /etc/letsencrypt/live/app.kisankhata.in/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/app.kisankhata.in/privkey.pem;
+### A. Backend Deployment (Render)
 
-    # Security Headers
-    add_header X-Frame-Options "DENY";
-    add_header X-Content-Type-Options "nosniff";
-    add_header X-XSS-Protection "1; mode=block";
-    add_header Referrer-Policy "strict-origin-when-cross-origin";
+1. **Repository:** Connect the repository to your Render Web Service.
+2. **Environment:** Java / Docker / Native.
+   - **Root Directory:** `backend`
+   - **Build Command:**
+     ```bash
+     mvn clean package -DskipTests
+     ```
+   - **Start Command:**
+     ```bash
+     java -jar target/kisankhata-backend-0.1.0.jar
+     ```
+3. Set the required backend environment variables.
+4. Add the backend redirect URI in Google Cloud Console:
+   `https://<your-render-app>.onrender.com/login/oauth2/code/google`
 
-    # Static uploads caching & serving
-    location /api/v1/files/ {
-        proxy_pass http://127.0.0.1:8080;
-        expires 30d;
-        add_header Cache-Control "public, no-transform";
-    }
+### B. Frontend Deployment (Vercel)
 
-    # API Proxy
-    location / {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
-        proxy_cookie_path / "/; Secure; HttpOnly; SameSite=Lax";
-    }
-}
-```
+1. **Root Directory:** `frontend`
+2. **Build Command:** `npm run build`
+3. **Output Directory:** `dist`
+4. **Environment Variable:** `VITE_API_BASE_URL=https://<your-render-app>.onrender.com`
 
-## 6. Backup & Recovery Procedure
+---
 
-### Automated Backup Script (`backup.sh`)
-```bash
-#!/bin/bash
-BACKUP_DIR="/var/backups/kisankhata"
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-mkdir -p "$BACKUP_DIR"
+## 5. Verification Checklist
 
-# Hot copy H2 database file and uploaded images
-tar -czf "$BACKUP_DIR/kisankhata_backup_$TIMESTAMP.tar.gz" -C /opt/kisankhata data
-
-# Retain 30 days of backups
-find "$BACKUP_DIR" -type f -name "*.tar.gz" -mtime +30 -delete
-```
-
-### Recovery Steps
-1. Stop the application service: `systemctl stop kisankhata`.
-2. Extract the archive into the application root: `tar -xzf backup.tar.gz -C /opt/kisankhata`.
-3. Verify file permissions: `chown -R kisankhata:kisankhata /opt/kisankhata/data`.
-4. Restart service: `systemctl start kisankhata`.
-5. Check health: `curl -f http://localhost:8080/actuator/health`.
+- [x] Login page loads with "Continue with Google", "Sign In", and "Register" buttons.
+- [x] Demo account endpoints and UI elements completely removed.
+- [x] Google sign-in works for Farmers and Buyers, establishing a real Spring session.
+- [x] Profile completion modal triggers for users with missing mobile/delivery details.
+- [x] Tenant data isolation verified: Users only access their own records.
+- [x] Session restores cleanly on page refresh via `/api/v1/auth/me`.

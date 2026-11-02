@@ -1,5 +1,7 @@
 package in.kisankhata.config;
 
+import in.kisankhata.auth.OAuth2FailureHandler;
+import in.kisankhata.auth.OAuth2SuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -19,6 +21,14 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final OAuth2FailureHandler oAuth2FailureHandler;
+
+    public SecurityConfig(OAuth2SuccessHandler oAuth2SuccessHandler, OAuth2FailureHandler oAuth2FailureHandler) {
+        this.oAuth2SuccessHandler = oAuth2SuccessHandler;
+        this.oAuth2FailureHandler = oAuth2FailureHandler;
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
@@ -33,8 +43,6 @@ public class SecurityConfig {
                     "/api/v1/auth/register",
                     "/api/v1/auth/register-buyer",
                     "/api/v1/auth/login",
-                    "/api/v1/auth/demo",
-                    "/api/v1/auth/demo/reset",
                     "/api/v1/auth/logout",
                     "/actuator/health",
                     "/actuator/health/**"
@@ -59,8 +67,9 @@ public class SecurityConfig {
                     "/api/v1/auth/register",
                     "/api/v1/auth/register-buyer",
                     "/api/v1/auth/login",
-                    "/api/v1/auth/demo",
-                    "/api/v1/auth/demo/reset",
+                    "/api/v1/auth/google/start",
+                    "/oauth2/**",
+                    "/login/oauth2/**",
                     "/api/v1/auth/csrf",
                     "/actuator/health",
                     "/actuator/health/**",
@@ -77,6 +86,10 @@ public class SecurityConfig {
 
                 // Everything else requires authentication
                 .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .successHandler(oAuth2SuccessHandler)
+                .failureHandler(oAuth2FailureHandler)
             )
             .formLogin(f -> f.disable())
             .httpBasic(b -> b.disable())
@@ -101,14 +114,17 @@ public class SecurityConfig {
         origins.add("http://localhost:3000");
         origins.add("https://kisan-khata-x1dp.vercel.app");
 
-        String allowedOrigin = env.getProperty("app.cors.allowed-origin");
-        if (allowedOrigin != null && !allowedOrigin.isBlank()) {
-            String trimmed = allowedOrigin.trim();
-            if (trimmed.endsWith("/")) {
-                trimmed = trimmed.substring(0, trimmed.length() - 1);
-            }
-            if (!origins.contains(trimmed)) {
-                origins.add(trimmed);
+        String[] envKeys = {"app.cors.allowed-origin", "app.frontend-url", "FRONTEND_ORIGIN"};
+        for (String key : envKeys) {
+            String origin = env.getProperty(key);
+            if (origin != null && !origin.isBlank()) {
+                String trimmed = origin.trim();
+                if (trimmed.endsWith("/")) {
+                    trimmed = trimmed.substring(0, trimmed.length() - 1);
+                }
+                if (!origins.contains(trimmed)) {
+                    origins.add(trimmed);
+                }
             }
         }
 

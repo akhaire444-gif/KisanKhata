@@ -5,7 +5,7 @@ import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
 import { FarmerDashboard } from './pages/farmer/FarmerDashboard';
 import { AboutPage, ContactPage } from './pages/public/AboutAndContact';
-import { AuthModal } from './components/AuthModals';
+import { AuthModal, CompleteProfileModal } from './components/AuthModals';
 import { NavigationPath } from './types';
 
 const PUBLIC_PATHS: NavigationPath[] = ['home', 'about', 'contact'];
@@ -18,7 +18,9 @@ const MainApp: React.FC = () => {
     isAuthChecking,
     toastMessage,
     showToast,
-    refreshData
+    refreshData,
+    isProfileModalOpen,
+    setIsProfileModalOpen
   } = useApp();
 
   const [authModalConfig, setAuthModalConfig] = useState<{
@@ -139,6 +141,14 @@ const MainApp: React.FC = () => {
           initialIsRegister={authModalConfig.isRegister}
           onClose={handleCloseAuthModal}
           onSuccess={handleAuthSuccess}
+        />
+      )}
+
+      {/* Profile Completion Modal for Google / Incomplete Users */}
+      {isProfileModalOpen && (
+        <CompleteProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
         />
       )}
 
