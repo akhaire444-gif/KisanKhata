@@ -128,9 +128,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-[#d8e3fb] max-h-[92vh] overflow-y-auto">
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#f0f3ff]">
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-white/95 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-[0_24px_70px_rgba(0,0,0,0.22)] border border-white/85 max-h-[92vh] overflow-y-auto">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200/60">
           <div>
             <h3 className="font-bold text-[22px] text-[#012d1d]">
               {isRegister ? 'Register New Farm (Krishi Khata)' : 'Farmer Sign In'}
@@ -142,7 +142,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           <button
             onClick={onClose}
-            className="text-[#717973] hover:text-[#012d1d] p-1 rounded-lg hover:bg-stone-100 transition-colors cursor-pointer"
+            className="text-[#717973] hover:text-[#012d1d] p-1.5 rounded-xl hover:bg-slate-100/60 transition-colors cursor-pointer"
             aria-label="Close"
           >
             <span className="material-symbols-outlined text-[24px]">close</span>
@@ -150,7 +150,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
 
         {error && (
-          <div className="p-3 mb-4 rounded-xl bg-[#ffdad6] text-[#ba1a1a] text-[13px] font-semibold flex items-center gap-2">
+          <div className="p-3 mb-4 rounded-xl bg-red-500/10 text-[#ba1a1a] border border-red-200/60 text-[13px] font-semibold flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px]">error</span>
             <span>{error}</span>
           </div>
@@ -167,7 +167,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={firstName}
                     onChange={e => setFirstName(e.target.value)}
                     placeholder="e.g. Ramesh"
-                    className="w-full px-3 py-2 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
                     required
                     disabled={isSubmitting}
                   />
@@ -179,7 +179,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={lastName}
                     onChange={e => setLastName(e.target.value)}
                     placeholder="e.g. Shinde"
-                    className="w-full px-3 py-2 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
                     required
                     disabled={isSubmitting}
                   />
@@ -195,7 +195,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={mobile}
                     onChange={e => setMobile(e.target.value)}
                     placeholder="9876543210"
-                    className="w-full px-3 py-2 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
                     required
                     disabled={isSubmitting}
                   />
@@ -207,7 +207,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     value={farmName}
                     onChange={e => setFarmName(e.target.value)}
                     placeholder="Krishi Farm"
-                    className="w-full px-3 py-2 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
                     disabled={isSubmitting}
                   />
                 </div>
@@ -220,7 +220,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   value={address}
                   onChange={e => setAddress(e.target.value)}
                   placeholder="e.g. Sinnar, Nashik Rural"
-                  className="w-full px-3 py-2 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
                   disabled={isSubmitting}
                 />
               </div>
@@ -234,7 +234,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="farmer@example.com"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
               required
               disabled={isSubmitting}
             />
@@ -247,7 +247,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="Minimum 6 characters"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
               required
               disabled={isSubmitting}
             />
@@ -261,7 +261,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 value={repeatPassword}
                 onChange={e => setRepeatPassword(e.target.value)}
                 placeholder="Repeat password"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#d8e3fb] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
                 required
                 disabled={isSubmitting}
               />
@@ -271,7 +271,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full min-h-[48px] py-3 rounded-xl bg-[#012d1d] text-white font-bold text-[15px] hover:bg-[#1b4332] transition-colors shadow-md mt-2 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full min-h-[48px] py-3 rounded-xl bg-[#012d1d] text-white font-bold text-[15px] hover:bg-[#1b4332] shadow-[0_4px_16px_rgba(1,45,29,0.25)] transition-all mt-2 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>
@@ -287,10 +287,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Divider */}
         <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#d8e3fb]" />
+            <div className="w-full border-t border-slate-200/70" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-3 text-[#717973] font-semibold">Or Try Instant Access</span>
+            <span className="bg-white/90 backdrop-blur-md px-3 text-[#717973] font-semibold">Or Try Instant Access</span>
           </div>
         </div>
 
@@ -299,7 +299,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           type="button"
           onClick={handleDemoLogin}
           disabled={isSubmitting || isDemoLoading}
-          className="w-full py-3 px-4 rounded-xl border-2 border-[#116c4a]/30 bg-gradient-to-r from-[#e8f5e9] to-[#d8f3e5] text-[#012d1d] hover:bg-[#c8e6c9] hover:border-[#116c4a] font-bold text-[14px] transition-all flex items-center justify-center gap-2.5 shadow-xs hover:shadow-md cursor-pointer disabled:opacity-50"
+          className="w-full py-3 px-4 rounded-xl border border-emerald-500/35 bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-amber-500/10 hover:from-emerald-500/25 hover:to-teal-500/20 backdrop-blur-md text-[#012d1d] font-bold text-[14px] transition-all flex items-center justify-center gap-2.5 shadow-xs hover:shadow-md cursor-pointer disabled:opacity-50"
         >
           {isDemoLoading ? (
             <>
@@ -317,7 +317,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           Explore all farm features with preconfigured crops, workers & expenses. No password required.
         </p>
 
-        <div className="pt-4 mt-4 border-t border-[#f0f3ff] text-center text-[13px] text-[#414844]">
+        <div className="pt-4 mt-4 border-t border-slate-200/60 text-center text-[13px] text-[#414844]">
           {isRegister ? (
             <p>
               Already registered?{' '}

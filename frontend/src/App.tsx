@@ -113,12 +113,20 @@ const MainApp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9f9ff] text-[#111c2d] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#f7f9fd] text-[#111c2d] flex flex-col font-sans relative overflow-x-hidden selection:bg-[#a1f4c8] selection:text-[#012d1d]">
+      {/* macOS Ambient Mesh Glows (Provides refraction substrate for liquid glass) */}
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden" aria-hidden="true">
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent blur-[110px]" />
+        <div className="absolute top-1/4 -right-32 w-[480px] h-[480px] rounded-full bg-gradient-to-bl from-blue-100/40 via-emerald-100/30 to-transparent blur-[120px]" />
+        <div className="absolute top-2/3 left-1/4 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-100/25 via-emerald-100/20 to-transparent blur-[120px]" />
+        <div className="absolute -bottom-32 right-1/4 w-[380px] h-[380px] rounded-full bg-gradient-to-tl from-teal-100/35 to-transparent blur-[100px]" />
+      </div>
+
       {/* Global Navigation Header */}
       <Header onOpenAuthModal={handleOpenAuthModal} />
 
       {/* Main Content View with top offset for fixed navbar */}
-      <main className="flex-1 pt-20 w-full">
+      <main className="flex-1 pt-20 w-full relative z-0">
         {renderContent()}
       </main>
 
@@ -136,7 +144,7 @@ const MainApp: React.FC = () => {
 
       {/* Toast Notification Pill */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border bg-[#012d1d] text-white animate-in slide-in-from-bottom-3">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.22)] border border-white/20 bg-[#012d1d]/90 backdrop-blur-xl text-white animate-in slide-in-from-bottom-3 transition-all">
           <span className="material-symbols-outlined text-[20px] text-[#a1f4c8]">
             {toastMessage.type === 'error' ? 'error' : toastMessage.type === 'info' ? 'info' : 'check_circle'}
           </span>

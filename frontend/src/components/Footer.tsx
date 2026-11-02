@@ -6,9 +6,9 @@ export const Footer: React.FC = () => {
   const { setCurrentPath, currentFarmer } = useApp();
 
   return (
-    <footer className="w-full bg-[#f0f3ff] shadow-[0_-1px_6px_rgba(0,0,0,0.02)] py-12 border-t border-[#d8e3fb]">
+    <footer className="w-full bg-white/70 backdrop-blur-2xl py-12 border-t border-white/80 shadow-[0_-8px_32px_rgba(0,0,0,0.03)] relative overflow-hidden">
       <div className="w-full px-4 lg:px-8 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-[#d8e3fb]/60">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-slate-200/60">
           {/* Brand Col */}
           <div className="space-y-3">
             <KisanKhataLogo
@@ -23,10 +23,10 @@ export const Footer: React.FC = () => {
               Next-generation enterprise agricultural SaaS ledger and rural bookkeeping infrastructure built specifically for Indian farmers and farmlands.
             </p>
             <div className="flex items-center gap-2 pt-1 flex-wrap">
-              <span className="px-2 py-0.5 rounded bg-[#c1ecd4] text-[#274e3d] text-[11px] font-semibold">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-[#012d1d] text-[11px] font-semibold border border-emerald-500/20 backdrop-blur-sm">
                 Multi-Tenant v4.2
               </span>
-              <span className="px-2 py-0.5 rounded bg-[#e7eeff] text-[#414844] text-[11px] font-semibold border border-[#d8e3fb]">
+              <span className="px-2.5 py-0.5 rounded-full bg-white/60 text-[#414844] text-[11px] font-semibold border border-white/80 backdrop-blur-sm shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
                 Offline-Ready
               </span>
             </div>
@@ -153,7 +153,7 @@ export const Footer: React.FC = () => {
         {/* Bottom bar */}
         <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-[12px] text-[#414844]">
           <p>© 2026 KisanKhata Technologies Pvt Ltd. Dedicated to Bharat's Agricultural Producers.</p>
-          <p className="flex items-center gap-1.5 font-medium text-[#116c4a]">
+          <p className="flex items-center gap-1.5 font-medium text-[#116c4a] px-3 py-1 rounded-full bg-white/60 border border-white/80 backdrop-blur-sm shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
             <span className="material-symbols-outlined text-[16px]">verified</span>
             Strict Tenant Isolation Guaranteed{currentFarmer ? ` (${currentFarmer.tenantId})` : ''}
           </p>

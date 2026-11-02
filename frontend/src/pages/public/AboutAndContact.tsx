@@ -5,7 +5,7 @@ export const AboutPage: React.FC = () => {
   const { setCurrentPath } = useApp();
 
   return (
-    <div className="w-full min-h-[calc(100vh-80px)] bg-[#f9f9ff] py-12 px-4 lg:px-8 max-w-5xl mx-auto">
+    <div className="w-full min-h-[calc(100vh-80px)] py-12 px-4 lg:px-8 max-w-5xl mx-auto">
       {/* Title */}
       <div className="text-center max-w-3xl mx-auto mb-12">
         <span className="text-[12px] font-bold text-[#116c4a] uppercase tracking-wider block mb-2">
@@ -20,8 +20,8 @@ export const AboutPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-        <div className="bg-white p-8 rounded-3xl border border-[#e7eeff] shadow-xs space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-[#c1ecd4] text-[#274e3d] flex items-center justify-center font-bold text-[24px]">
+        <div className="bg-white/80 backdrop-blur-2xl p-8 rounded-3xl border border-white/85 shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#c1ecd4] text-[#274e3d] flex items-center justify-center font-bold text-[24px] shadow-xs">
             <span className="material-symbols-outlined text-[28px]">agriculture</span>
           </div>
           <h2 className="text-[22px] font-bold text-[#012d1d]">The Farmer Problem</h2>
@@ -33,8 +33,8 @@ export const AboutPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="bg-white p-8 rounded-3xl border border-[#e7eeff] shadow-xs space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-[#ffdcc3] text-[#6e3900] flex items-center justify-center font-bold text-[24px]">
+        <div className="bg-white/80 backdrop-blur-2xl p-8 rounded-3xl border border-white/85 shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#ffdcc3] text-[#6e3900] flex items-center justify-center font-bold text-[24px] shadow-xs">
             <span className="material-symbols-outlined text-[28px]">verified_user</span>
           </div>
           <h2 className="text-[22px] font-bold text-[#012d1d]">Audited Ledger & Bank Eligibility</h2>
@@ -48,12 +48,12 @@ export const AboutPage: React.FC = () => {
       </div>
 
       {/* Architecture Highlights */}
-      <div className="bg-white rounded-3xl p-8 border border-[#e7eeff] shadow-xs mb-12">
+      <div className="bg-white/80 backdrop-blur-2xl rounded-3xl p-8 border border-white/85 shadow-[0_8px_30px_rgba(0,0,0,0.03)] mb-12">
         <h3 className="text-[20px] font-bold text-[#012d1d] mb-4">
           Key Engineering Principles
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="p-4 rounded-2xl bg-[#f0f3ff] border border-[#d8e3fb]">
+          <div className="p-5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs">
             <strong className="text-[15px] font-bold text-[#012d1d] block mb-1">
               Multi-Tenant Data Isolation
             </strong>
@@ -62,7 +62,7 @@ export const AboutPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-[#f0f3ff] border border-[#d8e3fb]">
+          <div className="p-5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs">
             <strong className="text-[15px] font-bold text-[#012d1d] block mb-1">
               Inclusive Touch Ergonomics
             </strong>
@@ -71,7 +71,7 @@ export const AboutPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-[#f0f3ff] border border-[#d8e3fb]">
+          <div className="p-5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs">
             <strong className="text-[15px] font-bold text-[#012d1d] block mb-1">
               Offline-First Resilience
             </strong>
@@ -89,7 +89,7 @@ export const AboutPage: React.FC = () => {
             setCurrentPath('dashboard');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          className="px-8 py-3.5 rounded-xl bg-[#012d1d] text-white font-bold text-[15px] hover:bg-[#1b4332] shadow-md cursor-pointer"
+          className="px-8 py-3.5 rounded-xl bg-[#012d1d] text-white font-bold text-[15px] hover:bg-[#1b4332] shadow-[0_4px_16px_rgba(1,45,29,0.25)] transition-all cursor-pointer"
         >
           Open Farmer Ledger Now
         </button>
@@ -113,7 +113,7 @@ export const ContactPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full min-h-[calc(100vh-80px)] bg-[#f9f9ff] py-12 px-4 lg:px-8 max-w-4xl mx-auto">
+    <div className="w-full min-h-[calc(100vh-80px)] py-12 px-4 lg:px-8 max-w-4xl mx-auto">
       <div className="text-center max-w-2xl mx-auto mb-10">
         <span className="text-[12px] font-bold text-[#116c4a] uppercase tracking-wider block mb-2">
           Kisan Sahayata Kendra
@@ -128,13 +128,13 @@ export const ContactPage: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Contact Info */}
-        <div className="bg-white p-8 rounded-3xl border border-[#e7eeff] shadow-xs space-y-6">
+        <div className="bg-white/80 backdrop-blur-2xl p-8 rounded-3xl border border-white/85 shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-6">
           <div>
             <h3 className="font-bold text-[18px] text-[#012d1d] mb-4">Contact Channels</h3>
             
             <div className="space-y-4 text-[14px]">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#c1ecd4] text-[#274e3d] flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-[#c1ecd4] text-[#274e3d] flex items-center justify-center shrink-0 shadow-xs">
                   <span className="material-symbols-outlined text-[20px]">phone_in_talk</span>
                 </div>
                 <div>
@@ -144,7 +144,7 @@ export const ContactPage: React.FC = () => {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#a1f4c8] text-[#1b724f] flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-[#a1f4c8] text-[#1b724f] flex items-center justify-center shrink-0 shadow-xs">
                   <span className="material-symbols-outlined text-[20px]">chat</span>
                 </div>
                 <div>
@@ -154,7 +154,7 @@ export const ContactPage: React.FC = () => {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#ffdcc3] text-[#6e3900] flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-[#ffdcc3] text-[#6e3900] flex items-center justify-center shrink-0 shadow-xs">
                   <span className="material-symbols-outlined text-[20px]">location_on</span>
                 </div>
                 <div>
@@ -167,7 +167,7 @@ export const ContactPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-[#f0f3ff] border border-[#d8e3fb]">
+          <div className="p-4 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs">
             <span className="font-bold text-[13px] text-[#012d1d] block mb-1">
               Regional Field Coordinator Coverage:
             </span>
@@ -178,17 +178,17 @@ export const ContactPage: React.FC = () => {
         </div>
 
         {/* Support Inquiry Form */}
-        <div className="bg-white p-8 rounded-3xl border border-[#e7eeff] shadow-xs">
+        <div className="bg-white/80 backdrop-blur-2xl p-8 rounded-3xl border border-white/85 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
           <h3 className="font-bold text-[18px] text-[#012d1d] mb-4">Send a Message</h3>
 
           {submitted ? (
-            <div className="p-6 rounded-2xl bg-[#c1ecd4] text-[#274e3d] text-center">
-              <span className="material-symbols-outlined text-[36px] mb-2">check_circle</span>
-              <h4 className="font-bold text-[16px]">Inquiry Received</h4>
-              <p className="text-[13px] mt-1">Our field officer will get in touch with you shortly.</p>
+            <div className="p-6 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 text-[#274e3d] text-center backdrop-blur-md">
+              <span className="material-symbols-outlined text-[36px] mb-2 text-[#116c4a]">check_circle</span>
+              <h4 className="font-bold text-[16px] text-[#012d1d]">Inquiry Received</h4>
+              <p className="text-[13px] mt-1 text-[#414844]">Our field officer will get in touch with you shortly.</p>
               <button
                 onClick={() => setSubmitted(false)}
-                className="mt-4 px-4 py-2 rounded-xl bg-[#012d1d] text-white text-[12px] font-bold"
+                className="mt-4 px-4 py-2 rounded-xl bg-[#012d1d] text-white text-[12px] font-bold shadow-xs hover:bg-[#1b4332] transition-colors"
               >
                 Send Another Note
               </button>
@@ -202,7 +202,7 @@ export const ContactPage: React.FC = () => {
                   value={name}
                   onChange={e => setName(e.target.value)}
                   placeholder="e.g. Rajesh Patil"
-                  className="w-full px-4 py-2.5 rounded-xl border border-[#d8e3fb] text-[14px]"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
                   required
                 />
               </div>
@@ -215,7 +215,7 @@ export const ContactPage: React.FC = () => {
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   placeholder="9822014012"
-                  className="w-full px-4 py-2.5 rounded-xl border border-[#d8e3fb] text-[14px]"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
                   required
                 />
               </div>
@@ -227,14 +227,14 @@ export const ContactPage: React.FC = () => {
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                   placeholder="Need assistance setting up worker wage rolls or logging tractor diesel..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-[#d8e3fb] text-[14px]"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
                   required
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full min-h-[48px] py-3 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] hover:bg-[#1b4332] transition-colors cursor-pointer"
+                className="w-full min-h-[48px] py-3 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] hover:bg-[#1b4332] shadow-[0_4px_16px_rgba(1,45,29,0.25)] transition-all cursor-pointer"
               >
                 Submit Inquiry
               </button>

@@ -62,7 +62,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
   const navItems = currentFarmer ? authenticatedNavItems : publicNavItems;
 
   return (
-    <header className="fixed top-0 w-full z-50 bg-[#f9f9ff]/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-b border-[#e7eeff]">
+    <header className="fixed top-0 w-full z-50 bg-white/75 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.03)] border-b border-white/75 transition-all">
       <div className="h-20 w-full px-4 lg:px-8 max-w-7xl mx-auto flex items-center justify-between gap-4">
         {/* Left: Brand & Tenant ID */}
         <div className="flex items-center gap-3 lg:gap-4">
@@ -81,12 +81,12 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
                   ? 'Connecting to backend...'
                   : 'Public Demo Mode is active and ready'
             }
-            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all border ${
+            className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all border backdrop-blur-md shadow-2xs ${
               backendStatus === 'connected'
-                ? 'bg-[#1b4332]/10 text-[#116c4a] border-[#a1f4c8]'
+                ? 'bg-[#1b4332]/10 text-[#116c4a] border-emerald-500/25'
                 : backendStatus === 'checking'
-                  ? 'bg-amber-50 text-amber-700 border-amber-200'
-                  : 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                  ? 'bg-amber-500/10 text-amber-800 border-amber-300/40'
+                  : 'bg-emerald-500/15 text-emerald-900 border-emerald-400/40 shadow-[0_0_12px_rgba(16,185,129,0.12)]'
             }`}
           >
             <span
@@ -109,9 +109,9 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
 
           {/* Tenant Status Pill / Demo Account Badge */}
           {currentFarmer && (
-            <div className={`hidden xl:flex items-center px-3 py-1 rounded-full text-[12px] font-bold shadow-xs ${currentFarmer.isDemo
-                ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                : 'bg-[#a1f4c8] text-[#1b724f]'
+            <div className={`hidden xl:flex items-center px-3.5 py-1 rounded-full text-[12px] font-bold shadow-xs backdrop-blur-md ${currentFarmer.isDemo
+                ? 'bg-amber-100/80 text-amber-950 border border-amber-300/80 shadow-[0_2px_8px_rgba(245,158,11,0.15)]'
+                : 'bg-[#a1f4c8]/80 text-[#0f5135] border border-emerald-300/80'
               }`}>
               <span className="material-symbols-outlined text-[15px] mr-1">
                 {currentFarmer.isDemo ? 'verified' : 'domain'}
@@ -122,21 +122,21 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
         </div>
 
         {/* Center: Navigation Pill Bar */}
-        <nav className="hidden lg:flex items-center gap-1 bg-[#f0f3ff] p-1.5 rounded-xl border border-[#d8e3fb]">
+        <nav className="hidden lg:flex items-center gap-1 bg-white/45 backdrop-blur-xl p-1.5 rounded-2xl border border-white/75 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9),0_2px_8px_rgba(0,0,0,0.02)]">
           {navItems.map(item => {
             const isActive = currentPath === item.path;
             return (
               <button
                 key={item.path}
                 onClick={() => handleNavClick(item.path)}
-                className={`relative px-3 py-1.5 text-[13px] font-semibold rounded-lg transition-all cursor-pointer ${isActive
-                    ? 'bg-[#1b4332] text-white shadow-xs'
-                    : 'text-[#414844] hover:text-[#111c2d] hover:bg-[#e7eeff]/60'
+                className={`relative px-3.5 py-1.5 text-[13px] font-semibold rounded-xl transition-all cursor-pointer ${isActive
+                    ? 'bg-[#012d1d]/90 text-white shadow-[0_3px_12px_rgba(1,45,29,0.28),inset_0_1px_0_rgba(255,255,255,0.3)] backdrop-blur-md'
+                    : 'text-[#414844] hover:text-[#012d1d] hover:bg-white/70'
                   }`}
               >
                 {item.label}
                 {item.path === 'reminders' && todayReminders.length > 0 && (
-                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#f48c24] text-white">
+                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#f48c24] text-white shadow-2xs">
                     {todayReminders.length}
                   </span>
                 )}
@@ -148,7 +148,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
         {/* Right Actions: Currency, Notification, Profile Switcher */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* INR Indicator */}
-          <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#e7eeff] text-[#414844] text-[12px] font-semibold border border-[#d8e3fb]">
+          <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white/60 backdrop-blur-md text-[#414844] text-[12px] font-semibold border border-white/80 shadow-2xs">
             <span className="material-symbols-outlined text-[16px]">currency_rupee</span>
             <span>INR</span>
           </div>
@@ -159,7 +159,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
               <button
                 onClick={() => handleNavClick('reminders')}
                 title={todayReminders.length > 0 ? `${todayReminders.length} reminder(s) due today` : 'Farm Reminders'}
-                className="relative w-9 h-9 rounded-full flex items-center justify-center text-[#414844] hover:bg-[#e7eeff] transition-colors cursor-pointer"
+                className="relative w-9 h-9 rounded-full flex items-center justify-center text-[#414844] bg-white/50 hover:bg-white/85 border border-white/70 backdrop-blur-md shadow-2xs transition-all cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[21px]">notifications</span>
                 {todayReminders.length > 0 && (
@@ -171,9 +171,9 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
               <div className="relative">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 bg-[#f0f3ff] rounded-full border border-[#d8e3fb] hover:bg-[#e7eeff] transition-all cursor-pointer"
+                  className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 bg-white/65 backdrop-blur-md rounded-full border border-white/80 shadow-2xs hover:bg-white/90 hover:shadow-xs transition-all cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-full bg-[#012d1d] flex items-center justify-center text-white text-[16px]">
+                  <div className="w-8 h-8 rounded-full bg-[#012d1d] flex items-center justify-center text-white text-[16px] shadow-2xs">
                     <span className="material-symbols-outlined text-[18px]">agriculture</span>
                   </div>
                   <div className="hidden md:flex flex-col text-left">
@@ -191,7 +191,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
 
                 {isProfileOpen && (
                   <div
-                    className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-[#d8e3fb] p-3 z-50 animate-in fade-in slide-in-from-top-2"
+                    className="absolute right-0 mt-2 w-72 bg-white/90 backdrop-blur-2xl rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white/85 p-3 z-50 animate-in fade-in slide-in-from-top-2"
                     onClick={() => setIsProfileOpen(false)}
                   >
                     <div className="p-2 border-b border-[#f0f3ff] mb-2">
@@ -266,7 +266,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
                 type="button"
                 onClick={handleExploreDemo}
                 disabled={isDemoLoading}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#116c4a] to-[#1b724f] text-white text-[12px] font-bold hover:from-[#0d593c] hover:to-[#166042] shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white text-[12px] font-bold shadow-[0_4px_14px_rgba(16,185,129,0.3),inset_0_1px_0_rgba(255,255,255,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
               >
                 <span className="material-symbols-outlined text-[16px]">rocket_launch</span>
                 <span>{isDemoLoading ? 'Loading...' : 'Explore Demo'}</span>
@@ -274,14 +274,14 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
               <button
                 type="button"
                 onClick={() => onOpenAuthModal(false)}
-                className="px-3.5 py-1.5 rounded-xl text-[13px] font-bold text-[#012d1d] hover:bg-[#e7eeff] border border-[#d8e3fb] transition-colors cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl text-[13px] font-bold text-[#012d1d] bg-white/70 hover:bg-white/95 backdrop-blur-md border border-white/85 shadow-2xs hover:shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
               >
                 Sign In
               </button>
               <button
                 type="button"
                 onClick={() => onOpenAuthModal(true)}
-                className="px-3.5 py-1.5 rounded-xl bg-[#012d1d] text-white text-[13px] font-bold hover:bg-[#1b4332] shadow-xs transition-colors cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl bg-[#012d1d]/90 hover:bg-[#012d1d] text-white text-[13px] font-bold shadow-[0_4px_14px_rgba(1,45,29,0.25),inset_0_1px_0_rgba(255,255,255,0.25)] hover:shadow-[0_6px_20px_rgba(1,45,29,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
               >
                 Register Farm
               </button>
@@ -291,7 +291,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center text-[#111c2d] hover:bg-[#e7eeff] transition-colors"
+            className="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center text-[#111c2d] bg-white/60 backdrop-blur-md border border-white/80 hover:bg-white/85 transition-colors"
             aria-label="Toggle Menu"
           >
             <span className="material-symbols-outlined text-[24px]">
@@ -303,7 +303,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden bg-white border-b border-[#e7eeff] px-4 py-4 space-y-3 shadow-lg">
+        <div className="lg:hidden bg-white/85 backdrop-blur-2xl border-b border-white/80 px-4 py-4 space-y-3 shadow-xl">
           {currentFarmer && (
             <div className="flex items-center justify-between pb-2 mb-1 border-b border-[#f0f3ff]">
               <span className="text-[12px] font-semibold text-[#116c4a]">
@@ -318,9 +318,9 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
               <button
                 key={item.path}
                 onClick={() => handleNavClick(item.path)}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-semibold text-left ${currentPath === item.path
-                    ? 'bg-[#1b4332] text-white'
-                    : 'bg-[#f0f3ff] text-[#111c2d]'
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-semibold text-left transition-all ${currentPath === item.path
+                    ? 'bg-[#012d1d] text-white shadow-xs'
+                    : 'bg-white/60 hover:bg-white/85 border border-white/70 text-[#111c2d]'
                   }`}
               >
                 <span>{item.label}</span>
