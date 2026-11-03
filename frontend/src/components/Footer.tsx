@@ -6,9 +6,9 @@ export const Footer: React.FC = () => {
   const { setCurrentPath, currentFarmer } = useApp();
 
   return (
-    <footer className="w-full bg-white/70 backdrop-blur-2xl py-12 border-t border-white/80 shadow-[0_-8px_32px_rgba(0,0,0,0.03)] relative overflow-hidden">
+    <footer className="w-full glass-subtle py-12 border-t border-white/85 shadow-[0_-4px_24px_rgba(1,45,29,0.03)] relative overflow-hidden mt-12">
       <div className="w-full px-4 lg:px-8 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-slate-200/60">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-emerald-500/15">
           {/* Brand Col */}
           <div className="space-y-3">
             <KisanKhataLogo
@@ -23,10 +23,10 @@ export const Footer: React.FC = () => {
               Next-generation enterprise agricultural SaaS ledger and rural bookkeeping infrastructure built specifically for Indian farmers and farmlands.
             </p>
             <div className="flex items-center gap-2 pt-1 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-[#012d1d] text-[11px] font-semibold border border-emerald-500/20 backdrop-blur-sm">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-[#012d1d] text-[11px] font-semibold border border-emerald-500/20 glass-subtle">
                 Multi-Tenant v4.2
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-white/60 text-[#414844] text-[11px] font-semibold border border-white/80 backdrop-blur-sm shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
+              <span className="px-2.5 py-0.5 rounded-full glass-subtle text-[#414844] text-[11px] font-semibold border border-white/80">
                 Offline-Ready
               </span>
             </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { TiltCard } from '../../components/TiltCard';
 
 export const AboutPage: React.FC = () => {
   const { setCurrentPath } = useApp();
@@ -20,7 +21,7 @@ export const AboutPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-        <div className="bg-white/80 backdrop-blur-2xl p-8 rounded-3xl border border-white/85 shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-4">
+        <TiltCard className="glass p-8 rounded-3xl space-y-4">
           <div className="w-12 h-12 rounded-2xl bg-[#c1ecd4] text-[#274e3d] flex items-center justify-center font-bold text-[24px] shadow-xs">
             <span className="material-symbols-outlined text-[28px]">agriculture</span>
           </div>
@@ -31,9 +32,9 @@ export const AboutPage: React.FC = () => {
           <p className="text-[14px] text-[#414844] leading-relaxed">
             KisanKhata eliminates notebook loss by providing high-contrast, oversized touch buttons tailored for outdoor sunlight, offline synchronization, and instant crop-wise expenditure totals.
           </p>
-        </div>
+        </TiltCard>
 
-        <div className="bg-white/80 backdrop-blur-2xl p-8 rounded-3xl border border-white/85 shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-4">
+        <TiltCard className="glass p-8 rounded-3xl space-y-4">
           <div className="w-12 h-12 rounded-2xl bg-[#ffdcc3] text-[#6e3900] flex items-center justify-center font-bold text-[24px] shadow-xs">
             <span className="material-symbols-outlined text-[28px]">verified_user</span>
           </div>
@@ -44,16 +45,16 @@ export const AboutPage: React.FC = () => {
           <p className="text-[14px] text-[#414844] leading-relaxed">
             With KisanKhata, farmers can print certified A4 date-wise, crop-wise, and worker payment reports in standard ₹ INR formatting with a single tap, demonstrating disciplined farm balance sheets.
           </p>
-        </div>
+        </TiltCard>
       </div>
 
       {/* Architecture Highlights */}
-      <div className="bg-white/80 backdrop-blur-2xl rounded-3xl p-8 border border-white/85 shadow-[0_8px_30px_rgba(0,0,0,0.03)] mb-12">
+      <div className="glass rounded-3xl p-8 mb-12">
         <h3 className="text-[20px] font-bold text-[#012d1d] mb-4">
           Key Engineering Principles
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="p-5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs">
+          <div className="p-5 rounded-2xl glass-subtle border border-white/80">
             <strong className="text-[15px] font-bold text-[#012d1d] block mb-1">
               Multi-Tenant Data Isolation
             </strong>
@@ -62,7 +63,7 @@ export const AboutPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs">
+          <div className="p-5 rounded-2xl glass-subtle border border-white/80">
             <strong className="text-[15px] font-bold text-[#012d1d] block mb-1">
               Inclusive Touch Ergonomics
             </strong>
@@ -71,7 +72,7 @@ export const AboutPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs">
+          <div className="p-5 rounded-2xl glass-subtle border border-white/80">
             <strong className="text-[15px] font-bold text-[#012d1d] block mb-1">
               Offline-First Resilience
             </strong>
@@ -89,7 +90,7 @@ export const AboutPage: React.FC = () => {
             setCurrentPath('dashboard');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          className="px-8 py-3.5 rounded-xl bg-[#012d1d] text-white font-bold text-[15px] hover:bg-[#1b4332] shadow-[0_4px_16px_rgba(1,45,29,0.25)] transition-all cursor-pointer"
+          className="px-8 py-3.5 rounded-2xl glass-btn-primary water-shimmer text-white font-bold text-[15px] cursor-pointer"
         >
           Open Farmer Ledger Now
         </button>
@@ -128,7 +129,7 @@ export const ContactPage: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Contact Info */}
-        <div className="bg-white/80 backdrop-blur-2xl p-8 rounded-3xl border border-white/85 shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-6">
+        <div className="glass p-8 rounded-3xl space-y-6">
           <div>
             <h3 className="font-bold text-[18px] text-[#012d1d] mb-4">Contact Channels</h3>
             
@@ -167,7 +168,7 @@ export const ContactPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs">
+          <div className="p-4 rounded-2xl glass-subtle border border-white/80">
             <span className="font-bold text-[13px] text-[#012d1d] block mb-1">
               Regional Field Coordinator Coverage:
             </span>
@@ -178,17 +179,17 @@ export const ContactPage: React.FC = () => {
         </div>
 
         {/* Support Inquiry Form */}
-        <div className="bg-white/80 backdrop-blur-2xl p-8 rounded-3xl border border-white/85 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
+        <div className="glass p-8 rounded-3xl">
           <h3 className="font-bold text-[18px] text-[#012d1d] mb-4">Send a Message</h3>
 
           {submitted ? (
-            <div className="p-6 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 text-[#274e3d] text-center backdrop-blur-md">
+            <div className="p-6 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 text-[#274e3d] text-center glass-subtle">
               <span className="material-symbols-outlined text-[36px] mb-2 text-[#116c4a]">check_circle</span>
               <h4 className="font-bold text-[16px] text-[#012d1d]">Inquiry Received</h4>
               <p className="text-[13px] mt-1 text-[#414844]">Our field officer will get in touch with you shortly.</p>
               <button
                 onClick={() => setSubmitted(false)}
-                className="mt-4 px-4 py-2 rounded-xl bg-[#012d1d] text-white text-[12px] font-bold shadow-xs hover:bg-[#1b4332] transition-colors"
+                className="mt-4 px-4 py-2 rounded-xl glass-btn-primary text-white text-[12px] font-bold"
               >
                 Send Another Note
               </button>
@@ -202,7 +203,7 @@ export const ContactPage: React.FC = () => {
                   value={name}
                   onChange={e => setName(e.target.value)}
                   placeholder="e.g. Rajesh Patil"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                  className="w-full px-4 py-2.5 glass-input text-[14px]"
                   required
                 />
               </div>
@@ -215,7 +216,7 @@ export const ContactPage: React.FC = () => {
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   placeholder="9822014012"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                  className="w-full px-4 py-2.5 glass-input text-[14px]"
                   required
                 />
               </div>
@@ -227,14 +228,14 @@ export const ContactPage: React.FC = () => {
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                   placeholder="Need assistance setting up worker wage rolls or logging tractor diesel..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                  className="w-full px-4 py-2.5 glass-input text-[14px]"
                   required
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full min-h-[48px] py-3 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] hover:bg-[#1b4332] shadow-[0_4px_16px_rgba(1,45,29,0.25)] transition-all cursor-pointer"
+                className="w-full min-h-[48px] py-3 rounded-2xl glass-btn-primary water-shimmer text-white font-bold text-[14px] cursor-pointer"
               >
                 Submit Inquiry
               </button>

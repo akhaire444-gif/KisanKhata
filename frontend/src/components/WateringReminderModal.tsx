@@ -100,12 +100,12 @@ export const WateringReminderModal: React.FC<WateringReminderModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-white/95 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-[0_24px_70px_rgba(0,0,0,0.22)] border border-white/85 max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-[#012d1d]/35 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="glass-strong rounded-3xl p-6 sm:p-8 max-w-xl w-full border border-white/85 max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-200">
         {/* Modal Header */}
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200/60">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-emerald-500/20">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-[#bae6fd] text-[#0369a1] flex items-center justify-center shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-[#c1ecd4] text-[#012d1d] flex items-center justify-center shadow-xs">
               <span className="material-symbols-outlined text-[22px]">water_drop</span>
             </div>
             <div>
@@ -117,7 +117,7 @@ export const WateringReminderModal: React.FC<WateringReminderModalProps> = ({
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1 rounded-xl hover:bg-slate-100/60 transition-colors cursor-pointer">
+          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1 rounded-xl hover:bg-white/60 transition-colors cursor-pointer">
             <span className="material-symbols-outlined text-[24px]">close</span>
           </button>
         </div>
@@ -138,7 +138,7 @@ export const WateringReminderModal: React.FC<WateringReminderModalProps> = ({
               <select
                 value={cropId}
                 onChange={e => handleCropChange(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-3.5 py-2.5 glass-input text-[14px] font-semibold"
               >
                 {crops.map(c => (
                   <option key={c.id} value={c.id}>
@@ -158,14 +158,14 @@ export const WateringReminderModal: React.FC<WateringReminderModalProps> = ({
                 value={plotName}
                 onChange={e => setPlotName(e.target.value)}
                 placeholder="e.g. Plot-1 Drip Line, North Orchard"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-3.5 py-2.5 glass-input text-[14px]"
                 required
               />
             </div>
           </div>
 
           {/* CUSTOM REMINDER INTERVAL: DAYS, WEEKS, MONTHS */}
-          <div className="p-4 rounded-2xl bg-white/60 backdrop-blur-md border border-white/80 space-y-3">
+          <div className="p-4 rounded-2xl glass-subtle border border-white/80 space-y-3">
             <div>
               <label className="block text-[13px] font-bold text-[#012d1d] mb-1">
                 Watering Frequency (सिंचाई अंतराल) *
@@ -189,7 +189,7 @@ export const WateringReminderModal: React.FC<WateringReminderModalProps> = ({
                 />
                 
                 {/* Unit Selector: Days / Weeks / Months */}
-                <div className="flex items-center rounded-xl bg-white/80 backdrop-blur-md p-1 border border-slate-200/80 shadow-2xs">
+                <div className="flex items-center rounded-xl glass-subtle p-1 border border-white/80 shadow-2xs">
                   {(['days', 'weeks', 'months'] as WateringIntervalUnit[]).map(unit => (
                     <button
                       type="button"
@@ -197,8 +197,8 @@ export const WateringReminderModal: React.FC<WateringReminderModalProps> = ({
                       onClick={() => setIntervalUnit(unit)}
                       className={`px-3 py-1.5 rounded-lg text-[13px] font-bold capitalize transition-all cursor-pointer ${
                         intervalUnit === unit
-                          ? 'bg-[#012d1d] text-white shadow-xs'
-                          : 'text-[#414844] hover:bg-slate-100/60'
+                          ? 'bg-gradient-to-r from-[#1b4332] to-[#012d1d] text-white shadow-xs'
+                          : 'text-[#414844] hover:bg-white/60'
                       }`}
                     >
                       {unit === 'days' ? 'Days (दिन)' : unit === 'weeks' ? 'Weeks (सप्ताह)' : 'Months (महीने)'}
@@ -230,8 +230,8 @@ export const WateringReminderModal: React.FC<WateringReminderModalProps> = ({
                       onClick={() => handleApplyPresetInterval(item.val, item.unit)}
                       className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
                         isActive
-                          ? 'bg-[#0284c7] text-white border-[#0284c7] shadow-xs'
-                          : 'bg-white/80 text-[#012d1d] border-slate-200/80 hover:bg-[#bae6fd]/50'
+                          ? 'bg-[#012d1d] text-[#a1f4c8] border-[#012d1d] shadow-2xs font-bold'
+                          : 'glass-subtle text-[#012d1d] border-white/70 hover:bg-white/90'
                       }`}
                     >
                       {item.label}
@@ -251,7 +251,7 @@ export const WateringReminderModal: React.FC<WateringReminderModalProps> = ({
               <select
                 value={method}
                 onChange={e => setMethod(e.target.value as any)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-3.5 py-2.5 glass-input text-[14px] font-semibold"
               >
                 <option value="Drip">Drip Irrigation (ड्रिप)</option>
                 <option value="Canal">Canal / Pat (नहर)</option>
@@ -270,7 +270,7 @@ export const WateringReminderModal: React.FC<WateringReminderModalProps> = ({
                 value={durationTarget}
                 onChange={e => setDurationTarget(e.target.value)}
                 placeholder="e.g. 3 Hours, 2500 Litres"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-3.5 py-2.5 glass-input text-[14px]"
               />
             </div>
           </div>
@@ -286,13 +286,13 @@ export const WateringReminderModal: React.FC<WateringReminderModalProps> = ({
                   type="time"
                   value={time}
                   onChange={e => setTime(e.target.value)}
-                  className="flex-1 px-3.5 py-2 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                  className="flex-1 px-3.5 py-2 glass-input text-[14px] font-semibold"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setTime('06:30')}
-                  className="px-2.5 py-2 rounded-xl bg-white/70 text-[11px] font-bold border border-slate-200/80 cursor-pointer hover:bg-white"
+                  className="px-2.5 py-2 rounded-xl glass-subtle text-[11px] font-bold border border-white/80 cursor-pointer hover:bg-white"
                   title="Early morning avoids evaporation"
                 >
                   🌅 06:30 AM
@@ -300,7 +300,7 @@ export const WateringReminderModal: React.FC<WateringReminderModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setTime('17:30')}
-                  className="px-2.5 py-2 rounded-xl bg-white/70 text-[11px] font-bold border border-slate-200/80 cursor-pointer hover:bg-white"
+                  className="px-2.5 py-2 rounded-xl glass-subtle text-[11px] font-bold border border-white/80 cursor-pointer hover:bg-white"
                   title="Evening watering"
                 >
                   🌇 05:30 PM
@@ -316,7 +316,7 @@ export const WateringReminderModal: React.FC<WateringReminderModalProps> = ({
                 type="date"
                 value={nextWateringDate}
                 onChange={e => setNextWateringDate(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-3.5 py-2 glass-input text-[14px] font-semibold"
                 required
               />
             </div>
@@ -332,22 +332,22 @@ export const WateringReminderModal: React.FC<WateringReminderModalProps> = ({
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="e.g. Check soil moisture before start; clean sand filter"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[13px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+              className="w-full px-3.5 py-2.5 glass-input text-[13px]"
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-200/60">
+          <div className="pt-4 flex items-center justify-end gap-3 border-t border-emerald-500/20">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl bg-white/70 hover:bg-white text-[#414844] font-bold text-[14px] border border-slate-200/60 backdrop-blur-md transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-xl glass-btn-secondary text-[#414844] font-bold text-[14px] cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] hover:bg-[#1b4332] shadow-[0_4px_16px_rgba(1,45,29,0.25)] transition-all cursor-pointer"
+              className="px-6 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] cursor-pointer"
             >
               {reminder ? 'Update Schedule' : 'Save Watering Reminder'}
             </button>

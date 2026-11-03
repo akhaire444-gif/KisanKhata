@@ -2,6 +2,38 @@
 
 All notable changes to the KisanKhata backend and documentation are tracked here.
 
+## [1.4.0] - 2026-11-03 (Professional Glassy / Watery Redesign & 3D Animation System)
+
+### Added
+- **"Clear Water on a Green Field" Living Visual System:**
+  - Layered living-water background (`#eaf6f0` → `#e3f1f4` → `#f4f8ff`) with 4 drifting blurred ambient orbs and subtle caustic SVG light texture.
+  - Comprehensive glass utility system in `index.css`: `.glass`, `.glass-strong`, `.glass-subtle`, `.glass-dark`, `.glass-input`, `.glass-btn-primary`, `.glass-btn-secondary`, and `.water-shimmer`.
+  - Created `frontend/src/components/WaterLoader.tsx`: Pulsing glass droplet loader with specular reflection for session verification.
+  - Created `frontend/src/components/TiltCard.tsx`: Interactive 3D hover perspective tilt card with cursor-tracking specular glare effect.
+  - Created `frontend/src/components/CountUp.tsx`: Smooth animated counter supporting formatted INR currency strings.
+  - Created `docs/UI_DESIGN_SYSTEM.md`: Full architectural reference for design tokens, WebGL scene parameters, accessibility compliance, and print overrides.
+- **Three.js / React Three Fiber 3D Hero Scene:**
+  - Integrated `three`, `@react-three/fiber`, and `@react-three/drei` dynamically loaded via `React.lazy()` and `Suspense`.
+  - Physically accurate `MeshPhysicalMaterial` water droplets with dynamic transmission, dispersion, and realistic 1.333 water index of refraction.
+  - 3-point studio lighting with damped mouse parallax camera rotation.
+  - Performance guards: `IntersectionObserver` auto-pauses rendering when out of viewport; Page Visibility API pauses rendering when inactive; WebGL capability check with `StaticHeroFallback.tsx`.
+
+### Changed
+- **Frontend Modernization across all screens (Visual-Only):**
+  - Upgraded `Header.tsx` to `.glass-strong` with glossy active pill and translucent drawer navigation.
+  - Upgraded `Footer.tsx` with `.glass-subtle` and living-water accents.
+  - Upgraded `HomePage.tsx` with 3D hero scene, `TiltCard` feature cards, and shimmering action buttons.
+  - Upgraded `AuthModals.tsx` (Sign In, Register, and Complete Profile) to `.glass-strong` with `.glass-input` and `.glass-btn-primary`.
+  - Upgraded `FarmerDashboard.tsx` (all tabs: overview, crops, expenses, workers, fertilizers, reminders, reports, help):
+    - Glass-styled tab navigation bar with glossy emerald active pill.
+    - Overview KPIs with `TiltCard`, `CountUp`, and high-contrast `.glass-dark` card.
+    - Quick Expense Khata banner and 7 Core Touch buttons wrapped in `TiltCard`.
+    - All sub-modals (`CropModal`, `ExpenseModal`, `WorkerModal`, `FertilizerModal`, `ReminderModal`, and delete confirmation dialog) restyled with `.glass-strong`, `.glass-input`, and `.glass-btn-*`.
+    - Clean tabular layouts with `.glass-subtle` zebra striping and sticky frosted headers.
+    - Full `@media print` style overrides ensuring crisp white-paper A4 print fidelity with all glass and blurs disabled.
+  - Upgraded `AboutAndContact.tsx` and `WateringReminderModal.tsx` to match the glass design system.
+- Strict preservation of all business logic, API requests, routing, auth flows, validation, and state management.
+
 ## [1.3.0] - 2026-11-02 (Farmer-Only Sign-Up & Render Proxy Redirect Fix)
 
 ### Changed

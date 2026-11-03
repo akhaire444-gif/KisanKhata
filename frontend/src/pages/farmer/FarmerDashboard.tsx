@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Crop, Expense, Worker, FertilizerRecord, Reminder, ExpenseCategory } from '../../types';
 import { EXPENSE_CATEGORIES_CONFIG } from '../../constants/expenseCategories';
+import { TiltCard } from '../../components/TiltCard';
+import { CountUp } from '../../components/CountUp';
 
 type FarmerTab = 
   | 'overview' 
@@ -229,7 +231,7 @@ export const FarmerDashboard: React.FC = () => {
       )}
 
       {/* Module Navigation Tabs */}
-      <div className="p-1.5 rounded-2xl bg-white/60 backdrop-blur-2xl border border-white/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex items-center gap-1.5 overflow-x-auto pb-1.5 mb-6 no-scrollbar">
+      <div className="p-1.5 rounded-2xl glass-subtle border border-white/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex items-center gap-1.5 overflow-x-auto pb-1.5 mb-6 no-scrollbar">
         {[
           { id: 'overview', label: '📊 Farm Summary (कुल सारांश)', icon: 'grid_view' },
           { id: 'expenses', label: '📋 All Expenses Khata (खर्चा बही)', icon: 'currency_rupee' },
@@ -243,10 +245,10 @@ export const FarmerDashboard: React.FC = () => {
           <button
             key={tab.id}
             onClick={() => handleTabChange(tab.id as FarmerTab)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-[13px] whitespace-nowrap transition-all cursor-pointer min-h-[44px] backdrop-blur-md ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-[13px] whitespace-nowrap transition-all cursor-pointer min-h-[44px] ${
               activeTab === tab.id
-                ? 'bg-[#012d1d] text-white shadow-[0_4px_16px_rgba(1,45,29,0.25)] border border-[#012d1d]'
-                : 'bg-white/50 text-[#414844] hover:bg-white/90 hover:text-[#012d1d] border border-white/60'
+                ? 'bg-gradient-to-r from-[#1b4332] to-[#012d1d] text-white shadow-[0_4px_16px_rgba(1,45,29,0.25)] border border-[#012d1d]'
+                : 'glass-subtle text-[#414844] hover:bg-white/90 hover:text-[#012d1d] border border-white/60'
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>
@@ -262,45 +264,54 @@ export const FarmerDashboard: React.FC = () => {
         <div className="space-y-6">
           {/* Quick Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white/75 hover:bg-white/90 backdrop-blur-xl p-5 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_14px_35px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300">
+            <TiltCard className="glass p-5 rounded-3xl cursor-pointer">
               <div className="flex items-center justify-between text-[#414844] text-[13px] mb-2">
                 <span>Active Crops</span>
                 <span className="material-symbols-outlined text-[#116c4a] text-[22px]">yard</span>
               </div>
-              <div className="text-[26px] font-bold text-[#012d1d]">{crops.length}</div>
-              <div className="text-[12px] text-[#116c4a] font-medium mt-1">Sowing to yield cycle</div>
-            </div>
-
-            <div className="bg-white/75 hover:bg-white/90 backdrop-blur-xl p-5 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_14px_35px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300">
-              <div className="flex items-center justify-between text-[#414844] text-[13px] mb-2">
-                <span>Total Expenses</span>
-                <span className="material-symbols-outlined text-[#ba1a1a] text-[22px]">payments</span>
+              <div className="text-[26px] font-bold text-[#012d1d]">
+                <CountUp value={crops.length} />
               </div>
-              <div className="text-[26px] font-bold text-[#012d1d]">₹{totalExpenseSum.toLocaleString('en-IN')}</div>
-              <div className="text-[12px] text-[#414844] font-medium mt-1">{expenses.length} ledger entries</div>
-            </div>
+              <div className="text-[12px] text-[#116c4a] font-medium mt-1">Sowing to yield cycle</div>
+            </TiltCard>
 
-            <div className="bg-white/75 hover:bg-white/90 backdrop-blur-xl p-5 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_14px_35px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300">
+            {/* Key Hero Total Expense Card (Deep Green Glass) */}
+            <TiltCard className="glass-dark p-5 rounded-3xl cursor-pointer">
+              <div className="flex items-center justify-between text-[#a1f4c8] text-[13px] mb-2">
+                <span>Total Expenses</span>
+                <span className="material-symbols-outlined text-[#a1f4c8] text-[22px]">payments</span>
+              </div>
+              <div className="text-[26px] font-bold text-white">
+                <CountUp value={totalExpenseSum} prefix="₹" />
+              </div>
+              <div className="text-[12px] text-[#a1f4c8]/90 font-medium mt-1">{expenses.length} ledger entries</div>
+            </TiltCard>
+
+            <TiltCard className="glass p-5 rounded-3xl cursor-pointer">
               <div className="flex items-center justify-between text-[#414844] text-[13px] mb-2">
                 <span>Labor Wage Ledger</span>
                 <span className="material-symbols-outlined text-[#1b724f] text-[22px]">engineering</span>
               </div>
-              <div className="text-[26px] font-bold text-[#012d1d]">₹{totalWorkerWages.toLocaleString('en-IN')}</div>
+              <div className="text-[26px] font-bold text-[#012d1d]">
+                <CountUp value={totalWorkerWages} prefix="₹" />
+              </div>
               <div className="text-[12px] text-[#414844] font-medium mt-1">{workers.length} active workers</div>
-            </div>
+            </TiltCard>
 
-            <div className="bg-white/75 hover:bg-white/90 backdrop-blur-xl p-5 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_14px_35px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300">
+            <TiltCard className="glass p-5 rounded-3xl cursor-pointer">
               <div className="flex items-center justify-between text-[#414844] text-[13px] mb-2">
                 <span>Spray / Inputs Logs</span>
                 <span className="material-symbols-outlined text-[#3f6653] text-[22px]">eco</span>
               </div>
-              <div className="text-[26px] font-bold text-[#012d1d]">{fertilizerRecords.length}</div>
+              <div className="text-[26px] font-bold text-[#012d1d]">
+                <CountUp value={fertilizerRecords.length} />
+              </div>
               <div className="text-[12px] text-[#414844] font-medium mt-1">Recorded field applications</div>
-            </div>
+            </TiltCard>
           </div>
 
           {/* Quick Expense Khata Banner */}
-          <div className="bg-gradient-to-r from-[#012d1d]/95 via-[#0d3b28]/95 to-[#1b4332]/95 backdrop-blur-2xl rounded-3xl p-6 sm:p-7 text-white shadow-[0_16px_40px_rgba(1,45,29,0.25)] flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-emerald-400/25 relative overflow-hidden">
+          <div className="glass-dark rounded-3xl p-6 sm:p-7 text-white shadow-[0_16px_40px_rgba(1,45,29,0.25)] flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-[#a1f4c8]/30 relative overflow-hidden">
             <div className="space-y-1.5 max-w-xl">
               <span className="px-3 py-1 rounded-full bg-[#a1f4c8] text-[#002113] text-[11px] font-bold uppercase tracking-wider inline-block">
                 Simple Farm Khata
@@ -330,7 +341,7 @@ export const FarmerDashboard: React.FC = () => {
               </button>
               <button
                 onClick={() => handleTabChange('expenses')}
-                className="min-h-[46px] px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-[14px] transition-all flex items-center gap-2 border border-white/20 backdrop-blur-md cursor-pointer"
+                className="min-h-[46px] px-5 py-2.5 rounded-xl glass-btn-secondary text-white font-bold text-[14px] transition-all flex items-center gap-2 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[20px]">receipt_long</span>
                 <span>Open Expenses Khata</span>
@@ -349,10 +360,10 @@ export const FarmerDashboard: React.FC = () => {
               { id: 'reports', label: 'Expense Reports', icon: 'receipt_long', desc: 'Printable summaries', color: 'bg-[#c1ecd4] text-[#274e3d]' },
               { id: 'help', label: 'Help Guide', icon: 'help_outline', desc: 'Plain-language steps', color: 'bg-[#f0f3ff] text-[#414844]' },
             ].map(item => (
-              <button
+              <TiltCard
                 key={item.id}
                 onClick={() => setActiveTab(item.id as FarmerTab)}
-                className="bg-white/75 hover:bg-white/95 backdrop-blur-xl p-5 rounded-3xl border border-white/80 hover:border-emerald-500/40 shadow-[0_6px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_14px_35px_rgba(17,108,74,0.1)] hover:-translate-y-0.5 transition-all duration-300 text-left flex flex-col justify-between min-h-[120px] cursor-pointer group"
+                className="glass p-5 rounded-3xl text-left flex flex-col justify-between min-h-[120px] cursor-pointer group"
               >
                 <div className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-3 shadow-xs ${item.color}`}>
                   <span className="material-symbols-outlined text-[24px]">{item.icon}</span>
@@ -363,14 +374,14 @@ export const FarmerDashboard: React.FC = () => {
                   </h4>
                   <p className="text-[12px] text-[#414844] mt-0.5">{item.desc}</p>
                 </div>
-              </button>
+              </TiltCard>
             ))}
           </div>
 
           {/* Recent Expenses & Recent Workers preview split */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Recent Expenses */}
-            <div className="bg-white/80 backdrop-blur-2xl p-6 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
+            <div className="glass p-6 rounded-3xl">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-[18px] text-[#012d1d]">Recent Crop Expenses</h3>
                 <button
@@ -383,7 +394,7 @@ export const FarmerDashboard: React.FC = () => {
 
               <div className="space-y-3">
                 {expenses.slice(0, 4).map(exp => (
-                  <div key={exp.id} className="flex items-center justify-between p-3.5 rounded-2xl bg-white/60 hover:bg-white/90 border border-slate-200/50 backdrop-blur-md transition-colors text-[13px]">
+                  <div key={exp.id} className="flex items-center justify-between p-3.5 rounded-2xl glass-subtle hover:bg-white/70 transition-colors text-[13px]">
                     <div>
                       <span className="font-bold text-[#012d1d] block">{exp.details}</span>
                       <span className="text-[#414844] text-[11px]">{exp.cropName} • {exp.date}</span>
@@ -397,7 +408,7 @@ export const FarmerDashboard: React.FC = () => {
             </div>
 
             {/* Worker Summary */}
-            <div className="bg-white/80 backdrop-blur-2xl p-6 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
+            <div className="glass p-6 rounded-3xl">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-[18px] text-[#012d1d]">Worker Roll & Wages</h3>
                 <button
@@ -410,7 +421,7 @@ export const FarmerDashboard: React.FC = () => {
 
               <div className="space-y-3">
                 {workers.map(w => (
-                  <div key={w.id} className="flex items-center justify-between p-3.5 rounded-2xl bg-white/60 hover:bg-white/90 border border-slate-200/50 backdrop-blur-md transition-colors text-[13px]">
+                  <div key={w.id} className="flex items-center justify-between p-3.5 rounded-2xl glass-subtle hover:bg-white/70 transition-colors text-[13px]">
                     <div>
                       <span className="font-bold text-[#012d1d] block">{w.name}</span>
                       <span className="text-[#414844] text-[11px]">{w.daysWorked} days @ ₹{w.dailyWage}/day</span>
@@ -428,8 +439,8 @@ export const FarmerDashboard: React.FC = () => {
 
       {/* 2. CROPS MANAGEMENT */}
       {activeTab === 'crops' && (
-        <div className="bg-white/80 backdrop-blur-2xl rounded-3xl p-6 border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200/60">
+        <div className="glass rounded-3xl p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-emerald-500/20">
             <div>
               <h2 className="text-[22px] font-bold text-[#012d1d]">My Crops</h2>
               <p className="text-[14px] text-[#414844]">
@@ -441,7 +452,7 @@ export const FarmerDashboard: React.FC = () => {
                 setEditingCrop(null);
                 setShowAddCropModal(true);
               }}
-              className="min-h-[48px] px-5 py-2.5 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] flex items-center justify-center gap-2 hover:bg-[#1b4332] shadow-sm transition-all cursor-pointer"
+              className="min-h-[48px] px-5 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] flex items-center justify-center gap-2 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[20px]">add</span>
               <span>Add New Crop</span>
@@ -449,13 +460,13 @@ export const FarmerDashboard: React.FC = () => {
           </div>
 
           {crops.length === 0 ? (
-            <div className="text-center py-12 bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-slate-200/50">
+            <div className="text-center py-12 glass-subtle rounded-2xl p-6">
               <span className="material-symbols-outlined text-[#717973] text-[48px] mb-2">yard</span>
               <p className="text-[16px] font-bold text-[#012d1d]">No crops added yet.</p>
               <p className="text-[14px] text-[#414844] mb-4">Add your first crop to start tracking farm expenses.</p>
               <button
                 onClick={() => setShowAddCropModal(true)}
-                className="px-6 py-2.5 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] cursor-pointer"
+                className="px-6 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] cursor-pointer"
               >
                 Add Your First Crop
               </button>
@@ -467,7 +478,7 @@ export const FarmerDashboard: React.FC = () => {
                 const cropExpTotal = cropExpenses.reduce((sum, e) => sum + e.amount, 0);
 
                 return (
-                  <div key={c.id} className="p-5 rounded-3xl bg-white/70 hover:bg-white/90 backdrop-blur-xl border border-white/80 hover:border-emerald-500/30 shadow-[0_6px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition-all flex flex-col justify-between">
+                  <TiltCard key={c.id} className="p-5 rounded-3xl glass hover:border-emerald-500/30 transition-all flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <span className="px-2.5 py-0.5 rounded-full bg-[#c1ecd4] text-[#274e3d] text-[11px] font-bold shadow-2xs">
@@ -477,7 +488,7 @@ export const FarmerDashboard: React.FC = () => {
                       </div>
                       <h3 className="font-bold text-[18px] text-[#012d1d] mb-1">{c.name}</h3>
                       <p className="text-[13px] text-[#414844] mb-3">{c.description || 'No description provided.'}</p>
-                      <div className="text-[12px] text-[#414844] bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-slate-200/60 space-y-1">
+                      <div className="text-[12px] text-[#414844] glass-subtle p-3 rounded-2xl space-y-1">
                         <div className="flex justify-between">
                           <span>Duration:</span>
                           <span className="font-bold text-[#012d1d]">{c.durationDays} Days</span>
@@ -489,13 +500,13 @@ export const FarmerDashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-end gap-2 pt-4 mt-4 border-t border-slate-200/60">
+                    <div className="flex items-center justify-end gap-2 pt-4 mt-4 border-t border-emerald-500/20">
                       <button
                         onClick={() => {
                           setEditingCrop(c);
                           setShowAddCropModal(true);
                         }}
-                        className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-white text-[#012d1d] font-bold text-[12px] border border-slate-200/80 backdrop-blur-md shadow-2xs transition-all cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl glass-btn-secondary text-[#012d1d] font-bold text-[12px] cursor-pointer"
                       >
                         Edit
                       </button>
@@ -512,7 +523,7 @@ export const FarmerDashboard: React.FC = () => {
                         Delete
                       </button>
                     </div>
-                  </div>
+                  </TiltCard>
                 );
               })}
             </div>
@@ -524,7 +535,7 @@ export const FarmerDashboard: React.FC = () => {
       {activeTab === 'expenses' && (
         <div className="space-y-6">
           {/* Category Breakdown Cards Strip */}
-          <div className="bg-white/80 backdrop-blur-2xl rounded-3xl p-6 border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
+          <div className="glass rounded-3xl p-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <div>
                 <h3 className="text-[17px] font-bold text-[#012d1d]">Category Breakdown (श्रेणीवार खर्चा)</h3>
@@ -549,10 +560,10 @@ export const FarmerDashboard: React.FC = () => {
                   <button
                     key={cat.category}
                     onClick={() => setExpenseCategoryFilter(isSelected ? 'all' : cat.category)}
-                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between backdrop-blur-md ${
+                    className={`p-3 rounded-2xl text-left transition-all cursor-pointer flex flex-col justify-between ${
                       isSelected
-                        ? 'border-[#012d1d] bg-[#f0f9f4]/90 shadow-xs ring-2 ring-[#012d1d]'
-                        : 'border-white/70 bg-white/60 hover:border-[#a1f4c8] hover:bg-white/90 shadow-2xs'
+                        ? 'border-2 border-[#012d1d] bg-white/95 shadow-md'
+                        : 'glass-subtle hover:bg-white/80'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -581,8 +592,8 @@ export const FarmerDashboard: React.FC = () => {
           </div>
 
           {/* Ledger Section with Filters & Add Button */}
-          <div className="bg-white/80 backdrop-blur-2xl rounded-3xl p-6 border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200/60">
+          <div className="glass rounded-3xl p-6 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-emerald-500/20">
               <div>
                 <h2 className="text-[22px] font-bold text-[#012d1d]">Farm Expenses Ledger</h2>
                 <p className="text-[14px] text-[#414844]">
@@ -601,7 +612,7 @@ export const FarmerDashboard: React.FC = () => {
                     setEditingExpense(null);
                     setShowAddExpenseModal(true);
                   }}
-                  className="min-h-[46px] px-5 py-2.5 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] flex items-center justify-center gap-2 hover:bg-[#1b4332] transition-colors shadow-sm cursor-pointer"
+                  className="min-h-[46px] px-5 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[20px]">add</span>
                   <span>Add Expense</span>
@@ -617,7 +628,7 @@ export const FarmerDashboard: React.FC = () => {
                 <select
                   value={expenseCropFilter}
                   onChange={e => setExpenseCropFilter(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[13px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                  className="w-full px-3.5 py-2 glass-input text-[13px]"
                 >
                   <option value="all">All Crops (सभी फसलें)</option>
                   {crops.map(c => (
@@ -634,7 +645,7 @@ export const FarmerDashboard: React.FC = () => {
                 <select
                   value={expenseCategoryFilter}
                   onChange={e => setExpenseCategoryFilter(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[13px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                  className="w-full px-3.5 py-2 glass-input text-[13px]"
                 >
                   <option value="all">All Categories (सभी खर्चे)</option>
                   <option value="Seeds">Seeds (बीज)</option>
@@ -658,7 +669,7 @@ export const FarmerDashboard: React.FC = () => {
                     value={expenseSearchQuery}
                     onChange={e => setExpenseSearchQuery(e.target.value)}
                     placeholder="Search by vendor, item, etc..."
-                    className="w-full pl-9 pr-8 py-2 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[13px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                    className="w-full pl-9 pr-8 py-2 glass-input text-[13px]"
                   />
                   {expenseSearchQuery && (
                     <button
@@ -674,7 +685,7 @@ export const FarmerDashboard: React.FC = () => {
 
             {/* Table */}
             {filteredExpenses.length === 0 ? (
-              <div className="text-center py-12 bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-slate-200/50">
+              <div className="text-center py-12 glass-subtle rounded-2xl p-6">
                 <span className="material-symbols-outlined text-[#717973] text-[48px] mb-2">payments</span>
                 <p className="text-[16px] font-bold text-[#012d1d]">No expenses match your filters.</p>
                 <p className="text-[14px] text-[#414844] mb-4">
@@ -689,17 +700,17 @@ export const FarmerDashboard: React.FC = () => {
                       setExpenseCategoryFilter('all');
                       setExpenseSearchQuery('');
                     }}
-                    className="px-4 py-2 rounded-xl bg-[#012d1d] text-white text-[13px] font-bold cursor-pointer"
+                    className="px-4 py-2 rounded-xl glass-btn-primary water-shimmer text-white text-[13px] font-bold cursor-pointer"
                   >
                     Reset All Filters
                   </button>
                 )}
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-2xl border border-slate-200/70 shadow-2xs">
+              <div className="overflow-x-auto rounded-2xl glass-subtle border border-emerald-500/20">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-200/70 bg-slate-50/80 backdrop-blur-md text-[12px] font-bold uppercase tracking-wider text-[#414844]">
+                    <tr className="border-b border-emerald-500/20 bg-white/60 backdrop-blur-md text-[12px] font-bold uppercase tracking-wider text-[#414844]">
                       <th className="py-3 px-4">Date</th>
                       <th className="py-3 px-4">Crop</th>
                       <th className="py-3 px-4">Category</th>
@@ -709,13 +720,13 @@ export const FarmerDashboard: React.FC = () => {
                       <th className="py-3 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 text-[14px] bg-white/40">
+                  <tbody className="divide-y divide-emerald-500/10 text-[14px]">
                     {filteredExpenses.map(exp => (
-                      <tr key={exp.id} className="hover:bg-emerald-500/5 transition-colors">
+                      <tr key={exp.id} className="hover:bg-emerald-500/10 transition-colors">
                         <td className="py-3.5 px-4 font-medium text-[#111c2d] whitespace-nowrap">{exp.date}</td>
                         <td className="py-3.5 px-4 font-bold text-[#012d1d] whitespace-nowrap">{exp.cropName}</td>
                         <td className="py-3.5 px-4 whitespace-nowrap">
-                          <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-[#012d1d] text-[12px] font-semibold border border-emerald-100">
+                          <span className="px-2.5 py-1 rounded-lg bg-[#c1ecd4]/60 text-[#012d1d] text-[12px] font-semibold border border-[#a1f4c8]/60">
                             {exp.category}
                           </span>
                         </td>
@@ -751,7 +762,7 @@ export const FarmerDashboard: React.FC = () => {
                         </td>
                       </tr>
                     ))}
-                    <tr className="bg-slate-50/90 font-bold text-[#012d1d] border-t border-slate-200/70">
+                    <tr className="bg-white/70 font-bold text-[#012d1d] border-t border-emerald-500/20">
                       <td colSpan={5} className="py-3.5 px-4 text-right">
                         {expenseCropFilter !== 'all' || expenseCategoryFilter !== 'all' || expenseSearchQuery
                           ? 'Filtered Total:'
@@ -772,8 +783,8 @@ export const FarmerDashboard: React.FC = () => {
 
       {/* 4. WORKER MANAGEMENT */}
       {activeTab === 'workers' && (
-        <div className="bg-white/80 backdrop-blur-2xl rounded-3xl p-6 border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200/60">
+        <div className="glass rounded-3xl p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-emerald-500/20">
             <div>
               <h2 className="text-[22px] font-bold text-[#012d1d]">Worker Daily Wages & Attendance</h2>
               <p className="text-[14px] text-[#414844]">
@@ -785,7 +796,7 @@ export const FarmerDashboard: React.FC = () => {
                 setEditingWorker(null);
                 setShowAddWorkerModal(true);
               }}
-              className="min-h-[48px] px-5 py-2.5 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] flex items-center justify-center gap-2 hover:bg-[#1b4332] transition-colors shadow-sm cursor-pointer"
+              className="min-h-[48px] px-5 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] flex items-center justify-center gap-2 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[20px]">person_add</span>
               <span>Add Worker</span>
@@ -793,7 +804,7 @@ export const FarmerDashboard: React.FC = () => {
           </div>
 
           {workers.length === 0 ? (
-            <div className="text-center py-12 bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-slate-200/50">
+            <div className="text-center py-12 glass-subtle rounded-2xl p-6">
               <span className="material-symbols-outlined text-[#717973] text-[48px] mb-2">groups</span>
               <p className="text-[16px] font-bold text-[#012d1d]">No workers added yet.</p>
               <p className="text-[14px] text-[#414844] mb-4">Add your farm workers to calculate wages and track payouts.</p>
@@ -801,16 +812,16 @@ export const FarmerDashboard: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {workers.map(w => (
-                <div key={w.id} className="p-5 rounded-3xl bg-white/70 hover:bg-white/90 backdrop-blur-xl border border-white/80 hover:border-emerald-500/30 shadow-[0_6px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition-all flex flex-col justify-between">
+                <TiltCard key={w.id} className="p-5 rounded-3xl glass hover:border-emerald-500/30 transition-all flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-bold text-[17px] text-[#012d1d]">{w.name}</span>
-                      <span className="px-2 py-0.5 rounded bg-white text-[#116c4a] text-[12px] font-bold border border-slate-200/80 shadow-2xs">
+                      <span className="px-2 py-0.5 rounded-lg bg-white/80 text-[#116c4a] text-[12px] font-bold border border-emerald-500/20 shadow-2xs">
                         {w.contact}
                       </span>
                     </div>
 
-                    <div className="space-y-1.5 text-[13px] text-[#414844] bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-slate-200/60 my-3">
+                    <div className="space-y-1.5 text-[13px] text-[#414844] glass-subtle p-3 rounded-2xl my-3">
                       <div className="flex justify-between">
                         <span>Days Worked:</span>
                         <strong className="text-[#012d1d]">{w.daysWorked} days</strong>
@@ -819,7 +830,7 @@ export const FarmerDashboard: React.FC = () => {
                         <span>Daily Wage Rate:</span>
                         <strong className="text-[#012d1d]">₹{w.dailyWage} / day</strong>
                       </div>
-                      <div className="flex justify-between pt-1 border-t border-slate-200/60">
+                      <div className="flex justify-between pt-1 border-t border-emerald-500/20">
                         <span className="font-bold text-[#012d1d]">Payment Amount:</span>
                         <strong className="text-[#116c4a] text-[15px]">₹{w.paymentAmount.toLocaleString('en-IN')}</strong>
                       </div>
@@ -836,13 +847,13 @@ export const FarmerDashboard: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="flex items-center justify-end gap-2 pt-4 mt-2 border-t border-slate-200/60">
+                  <div className="flex items-center justify-end gap-2 pt-4 mt-2 border-t border-emerald-500/20">
                     <button
                       onClick={() => {
                         setEditingWorker(w);
                         setShowAddWorkerModal(true);
                       }}
-                      className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-white text-[#012d1d] font-bold text-[12px] border border-slate-200/80 backdrop-blur-md shadow-2xs transition-all cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl glass-btn-secondary text-[#012d1d] font-bold text-[12px] cursor-pointer"
                     >
                       Update Days / Wage
                     </button>
@@ -859,7 +870,7 @@ export const FarmerDashboard: React.FC = () => {
                       Delete
                     </button>
                   </div>
-                </div>
+                </TiltCard>
               ))}
             </div>
           )}
@@ -869,8 +880,8 @@ export const FarmerDashboard: React.FC = () => {
 
       {/* 6. FERTILIZER & PESTICIDE */}
       {activeTab === 'fertilizer' && (
-        <div className="bg-white/80 backdrop-blur-2xl rounded-3xl p-6 border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200/60">
+        <div className="glass rounded-3xl p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-emerald-500/20">
             <div>
               <h2 className="text-[22px] font-bold text-[#012d1d]">Fertilizer & Pesticide Logs</h2>
               <p className="text-[14px] text-[#414844]">
@@ -879,7 +890,7 @@ export const FarmerDashboard: React.FC = () => {
             </div>
             <button
               onClick={() => setShowAddFertModal(true)}
-              className="min-h-[48px] px-5 py-2.5 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] flex items-center justify-center gap-2 hover:bg-[#1b4332] transition-colors shadow-sm cursor-pointer"
+              className="min-h-[48px] px-5 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] flex items-center justify-center gap-2 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[20px]">add</span>
               <span>Record Input Use</span>
@@ -887,17 +898,17 @@ export const FarmerDashboard: React.FC = () => {
           </div>
 
           {fertilizerRecords.length === 0 ? (
-            <div className="text-center py-12 bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-slate-200/50">
+            <div className="text-center py-12 glass-subtle rounded-2xl p-6">
               <p className="text-[16px] font-bold text-[#012d1d]">No input records yet.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {fertilizerRecords.map(fert => (
-                <div key={fert.id} className="p-4 rounded-3xl bg-white/70 hover:bg-white/90 backdrop-blur-xl border border-white/80 hover:border-emerald-500/30 shadow-[0_6px_24px_rgba(0,0,0,0.03)] transition-all flex flex-col justify-between">
+                <TiltCard key={fert.id} className="p-4 rounded-3xl glass hover:border-emerald-500/30 transition-all flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between text-[12px] text-[#414844] mb-2">
                       <span className="font-bold text-[#012d1d]">{fert.date}</span>
-                      <span className="px-2 py-0.5 rounded bg-[#c1ecd4] text-[#274e3d] font-bold shadow-2xs">
+                      <span className="px-2 py-0.5 rounded-full bg-[#c1ecd4] text-[#274e3d] font-bold shadow-2xs">
                         {fert.plotName}
                       </span>
                     </div>
@@ -907,7 +918,7 @@ export const FarmerDashboard: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="pt-3 mt-3 border-t border-slate-200/60 flex justify-end">
+                  <div className="pt-3 mt-3 border-t border-emerald-500/20 flex justify-end">
                     <button
                       onClick={() =>
                         setDeleteConfirm({
@@ -921,7 +932,7 @@ export const FarmerDashboard: React.FC = () => {
                       Delete Log
                     </button>
                   </div>
-                </div>
+                </TiltCard>
               ))}
             </div>
           )}
@@ -930,8 +941,8 @@ export const FarmerDashboard: React.FC = () => {
 
       {/* 7. REMINDERS */}
       {activeTab === 'reminders' && (
-        <div className="bg-white/80 backdrop-blur-2xl rounded-3xl p-6 border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200/60">
+        <div className="glass rounded-3xl p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-emerald-500/20">
             <div>
               <h2 className="text-[22px] font-bold text-[#012d1d]">Farm Reminders & Alerts</h2>
               <p className="text-[14px] text-[#414844]">
@@ -940,7 +951,7 @@ export const FarmerDashboard: React.FC = () => {
             </div>
             <button
               onClick={() => setShowAddReminderModal(true)}
-              className="min-h-[48px] px-5 py-2.5 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] flex items-center justify-center gap-2 hover:bg-[#1b4332] transition-colors shadow-sm cursor-pointer"
+              className="min-h-[48px] px-5 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] flex items-center justify-center gap-2 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[20px]">add_alert</span>
               <span>Set Reminder</span>
@@ -951,12 +962,12 @@ export const FarmerDashboard: React.FC = () => {
             {reminders.map(rem => (
               <div
                 key={rem.id}
-                className={`p-4.5 rounded-2xl border backdrop-blur-md transition-all flex items-center justify-between gap-4 ${
+                className={`p-4.5 rounded-2xl border transition-all flex items-center justify-between gap-4 ${
                   rem.isDone
-                    ? 'bg-white/40 border-slate-200/40 text-gray-400'
+                    ? 'glass-subtle opacity-60 text-gray-400'
                     : rem.date === new Date().toISOString().split('T')[0]
-                    ? 'bg-amber-500/15 border-[#f48c24] shadow-[0_4px_16px_rgba(244,140,36,0.12)]'
-                    : 'bg-white/70 hover:bg-white/90 border-white/80 shadow-2xs'
+                    ? 'glass bg-amber-500/15 border-amber-400 shadow-[0_4px_16px_rgba(244,140,36,0.15)]'
+                    : 'glass hover:border-emerald-500/30'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -1002,8 +1013,8 @@ export const FarmerDashboard: React.FC = () => {
 
       {/* 8. REPORTS */}
       {activeTab === 'reports' && (
-        <div className="bg-white/80 backdrop-blur-2xl rounded-3xl p-6 border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200/60">
+        <div className="glass rounded-3xl p-6 print:border-none print:shadow-none print:p-0 print:bg-transparent">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-emerald-500/20 print:hidden">
             <div>
               <h2 className="text-[22px] font-bold text-[#012d1d]">Farm Expense & Wage Reports</h2>
               <p className="text-[14px] text-[#414844]">
@@ -1012,7 +1023,7 @@ export const FarmerDashboard: React.FC = () => {
             </div>
             <button
               onClick={() => window.print()}
-              className="min-h-[48px] px-5 py-2.5 rounded-xl bg-[#116c4a] text-white font-bold text-[14px] flex items-center justify-center gap-2 hover:bg-[#116c4a]/90 transition-colors shadow-sm cursor-pointer"
+              className="min-h-[48px] px-5 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] flex items-center justify-center gap-2 cursor-pointer print:hidden"
             >
               <span className="material-symbols-outlined text-[20px]">print</span>
               <span>Print Friendly A4</span>
@@ -1020,11 +1031,11 @@ export const FarmerDashboard: React.FC = () => {
           </div>
 
           {/* Report Type Selector Pills */}
-          <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+          <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1 print:hidden">
             <button
               onClick={() => setReportType('date')}
               className={`px-4 py-2 rounded-xl text-[13px] font-bold cursor-pointer transition-all ${
-                reportType === 'date' ? 'bg-[#012d1d] text-white shadow-xs' : 'bg-white/70 hover:bg-white text-[#414844] border border-slate-200/60 backdrop-blur-md'
+                reportType === 'date' ? 'bg-[#012d1d] text-white shadow-xs' : 'glass-btn-secondary text-[#414844]'
               }`}
             >
               1. Date-wise Expense Report
@@ -1032,7 +1043,7 @@ export const FarmerDashboard: React.FC = () => {
             <button
               onClick={() => setReportType('crop')}
               className={`px-4 py-2 rounded-xl text-[13px] font-bold cursor-pointer transition-all ${
-                reportType === 'crop' ? 'bg-[#012d1d] text-white shadow-xs' : 'bg-white/70 hover:bg-white text-[#414844] border border-slate-200/60 backdrop-blur-md'
+                reportType === 'crop' ? 'bg-[#012d1d] text-white shadow-xs' : 'glass-btn-secondary text-[#414844]'
               }`}
             >
               2. Crop-wise Expense Report
@@ -1040,7 +1051,7 @@ export const FarmerDashboard: React.FC = () => {
             <button
               onClick={() => setReportType('worker')}
               className={`px-4 py-2 rounded-xl text-[13px] font-bold cursor-pointer transition-all ${
-                reportType === 'worker' ? 'bg-[#012d1d] text-white shadow-xs' : 'bg-white/70 hover:bg-white text-[#414844] border border-slate-200/60 backdrop-blur-md'
+                reportType === 'worker' ? 'bg-[#012d1d] text-white shadow-xs' : 'glass-btn-secondary text-[#414844]'
               }`}
             >
               3. Worker-wise Wage Report
@@ -1049,14 +1060,14 @@ export const FarmerDashboard: React.FC = () => {
 
           {/* Sub-Filters */}
           {reportType === 'date' && (
-            <div className="bg-white/60 backdrop-blur-md p-4 rounded-2xl border border-white/80 mb-6 flex flex-wrap items-center gap-4">
+            <div className="glass-subtle p-4 rounded-2xl mb-6 flex flex-wrap items-center gap-4 print:hidden">
               <div>
                 <label className="block text-[12px] font-bold text-[#012d1d] mb-1">From Date:</label>
                 <input
                   type="date"
                   value={reportFromDate}
                   onChange={e => setReportFromDate(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-white/80 border border-slate-200/80 text-[14px]"
+                  className="px-3 py-2 glass-input text-[14px]"
                 />
               </div>
               <div>
@@ -1065,19 +1076,19 @@ export const FarmerDashboard: React.FC = () => {
                   type="date"
                   value={reportToDate}
                   onChange={e => setReportToDate(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-white/80 border border-slate-200/80 text-[14px]"
+                  className="px-3 py-2 glass-input text-[14px]"
                 />
               </div>
             </div>
           )}
 
           {reportType === 'crop' && (
-            <div className="bg-white/60 backdrop-blur-md p-4 rounded-2xl border border-white/80 mb-6">
+            <div className="glass-subtle p-4 rounded-2xl mb-6 print:hidden">
               <label className="block text-[12px] font-bold text-[#012d1d] mb-1">Select Crop:</label>
               <select
                 value={reportSelectedCrop}
                 onChange={e => setReportSelectedCrop(e.target.value)}
-                className="px-4 py-2.5 rounded-xl bg-white/80 border border-slate-200/80 text-[14px] font-semibold w-full sm:w-80"
+                className="px-4 py-2.5 glass-input text-[14px] font-semibold w-full sm:w-80"
               >
                 {crops.map(c => (
                   <option key={c.id} value={c.id}>
@@ -1089,8 +1100,8 @@ export const FarmerDashboard: React.FC = () => {
           )}
 
           {/* REPORT RESULTS TABLE */}
-          <div className="border border-slate-200/80 rounded-2xl overflow-hidden shadow-2xs">
-            <div className="bg-slate-50/80 backdrop-blur-md p-4 border-b border-slate-200/80 flex justify-between items-center">
+          <div className="border border-emerald-500/20 rounded-2xl overflow-hidden glass-subtle print:border-slate-300 print:bg-white">
+            <div className="bg-white/60 backdrop-blur-md p-4 border-b border-emerald-500/20 flex justify-between items-center print:bg-slate-100">
               <div>
                 <h3 className="font-bold text-[16px] text-[#012d1d]">
                   {reportType === 'date' && `Date-wise Ledger (${reportFromDate} to ${reportToDate})`}
@@ -1103,7 +1114,7 @@ export const FarmerDashboard: React.FC = () => {
 
             {reportType === 'date' && (
               <table className="w-full text-left">
-                <thead className="bg-slate-100/60 text-[12px] uppercase text-[#414844]">
+                <thead className="bg-white/50 text-[12px] uppercase text-[#414844] print:bg-slate-100">
                   <tr>
                     <th className="py-2.5 px-4">Date</th>
                     <th className="py-2.5 px-4">Crop</th>
@@ -1112,7 +1123,7 @@ export const FarmerDashboard: React.FC = () => {
                     <th className="py-2.5 px-4 text-right">Amount (₹)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-[14px] bg-white/40">
+                <tbody className="divide-y divide-emerald-500/10 text-[14px]">
                   {expenses.map(e => (
                     <tr key={e.id}>
                       <td className="py-2.5 px-4">{e.date}</td>
@@ -1122,7 +1133,7 @@ export const FarmerDashboard: React.FC = () => {
                       <td className="py-2.5 px-4 text-right font-numeric-table font-bold">₹{e.amount.toLocaleString('en-IN')}</td>
                     </tr>
                   ))}
-                  <tr className="bg-slate-50/90 font-bold text-[#012d1d] border-t border-slate-200/80">
+                  <tr className="bg-white/70 font-bold text-[#012d1d] border-t border-emerald-500/20 print:bg-slate-100">
                     <td colSpan={4} className="py-3 px-4 text-right">Period Total:</td>
                     <td className="py-3 px-4 text-right font-numeric-table text-[16px]">₹{totalExpenseSum.toLocaleString('en-IN')}</td>
                   </tr>
@@ -1132,7 +1143,7 @@ export const FarmerDashboard: React.FC = () => {
 
             {reportType === 'crop' && (
               <table className="w-full text-left">
-                <thead className="bg-slate-100/60 text-[12px] uppercase text-[#414844]">
+                <thead className="bg-white/50 text-[12px] uppercase text-[#414844] print:bg-slate-100">
                   <tr>
                     <th className="py-2.5 px-4">Date</th>
                     <th className="py-2.5 px-4">Category</th>
@@ -1140,7 +1151,7 @@ export const FarmerDashboard: React.FC = () => {
                     <th className="py-2.5 px-4 text-right">Amount (₹)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-[14px] bg-white/40">
+                <tbody className="divide-y divide-emerald-500/10 text-[14px]">
                   {expenses
                     .filter(e => e.cropId === reportSelectedCrop)
                     .map(e => (
@@ -1151,7 +1162,7 @@ export const FarmerDashboard: React.FC = () => {
                         <td className="py-2.5 px-4 text-right font-numeric-table font-bold">₹{e.amount.toLocaleString('en-IN')}</td>
                       </tr>
                     ))}
-                  <tr className="bg-slate-50/90 font-bold text-[#012d1d] border-t border-slate-200/80">
+                  <tr className="bg-white/70 font-bold text-[#012d1d] border-t border-emerald-500/20 print:bg-slate-100">
                     <td colSpan={3} className="py-3 px-4 text-right">Total for this Crop:</td>
                     <td className="py-3 px-4 text-right font-numeric-table text-[16px]">
                       ₹
@@ -1167,7 +1178,7 @@ export const FarmerDashboard: React.FC = () => {
 
             {reportType === 'worker' && (
               <table className="w-full text-left">
-                <thead className="bg-slate-100/60 text-[12px] uppercase text-[#414844]">
+                <thead className="bg-white/50 text-[12px] uppercase text-[#414844] print:bg-slate-100">
                   <tr>
                     <th className="py-2.5 px-4">Worker Name</th>
                     <th className="py-2.5 px-4">Contact</th>
@@ -1176,7 +1187,7 @@ export const FarmerDashboard: React.FC = () => {
                     <th className="py-2.5 px-4 text-right">Total Payable (₹)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-[14px] bg-white/40">
+                <tbody className="divide-y divide-emerald-500/10 text-[14px]">
                   {workers.map(w => (
                     <tr key={w.id}>
                       <td className="py-2.5 px-4 font-bold text-[#012d1d]">{w.name}</td>
@@ -1188,7 +1199,7 @@ export const FarmerDashboard: React.FC = () => {
                       </td>
                     </tr>
                   ))}
-                  <tr className="bg-slate-50/90 font-bold text-[#012d1d] border-t border-slate-200/80">
+                  <tr className="bg-white/70 font-bold text-[#012d1d] border-t border-emerald-500/20 print:bg-slate-100">
                     <td colSpan={4} className="py-3 px-4 text-right">Grand Total Worker Wages:</td>
                     <td className="py-3 px-4 text-right font-numeric-table text-[16px] text-[#116c4a]">
                       ₹{totalWorkerWages.toLocaleString('en-IN')}
@@ -1203,7 +1214,7 @@ export const FarmerDashboard: React.FC = () => {
 
       {/* 9. HELP GUIDE */}
       {activeTab === 'help' && (
-        <div className="bg-white/80 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-6">
+        <div className="glass rounded-3xl p-6 sm:p-8 space-y-6">
           <div>
             <h2 className="text-[24px] font-bold text-[#012d1d]">Farmer User Guide (Kisan Sahayata)</h2>
             <p className="text-[14px] text-[#414844]">
@@ -1212,7 +1223,7 @@ export const FarmerDashboard: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-6 rounded-3xl bg-white/70 hover:bg-white/90 backdrop-blur-xl border border-white/80 shadow-[0_6px_24px_rgba(0,0,0,0.03)] transition-all">
+            <TiltCard className="p-6 rounded-3xl glass hover:border-emerald-500/30 transition-all">
               <div className="w-10 h-10 rounded-2xl bg-[#c1ecd4] text-[#274e3d] flex items-center justify-center font-bold text-[18px] mb-3 shadow-xs">
                 1
               </div>
@@ -1223,9 +1234,9 @@ export const FarmerDashboard: React.FC = () => {
                 <li>Enter crop name (e.g. Bhagwa Pomegranate), category, and plantation date.</li>
                 <li>Tap <strong>Save Crop</strong>. You can now link all diesel and seed expenses directly to this crop.</li>
               </ol>
-            </div>
+            </TiltCard>
 
-            <div className="p-6 rounded-3xl bg-white/70 hover:bg-white/90 backdrop-blur-xl border border-white/80 shadow-[0_6px_24px_rgba(0,0,0,0.03)] transition-all">
+            <TiltCard className="p-6 rounded-3xl glass hover:border-emerald-500/30 transition-all">
               <div className="w-10 h-10 rounded-2xl bg-[#ffdcc3] text-[#6e3900] flex items-center justify-center font-bold text-[18px] mb-3 shadow-xs">
                 2
               </div>
@@ -1236,9 +1247,9 @@ export const FarmerDashboard: React.FC = () => {
                 <li>Choose the crop, date of expense, and category (Diesel, Fertilizer, Labor, etc.).</li>
                 <li>Enter amount in ₹. Double-tap protection ensures duplicate receipts are not created.</li>
               </ol>
-            </div>
+            </TiltCard>
 
-            <div className="p-6 rounded-3xl bg-white/70 hover:bg-white/90 backdrop-blur-xl border border-white/80 shadow-[0_6px_24px_rgba(0,0,0,0.03)] transition-all">
+            <TiltCard className="p-6 rounded-3xl glass hover:border-emerald-500/30 transition-all">
               <div className="w-10 h-10 rounded-2xl bg-[#a1f4c8] text-[#1b724f] flex items-center justify-center font-bold text-[18px] mb-3 shadow-xs">
                 3
               </div>
@@ -1249,9 +1260,9 @@ export const FarmerDashboard: React.FC = () => {
                 <li>When days worked increase (e.g. 14 days), the app calculates total owed automatically: ₹7,000.</li>
                 <li>Add optional UPI ID for direct PhonePe or GPay transfer.</li>
               </ol>
-            </div>
+            </TiltCard>
 
-            <div className="p-6 rounded-3xl bg-white/70 hover:bg-white/90 backdrop-blur-xl border border-white/80 shadow-[0_6px_24px_rgba(0,0,0,0.03)] transition-all">
+            <TiltCard className="p-6 rounded-3xl glass hover:border-emerald-500/30 transition-all">
               <div className="w-10 h-10 rounded-2xl bg-[#dee8ff] text-[#012d1d] flex items-center justify-center font-bold text-[18px] mb-3 shadow-xs">
                 4
               </div>
@@ -1262,7 +1273,7 @@ export const FarmerDashboard: React.FC = () => {
                 <li>Review season cost aggregations in clear ₹ INR format.</li>
                 <li>Tap <strong>Print Friendly A4</strong> to generate certified documentation for Kisan Credit Cards (KCC) and bank subsidies.</li>
               </ol>
-            </div>
+            </TiltCard>
           </div>
         </div>
       )}
@@ -1355,8 +1366,8 @@ export const FarmerDashboard: React.FC = () => {
 
       {/* 7. Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white/95 backdrop-blur-2xl rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-[0_24px_70px_rgba(0,0,0,0.22)] border border-white/85">
+        <div className="fixed inset-0 z-50 bg-[#012d1d]/35 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="glass-strong rounded-3xl p-6 sm:p-7 max-w-md w-full border border-white/85 shadow-[0_24px_70px_rgba(1,45,29,0.22)] animate-in zoom-in-95 duration-200">
             <h3 className="font-bold text-[18px] text-[#ba1a1a] mb-2 flex items-center gap-2">
               <span className="material-symbols-outlined text-[24px]">warning</span>
               Confirm Deletion
@@ -1365,7 +1376,7 @@ export const FarmerDashboard: React.FC = () => {
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 rounded-xl bg-white/70 hover:bg-white text-[#414844] font-semibold text-[13px] border border-slate-200/60 backdrop-blur-md transition-all cursor-pointer"
+                className="px-4 py-2 rounded-xl glass-btn-secondary text-[#414844] font-semibold text-[13px] cursor-pointer"
               >
                 Cancel
               </button>
@@ -1421,13 +1432,13 @@ const CropModal: React.FC<CropModalProps> = ({ crop, onClose, onSave }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-white/95 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-[0_24px_70px_rgba(0,0,0,0.22)] border border-white/85">
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200/60">
+    <div className="fixed inset-0 z-50 bg-[#012d1d]/35 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="glass-strong rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-white/85 shadow-[0_24px_70px_rgba(1,45,29,0.22)] animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-emerald-500/20">
           <h3 className="font-bold text-[20px] text-[#012d1d]">
             {crop ? 'Edit Crop' : 'Add New Crop'}
           </h3>
-          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1 rounded-xl hover:bg-slate-100/60 transition-colors cursor-pointer">
+          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1 rounded-xl hover:bg-white/60 transition-colors cursor-pointer">
             <span className="material-symbols-outlined text-[24px]">close</span>
           </button>
         </div>
@@ -1442,7 +1453,7 @@ const CropModal: React.FC<CropModalProps> = ({ crop, onClose, onSave }) => {
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="e.g. Bhagwa Pomegranate, Ratnagiri Alphonso"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[15px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+              className="w-full px-4 py-2.5 glass-input text-[15px]"
               required
             />
           </div>
@@ -1453,7 +1464,7 @@ const CropModal: React.FC<CropModalProps> = ({ crop, onClose, onSave }) => {
               <select
                 value={category}
                 onChange={e => setCategory(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-3 py-2.5 glass-input text-[14px]"
               >
                 <option value="Fruit">Fruit</option>
                 <option value="Grain">Grain & Wheat</option>
@@ -1472,7 +1483,7 @@ const CropModal: React.FC<CropModalProps> = ({ crop, onClose, onSave }) => {
                 max="999"
                 value={durationDays}
                 onChange={e => setDurationDays(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-3 py-2.5 glass-input text-[14px]"
                 required
               />
             </div>
@@ -1485,7 +1496,7 @@ const CropModal: React.FC<CropModalProps> = ({ crop, onClose, onSave }) => {
               value={plantationDate}
               onChange={e => setPlantationDate(e.target.value)}
               placeholder="DD-MM-YYYY"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[15px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+              className="w-full px-4 py-2.5 glass-input text-[15px]"
               required
             />
           </div>
@@ -1497,21 +1508,21 @@ const CropModal: React.FC<CropModalProps> = ({ crop, onClose, onSave }) => {
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="e.g. 5 acres North plot with fertile black soil"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+              className="w-full px-4 py-2.5 glass-input text-[14px]"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200/60">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-emerald-500/20">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl bg-white/70 hover:bg-white text-[#414844] font-semibold text-[14px] border border-slate-200/60 backdrop-blur-md transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-xl glass-btn-secondary text-[#414844] font-semibold text-[14px] cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] hover:bg-[#1b4332] shadow-sm transition-all cursor-pointer"
+              className="px-6 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] cursor-pointer"
             >
               Save Crop
             </button>
@@ -1573,13 +1584,13 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ crops, expense, onClose, on
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-white/95 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-[0_24px_70px_rgba(0,0,0,0.22)] border border-white/85">
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200/60">
+    <div className="fixed inset-0 z-50 bg-[#012d1d]/35 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="glass-strong rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-white/85 shadow-[0_24px_70px_rgba(1,45,29,0.22)] animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-emerald-500/20">
           <h3 className="font-bold text-[20px] text-[#012d1d]">
             {expense ? 'Edit Expense' : 'Add Crop Expense'}
           </h3>
-          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1 rounded-xl hover:bg-slate-100/60 transition-colors cursor-pointer">
+          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1 rounded-xl hover:bg-white/60 transition-colors cursor-pointer">
             <span className="material-symbols-outlined text-[24px]">close</span>
           </button>
         </div>
@@ -1593,7 +1604,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ crops, expense, onClose, on
               <select
                 value={cropId}
                 onChange={e => setCropId(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-3 py-2.5 glass-input text-[14px]"
                 required
               >
                 {crops.map(c => (
@@ -1609,7 +1620,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ crops, expense, onClose, on
               <select
                 value={category}
                 onChange={e => setCategory(e.target.value as ExpenseCategory)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-3 py-2.5 glass-input text-[14px]"
               >
                 <option value="Seeds">Seeds (बीज)</option>
                 <option value="Fertilizers">Fertilizers (उर्वरक / खाद)</option>
@@ -1636,7 +1647,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ crops, expense, onClose, on
                   value={amount}
                   onChange={e => setAmount(e.target.value)}
                   placeholder="e.g. 4500"
-                  className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[15px] font-numeric-table font-bold focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                  className="w-full pl-8 pr-3 py-2.5 glass-input text-[15px] font-numeric-table font-bold"
                   required
                 />
               </div>
@@ -1649,7 +1660,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ crops, expense, onClose, on
                 value={date}
                 onChange={e => setDate(e.target.value)}
                 placeholder="DD-MM-YYYY"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[15px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-4 py-2.5 glass-input text-[15px]"
                 required
               />
             </div>
@@ -1662,7 +1673,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ crops, expense, onClose, on
               value={quantity}
               onChange={e => setQuantity(e.target.value)}
               placeholder="e.g. 2 bags, 45 Litres, 3 workers"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+              className="w-full px-4 py-2.5 glass-input text-[14px]"
             />
           </div>
 
@@ -1673,23 +1684,23 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ crops, expense, onClose, on
               value={details}
               onChange={e => setDetails(e.target.value)}
               placeholder="e.g. 45L Diesel from HP Pump for rotary tiller"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[15px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+              className="w-full px-4 py-2.5 glass-input text-[15px]"
               required
             />
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200/60">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-emerald-500/20">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl bg-white/70 hover:bg-white text-[#414844] font-semibold text-[14px] border border-slate-200/60 backdrop-blur-md transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-xl glass-btn-secondary text-[#414844] font-semibold text-[14px] cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isBusy}
-              className="px-6 py-2.5 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] hover:bg-[#1b4332] shadow-sm disabled:opacity-50 transition-all cursor-pointer"
+              className="px-6 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] disabled:opacity-50 cursor-pointer"
             >
               {isBusy ? 'Saving...' : expense ? 'Update Expense' : 'Save Expense'}
             </button>
@@ -1749,13 +1760,13 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ worker, onClose, onSave }) =>
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-white/95 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-[0_24px_70px_rgba(0,0,0,0.22)] border border-white/85">
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200/60">
+    <div className="fixed inset-0 z-50 bg-[#012d1d]/35 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="glass-strong rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-white/85 shadow-[0_24px_70px_rgba(1,45,29,0.22)] animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-emerald-500/20">
           <h3 className="font-bold text-[20px] text-[#012d1d]">
             {worker ? 'Update Worker Details' : 'Add Farm Worker'}
           </h3>
-          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1 rounded-xl hover:bg-slate-100/60 transition-colors cursor-pointer">
+          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1 rounded-xl hover:bg-white/60 transition-colors cursor-pointer">
             <span className="material-symbols-outlined text-[24px]">close</span>
           </button>
         </div>
@@ -1771,7 +1782,7 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ worker, onClose, onSave }) =>
                 value={name}
                 onChange={e => setName(e.target.value)}
                 placeholder="e.g. Baburao Shinde"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[15px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-4 py-2.5 glass-input text-[15px]"
                 required
               />
             </div>
@@ -1783,7 +1794,7 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ worker, onClose, onSave }) =>
                 value={contact}
                 onChange={e => setContact(e.target.value)}
                 placeholder="9823012345"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[15px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-4 py-2.5 glass-input text-[15px]"
                 required
               />
             </div>
@@ -1798,7 +1809,7 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ worker, onClose, onSave }) =>
                 max="366"
                 value={daysWorked}
                 onChange={e => setDaysWorked(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[15px] font-numeric-table focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-4 py-2.5 glass-input text-[15px] font-numeric-table"
                 required
               />
             </div>
@@ -1809,13 +1820,13 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ worker, onClose, onSave }) =>
                 min="1"
                 value={dailyWage}
                 onChange={e => setDailyWage(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[15px] font-numeric-table focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-4 py-2.5 glass-input text-[15px] font-numeric-table"
                 required
               />
             </div>
           </div>
 
-          <div className="p-3 bg-emerald-500/15 border border-emerald-500/25 rounded-2xl flex items-center justify-between text-[#002113]">
+          <div className="p-3.5 glass-subtle border border-emerald-500/30 rounded-2xl flex items-center justify-between text-[#002113]">
             <span className="text-[13px] font-semibold">Calculated Total Payment:</span>
             <span className="text-[18px] font-bold font-numeric-table">₹{calcAmount.toLocaleString('en-IN')}</span>
           </div>
@@ -1828,7 +1839,7 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ worker, onClose, onSave }) =>
                 value={upiId}
                 onChange={e => setUpiId(e.target.value)}
                 placeholder="name@upi"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-4 py-2.5 glass-input text-[14px]"
               />
             </div>
             <div>
@@ -1838,22 +1849,22 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ worker, onClose, onSave }) =>
                 value={address}
                 onChange={e => setAddress(e.target.value)}
                 placeholder="e.g. Sinnar, Nashik"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-4 py-2.5 glass-input text-[14px]"
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200/60">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-emerald-500/20">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl bg-white/70 hover:bg-white text-[#414844] font-semibold text-[14px] border border-slate-200/60 backdrop-blur-md transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-xl glass-btn-secondary text-[#414844] font-semibold text-[14px] cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] hover:bg-[#1b4332] shadow-sm transition-all cursor-pointer"
+              className="px-6 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] cursor-pointer"
             >
               Save Worker
             </button>
@@ -1884,11 +1895,11 @@ const FertilizerModal: React.FC<{ onClose: () => void; onSave: (data: Omit<Ferti
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-white/95 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-[0_24px_70px_rgba(0,0,0,0.22)] border border-white/85">
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200/60">
+    <div className="fixed inset-0 z-50 bg-[#012d1d]/35 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="glass-strong rounded-3xl p-6 sm:p-8 max-w-md w-full border border-white/85 shadow-[0_24px_70px_rgba(1,45,29,0.22)] animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-emerald-500/20">
           <h3 className="font-bold text-[20px] text-[#012d1d]">Record Fertilizer or Pesticide Spray</h3>
-          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1 rounded-xl hover:bg-slate-100/60 transition-colors cursor-pointer">
+          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1 rounded-xl hover:bg-white/60 transition-colors cursor-pointer">
             <span className="material-symbols-outlined text-[24px]">close</span>
           </button>
         </div>
@@ -1900,7 +1911,7 @@ const FertilizerModal: React.FC<{ onClose: () => void; onSave: (data: Omit<Ferti
               value={productName}
               onChange={e => setProductName(e.target.value)}
               placeholder="e.g. Bio-NPK, Neem Oil, Zinc Spray"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+              className="w-full px-4 py-2.5 glass-input text-[14px]"
               required
             />
           </div>
@@ -1910,7 +1921,7 @@ const FertilizerModal: React.FC<{ onClose: () => void; onSave: (data: Omit<Ferti
               type="text"
               value={plotName}
               onChange={e => setPlotName(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+              className="w-full px-4 py-2.5 glass-input text-[14px]"
               required
             />
           </div>
@@ -1923,7 +1934,7 @@ const FertilizerModal: React.FC<{ onClose: () => void; onSave: (data: Omit<Ferti
                 step="any"
                 value={quantity}
                 onChange={e => setQuantity(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-4 py-2.5 glass-input text-[14px]"
                 required
               />
             </div>
@@ -1932,7 +1943,7 @@ const FertilizerModal: React.FC<{ onClose: () => void; onSave: (data: Omit<Ferti
               <select
                 value={unit}
                 onChange={e => setUnit(e.target.value as 'ml' | 'kg')}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-4 py-2.5 glass-input text-[14px]"
               >
                 <option value="ml">ml (Liquid)</option>
                 <option value="kg">kg (Solid)</option>
@@ -1945,21 +1956,21 @@ const FertilizerModal: React.FC<{ onClose: () => void; onSave: (data: Omit<Ferti
               type="text"
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+              className="w-full px-4 py-2.5 glass-input text-[14px]"
               required
             />
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200/60">
+          <div className="flex justify-end gap-3 pt-4 border-t border-emerald-500/20">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl bg-white/70 hover:bg-white text-[#414844] font-semibold text-[14px] border border-slate-200/60 backdrop-blur-md transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-xl glass-btn-secondary text-[#414844] font-semibold text-[14px] cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] hover:bg-[#1b4332] shadow-sm transition-all cursor-pointer"
+              className="px-6 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] cursor-pointer"
             >
               Save Input Log
             </button>
@@ -1986,11 +1997,11 @@ const ReminderModal: React.FC<{ onClose: () => void; onSave: (data: Omit<Reminde
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-white/95 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-[0_24px_70px_rgba(0,0,0,0.22)] border border-white/85">
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200/60">
+    <div className="fixed inset-0 z-50 bg-[#012d1d]/35 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="glass-strong rounded-3xl p-6 sm:p-8 max-w-md w-full border border-white/85 shadow-[0_24px_70px_rgba(1,45,29,0.22)] animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-emerald-500/20">
           <h3 className="font-bold text-[20px] text-[#012d1d]">Set Farm Reminder</h3>
-          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1 rounded-xl hover:bg-slate-100/60 transition-colors cursor-pointer">
+          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1 rounded-xl hover:bg-white/60 transition-colors cursor-pointer">
             <span className="material-symbols-outlined text-[24px]">close</span>
           </button>
         </div>
@@ -2003,7 +2014,7 @@ const ReminderModal: React.FC<{ onClose: () => void; onSave: (data: Omit<Reminde
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="e.g. Spray micronutrients, apply top-dress urea"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+              className="w-full px-4 py-2.5 glass-input text-[14px]"
               required
             />
           </div>
@@ -2014,7 +2025,7 @@ const ReminderModal: React.FC<{ onClose: () => void; onSave: (data: Omit<Reminde
                 type="date"
                 value={date}
                 onChange={e => setDate(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-3 py-2.5 glass-input text-[14px]"
                 required
               />
             </div>
@@ -2024,22 +2035,22 @@ const ReminderModal: React.FC<{ onClose: () => void; onSave: (data: Omit<Reminde
                 type="time"
                 value={time}
                 onChange={e => setTime(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                className="w-full px-3 py-2.5 glass-input text-[14px]"
                 required
               />
             </div>
           </div>
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200/60">
+          <div className="flex justify-end gap-3 pt-4 border-t border-emerald-500/20">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl bg-white/70 hover:bg-white text-[#414844] font-semibold text-[14px] border border-slate-200/60 backdrop-blur-md transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-xl glass-btn-secondary text-[#414844] font-semibold text-[14px] cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] hover:bg-[#1b4332] shadow-sm transition-all cursor-pointer"
+              className="px-6 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] cursor-pointer"
             >
               Schedule Reminder
             </button>
