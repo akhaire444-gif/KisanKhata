@@ -2,6 +2,32 @@
 
 All notable changes to the KisanKhata backend and documentation are tracked here.
 
+## [1.5.0] - 2026-11-03 (Complete 3D Farming UI Redesign & Category-Based Crop Selection)
+
+### Added
+- **3D Indian Living Farm & Animated Farmer Hero (`FarmHeroScene.tsx`):**
+  - Integrated 3D stylized Indian farmer with procedural kinematics: cotton kurta, traditional dhoti, saffron gamcha/pagri, and wooden/iron farming tool (hoe).
+  - Looping agricultural activity: natural body weight shift, bending forward to inspect crops, arm swinging with farming tool, and head tilting.
+  - Realistic green agricultural furrows, raised soil ridges, and swaying crop foliage responding to wind physics.
+  - Translucent irrigation canal with watery refraction alongside the crop beds.
+  - Distant low-poly rolling hills, tree line, drifting fluffy clouds, and warm natural morning sunlight.
+  - Damped camera parallax tracking cursor movement, with pointer-events disabled on the canvas so hero text, buttons, and Google authentication remain 100% accessible.
+  - Automatic `IntersectionObserver` pause on scroll and Page Visibility pause on tab blur.
+- **Context-Aware Category-Based Crop Selection (`cropCatalogue.ts` & `CropCategorySelector.tsx`):**
+  - Comprehensive Indian crop catalogue categorized into **Fruits**, **Vegetables**, **Cereals & Grains**, **Pulses & Dal**, **Cash Crops**, and **Spices & Herbs**.
+  - Localized bilingual names (English + Hindi/Marathi) with standard crop duration presets.
+  - Dynamic `CropCategorySelector` inside `CropModal`: selecting a category immediately updates the available options.
+  - Selecting any crop auto-fills crop name and default harvest duration in days.
+  - In-category quick search and "Custom Variety" option for regional or specialized cultivars.
+  - Filter tabs in the Crops Management dashboard allowing farmers to browse crops by category.
+- **Worker Wage Formula Explainer:**
+  - Added dedicated visual calculation formula banner: `Days Worked × Daily Wage = Total Payment (e.g., 10 days × ₹500/day = ₹5,000)`.
+
+### Changed
+- Updated `HomePage.tsx` hero headline: "Your Farm. Your Expenses. Your Growth." with agricultural value propositions and prominent action buttons.
+- Cleaned up deprecated `HeroScene.tsx` in favor of the new comprehensive `FarmHeroScene.tsx`.
+- Updated `docs/UI_DESIGN_SYSTEM.md` with 3D farm environment specifications and crop selection architecture.
+
 ## [1.4.0] - 2026-11-03 (Professional Glassy / Watery Redesign & 3D Animation System)
 
 ### Added

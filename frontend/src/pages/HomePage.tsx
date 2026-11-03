@@ -4,7 +4,7 @@ import { api } from '../api/client';
 import { TiltCard } from '../components/TiltCard';
 import { StaticHeroFallback } from '../components/three/StaticHeroFallback';
 
-const HeroScene = React.lazy(() => import('../components/three/HeroScene'));
+const FarmHeroScene = React.lazy(() => import('../components/three/FarmHeroScene'));
 
 export const HomePage: React.FC<{
   onOpenAuthModal?: (isRegister?: boolean) => void;
@@ -31,28 +31,28 @@ export const HomePage: React.FC<{
   return (
     <div className="w-full text-[#111c2d] selection:bg-[#a1f4c8] selection:text-[#012d1d]">
       {/* Hero Section with 3D WebGL Background Scene */}
-      <section className="relative overflow-hidden pt-8 pb-16 lg:pt-14 lg:pb-24 border-b border-white/60">
-        {/* Real 3D WebGL Scene (or lightweight CSS fallback) */}
+      <section className="relative overflow-hidden pt-8 pb-16 lg:pt-14 lg:pb-24 border-b border-white/60 min-h-[580px] flex items-center">
+        {/* Real 3D WebGL Living Farm Scene with 3D Farmer */}
         <Suspense fallback={<StaticHeroFallback />}>
-          <HeroScene />
+          <FarmHeroScene />
         </Suspense>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pointer-events-auto">
           <div className="text-center max-w-3xl mx-auto space-y-6">
             {/* Pill Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-subtle border border-emerald-500/30 text-[#116c4a] text-[13px] font-bold">
-              <span className="material-symbols-outlined text-[17px]">verified_user</span>
+              <span className="material-symbols-outlined text-[17px]">agriculture</span>
               <span>Bharat’s Multi-Tenant Digital Farm Khata • फसल खर्च बही</span>
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#012d1d] tracking-tight leading-[1.15] drop-shadow-xs">
-              Empower Your Farm with Precision Expense & Wage Ledgers
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#012d1d] tracking-tight leading-[1.12] drop-shadow-xs">
+              Your Farm. Your Expenses. Your Growth.
             </h1>
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg text-[#414844] max-w-2xl mx-auto leading-relaxed">
-              Ditch lost damp paper diaries. Record diesel, seeds, fertilizer, and daily worker rozi-roti rolls with instant ₹ INR calculation and 1-tap certified bank audit reports.
+              Manage crops, track every expense, calculate worker wages and organise your farm activities — all in one place.
             </p>
 
             {/* Action Buttons */}
@@ -61,13 +61,31 @@ export const HomePage: React.FC<{
                 <button
                   type="button"
                   onClick={handleGoDashboard}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl glass-btn-primary text-white font-bold text-base water-shimmer flex items-center justify-center gap-2.5 cursor-pointer"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl glass-btn-primary text-white font-bold text-base water-shimmer flex items-center justify-center gap-2.5 cursor-pointer shadow-md"
                 >
                   <span className="material-symbols-outlined text-[22px]">grid_view</span>
                   <span>Open Farmer Dashboard ({currentFarmer.firstName})</span>
                 </button>
               ) : (
                 <>
+                  <button
+                    type="button"
+                    onClick={handleOpenRegister}
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-2xl glass-btn-primary text-white font-bold text-base water-shimmer flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">rocket_launch</span>
+                    <span>Get Started</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleOpenLogin}
+                    className="w-full sm:w-auto px-7 py-3.5 rounded-2xl glass-btn-secondary text-[#012d1d] font-bold text-base flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">login</span>
+                    <span>Sign In</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={handleGoogleAuth}
@@ -80,24 +98,6 @@ export const HomePage: React.FC<{
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                     </svg>
                     <span>Continue with Google</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleOpenLogin}
-                    className="w-full sm:w-auto px-7 py-3.5 rounded-2xl glass-btn-primary text-white font-bold text-base water-shimmer flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">login</span>
-                    <span>Sign In</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleOpenRegister}
-                    className="w-full sm:w-auto px-7 py-3.5 rounded-2xl glass-btn-secondary text-[#012d1d] font-bold text-base flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">person_add</span>
-                    <span>Register Farm</span>
                   </button>
                 </>
               )}

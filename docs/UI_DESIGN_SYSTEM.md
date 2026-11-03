@@ -75,21 +75,29 @@ Used for text fields, number inputs, date selectors, and dropdowns.
 
 ## 4. 3D & Micro-Interaction Architecture
 
-### 4.1 WebGL 3D Hero Scene (`HeroScene.tsx`)
+### 4.1 3D Living Farm & Animated Farmer Scene (`FarmHeroScene.tsx`)
 - **Technology:** `@react-three/fiber` + `@react-three/drei` with Three.js.
-- **Code Splitting & Performance:** Dynamically imported via React `lazy()` and `Suspense` with `StaticHeroFallback.tsx`. Completely isolated into its own lazy chunk (`HeroScene-*.js`), keeping the initial entry bundle light (~372 kB).
+- **Code Splitting & Performance:** Dynamically loaded via React `lazy()` and `Suspense` with `StaticHeroFallback.tsx`. Completely isolated into its own lazy chunk (`FarmHeroScene-*.js`), keeping the initial entry bundle light (~394 kB).
 - **Scene Elements:**
-  - **Glass Water Droplets:** Floating spherical meshes using `MeshPhysicalMaterial`:
-    - `transmission: 0.95`, `roughness: 0.08`, `ior: 1.333` (accurate refractive index of water).
-    - `dispersion: 0.04`, `clearcoat: 1.0`, `specularIntensity: 1.2`.
-  - **Agricultural Sprout:** Low-poly seedling with organic swaying rotation.
-  - **Dynamic Lighting:** Three-point studio lighting with directional sun rim-light and warm ambient fill.
-  - **Damped Parallax:** Mouse coordinates smoothly lerped into camera rotation with spring damping.
+  - **Procedural 3D Indian Farmer:**
+    - Stylized low-poly farmer wearing cotton kurta, traditional dhoti, green sash, and saffron gamcha/pagri (turban).
+    - Holding wooden and iron farming hoe (pawda/khurpi).
+    - Procedural natural animation loop in `useFrame`: gentle rhythmic bending to inspect soil/crops, arm swinging with farming tool, head tilting, breathing weight shift.
+  - **Agricultural Crop Rows & Furrows:**
+    - Raised soil ridges (`#45260e`) with orderly rows of crops.
+    - Foliage plants swaying gently in the breeze using trigonometric phase offsets.
+  - **Irrigation Water Canal:**
+    - Water canal running alongside the crop rows with `MeshPhysicalMaterial` (`ior: 1.333`, `transmission: 0.85`, translucent aqua tint).
+  - **Environment & Horizon:**
+    - Distant green rolling hills and layered low-poly pine/shade trees.
+    - Soft, drifting fluffy white clouds on the horizon.
+    - Directional sunlight casting warm natural morning rays across the fields.
+  - **Damped Parallax:** Subtle mouse coordinate tracking with smoothed spring damping.
 - **Battery & Performance Protections:**
-  - `IntersectionObserver`: Pauses WebGL rendering loop when scrolled out of view.
+  - `IntersectionObserver`: Pauses rendering loop when scrolled out of viewport.
   - Page Visibility API: Pauses rendering when browser tab is inactive.
   - WebGL Capability Check: Silently renders `StaticHeroFallback` on browsers/devices without WebGL support.
-  - Canvas Frame Loop: Demand-based rendering and FPS throttling on mobile devices.
+  - Pointer events disabled on canvas layer so hero text, buttons, and Google sign-in are 100% accessible and click-through.
 
 ### 4.2 TiltCard Component (`TiltCard.tsx`)
 - Pure CSS 3D perspective transform (`perspective: 1000px`, `rotateX`, `rotateY`).
@@ -108,7 +116,19 @@ Used for text fields, number inputs, date selectors, and dropdowns.
 
 ---
 
-## 5. Accessibility & Device Adaptability
+## 5. Category-Based Crop Selection Architecture (`cropCatalogue.ts` & `CropCategorySelector.tsx`)
+
+### 5.1 Context-Aware Interaction Flow
+When a farmer registers a crop or edits an existing crop in `CropModal`:
+1. **Category Selection:** Choosing a category (Fruits, Vegetables, Cereals & Grains, Pulses & Dal, Cash Crops, Spices & Herbs) dynamically refreshes the available crops.
+2. **Vernacular & English Display:** Crops display both their standard English agronomic name and familiar vernacular Hindi/Marathi terms (e.g., `अनार (भगवा डाळिंब)`, `टमाटर (टोमॅटो)`, `गेहूं (गहू)`).
+3. **Autofill Defaults:** Selecting any crop card auto-fills the crop name and provides a sensible default harvest cycle duration (e.g. 120 days for Tomato, 180 days for Pomegranate, 365 days for Sugarcane).
+4. **Category Search & Custom Mode:** Allows rapid in-category text search and supports custom local varieties for unique regional cultivars.
+5. **Dashboard Filtering:** The Crops Management tab supports instant tabbed filtering by category with item count chips and full-text search.
+
+---
+
+## 6. Accessibility & Device Adaptability
 
 1. **WCAG AA Compliance:** All text tokens maintain contrast ratios exceeding 4.5:1 for body and 3:1 for large headers against all glass backgrounds.
 2. **`prefers-reduced-motion` Support:** Disables 3D tilt, stops background orb oscillations, disables button shimmers, and skips numerical count-up animations.

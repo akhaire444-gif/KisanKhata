@@ -4,6 +4,13 @@ import { Crop, Expense, Worker, FertilizerRecord, Reminder, ExpenseCategory } fr
 import { EXPENSE_CATEGORIES_CONFIG } from '../../constants/expenseCategories';
 import { TiltCard } from '../../components/TiltCard';
 import { CountUp } from '../../components/CountUp';
+import { CropCategorySelector } from '../../components/CropCategorySelector';
+import {
+  CROP_CATEGORIES,
+  getCropsByCategory,
+  normalizeCategory,
+  findCropPresetByName
+} from '../../data/cropCatalogue';
 
 type FarmerTab = 
   | 'overview' 
@@ -55,6 +62,10 @@ export const FarmerDashboard: React.FC = () => {
   const [expenseCropFilter, setExpenseCropFilter] = useState<string>('all');
   const [expenseCategoryFilter, setExpenseCategoryFilter] = useState<string>('all');
   const [expenseSearchQuery, setExpenseSearchQuery] = useState<string>('');
+
+  // Crop filter states (Category-based selection & search)
+  const [cropCategoryFilter, setCropCategoryFilter] = useState<string>('all');
+  const [cropSearchQuery, setCropSearchQuery] = useState<string>('');
 
   // Sync tab with route path
   React.useEffect(() => {
@@ -135,6 +146,22 @@ export const FarmerDashboard: React.FC = () => {
   const expensesByCategory: Record<string, number> = {};
   expenses.forEach(e => {
     expensesByCategory[e.category] = (expensesByCategory[e.category] || 0) + e.amount;
+  });
+
+  // Computed crops for the Crops Management tab
+  const filteredCrops = crops.filter(c => {
+    if (cropCategoryFilter !== 'all') {
+      const norm = normalizeCategory(c.category);
+      if (norm !== cropCategoryFilter) return false;
+    }
+    if (cropSearchQuery.trim()) {
+      const q = cropSearchQuery.toLowerCase().trim();
+      const matchName = c.name.toLowerCase().includes(q);
+      const matchCat = c.category.toLowerCase().includes(q);
+      const matchDesc = c.description ? c.description.toLowerCase().includes(q) : false;
+      if (!matchName && !matchCat && !matchDesc) return false;
+    }
+    return true;
   });
 
   // Delete handler
@@ -439,10 +466,10 @@ export const FarmerDashboard: React.FC = () => {
 
       {/* 2. CROPS MANAGEMENT */}
       {activeTab === 'crops' && (
-        <div className="glass rounded-3xl p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-emerald-500/20">
+        <div className="glass rounded-3xl p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-emerald-500/20">
             <div>
-              <h2 className="text-[22px] font-bold text-[#012d1d]">My Crops</h2>
+              <h2 className="text-[22px] font-bold text-[#012d1d]">My Crops (मेरी फसलें)</h2>
               <p className="text-[14px] text-[#414844]">
                 Register plots, plantation dates, and harvest durations for accurate cost accounting.
               </p>
@@ -452,18 +479,80 @@ export const FarmerDashboard: React.FC = () => {
                 setEditingCrop(null);
                 setShowAddCropModal(true);
               }}
-              className="min-h-[48px] px-5 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] flex items-center justify-center gap-2 cursor-pointer"
+              className="min-h-[48px] px-5 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] flex items-center justify-center gap-2 cursor-pointer shadow-md"
             >
               <span className="material-symbols-outlined text-[20px]">add</span>
               <span>Add New Crop</span>
             </button>
           </div>
 
+          {/* Category Filter Tabs & Crop Search */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              <button
+                type="button"
+                onClick={() => setCropCategoryFilter('all')}
+                className={`px-3.5 py-1.5 rounded-xl text-[12px] font-bold whitespace-nowrap transition-all cursor-pointer border ${
+                  cropCategoryFilter === 'all'
+                    ? 'bg-[#012d1d] text-white border-[#012d1d] shadow-sm'
+                    : 'glass-subtle text-[#414844] hover:bg-white border-emerald-500/15'
+                }`}
+              >
+                All Crops ({crops.length})
+              </button>
+              {CROP_CATEGORIES.map(cat => {
+                const count = crops.filter(c => normalizeCategory(c.category) === cat.id).length;
+                const isSelected = cropCategoryFilter === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setCropCategoryFilter(cat.id)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold whitespace-nowrap transition-all cursor-pointer border ${
+                      isSelected
+                        ? 'bg-[#012d1d] text-white border-[#012d1d] shadow-sm'
+                        : 'glass-subtle text-[#414844] hover:bg-white border-emerald-500/15'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[15px]">{cat.icon}</span>
+                    <span>{cat.label}</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${isSelected ? 'bg-white/25 text-white' : 'bg-[#c1ecd4] text-[#116c4a]'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search within farmer crops */}
+            <div className="relative max-w-md">
+              <span className="material-symbols-outlined absolute left-3 top-2.5 text-[#717973] text-[18px]">
+                search
+              </span>
+              <input
+                type="text"
+                value={cropSearchQuery}
+                onChange={e => setCropSearchQuery(e.target.value)}
+                placeholder="Search registered crops by name or plot..."
+                className="w-full pl-9 pr-8 py-2 glass-input text-[13px] rounded-xl"
+              />
+              {cropSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setCropSearchQuery('')}
+                  className="absolute right-2.5 top-2.5 text-[#717973] hover:text-[#012d1d]"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              )}
+            </div>
+          </div>
+
           {crops.length === 0 ? (
             <div className="text-center py-12 glass-subtle rounded-2xl p-6">
               <span className="material-symbols-outlined text-[#717973] text-[48px] mb-2">yard</span>
-              <p className="text-[16px] font-bold text-[#012d1d]">No crops added yet.</p>
-              <p className="text-[14px] text-[#414844] mb-4">Add your first crop to start tracking farm expenses.</p>
+              <p className="text-[16px] font-bold text-[#012d1d]">No crops registered yet.</p>
+              <p className="text-[14px] text-[#414844] mb-4">Add your first fruit, vegetable, grain, or cash crop to start tracking farm expenses.</p>
               <button
                 onClick={() => setShowAddCropModal(true)}
                 className="px-6 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] cursor-pointer"
@@ -471,26 +560,52 @@ export const FarmerDashboard: React.FC = () => {
                 Add Your First Crop
               </button>
             </div>
+          ) : filteredCrops.length === 0 ? (
+            <div className="text-center py-10 glass-subtle rounded-2xl p-6">
+              <span className="material-symbols-outlined text-[#717973] text-[40px] mb-2">filter_alt_off</span>
+              <p className="text-[15px] font-bold text-[#012d1d]">No crops match your category filter or search.</p>
+              <p className="text-[13px] text-[#414844] mb-4">Try selecting "All Crops" or clearing your search term.</p>
+              <button
+                onClick={() => {
+                  setCropCategoryFilter('all');
+                  setCropSearchQuery('');
+                }}
+                className="px-4 py-2 rounded-xl glass-btn-primary water-shimmer text-white text-[13px] font-bold cursor-pointer"
+              >
+                Reset Filters
+              </button>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {crops.map(c => {
+              {filteredCrops.map(c => {
                 const cropExpenses = expenses.filter(e => e.cropId === c.id);
                 const cropExpTotal = cropExpenses.reduce((sum, e) => sum + e.amount, 0);
+                const preset = findCropPresetByName(c.name);
+                const normCat = normalizeCategory(c.category);
+                const catConfig = CROP_CATEGORIES.find(cat => cat.id === normCat);
 
                 return (
-                  <TiltCard key={c.id} className="p-5 rounded-3xl glass hover:border-emerald-500/30 transition-all flex flex-col justify-between">
+                  <TiltCard key={c.id} className="p-5 rounded-3xl glass hover:border-emerald-500/40 transition-all flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="px-2.5 py-0.5 rounded-full bg-[#c1ecd4] text-[#274e3d] text-[11px] font-bold shadow-2xs">
-                          {c.category}
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#c1ecd4] text-[#274e3d] text-[11px] font-bold shadow-2xs">
+                          <span className="material-symbols-outlined text-[14px]">
+                            {catConfig?.icon || 'yard'}
+                          </span>
+                          <span>{c.category}</span>
                         </span>
                         <span className="text-[12px] text-[#414844] font-medium">Planted: {c.plantationDate}</span>
                       </div>
-                      <h3 className="font-bold text-[18px] text-[#012d1d] mb-1">{c.name}</h3>
-                      <p className="text-[13px] text-[#414844] mb-3">{c.description || 'No description provided.'}</p>
+
+                      <h3 className="font-bold text-[18px] text-[#012d1d] mb-0.5">{c.name}</h3>
+                      {preset?.vernacularName && (
+                        <p className="text-[12px] font-semibold text-[#116c4a] mb-2">{preset.vernacularName}</p>
+                      )}
+                      <p className="text-[13px] text-[#414844] mb-3">{c.description || 'No plot description provided.'}</p>
+
                       <div className="text-[12px] text-[#414844] glass-subtle p-3 rounded-2xl space-y-1">
                         <div className="flex justify-between">
-                          <span>Duration:</span>
+                          <span>Harvest Cycle:</span>
                           <span className="font-bold text-[#012d1d]">{c.durationDays} Days</span>
                         </div>
                         <div className="flex justify-between">
@@ -784,11 +899,11 @@ export const FarmerDashboard: React.FC = () => {
       {/* 4. WORKER MANAGEMENT */}
       {activeTab === 'workers' && (
         <div className="glass rounded-3xl p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-emerald-500/20">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-emerald-500/20">
             <div>
-              <h2 className="text-[22px] font-bold text-[#012d1d]">Worker Daily Wages & Attendance</h2>
+              <h2 className="text-[22px] font-bold text-[#012d1d]">Worker Daily Wages & Attendance (मजदूरी हिसाब)</h2>
               <p className="text-[14px] text-[#414844]">
-                Auto-calculated: <strong>Days Worked × Daily Wage = Payment Amount</strong>
+                Maintain field-hand attendance, rozi-roti ledgers, and UPI payouts.
               </p>
             </div>
             <button
@@ -796,11 +911,22 @@ export const FarmerDashboard: React.FC = () => {
                 setEditingWorker(null);
                 setShowAddWorkerModal(true);
               }}
-              className="min-h-[48px] px-5 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] flex items-center justify-center gap-2 cursor-pointer"
+              className="min-h-[48px] px-5 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] flex items-center justify-center gap-2 cursor-pointer shadow-md"
             >
               <span className="material-symbols-outlined text-[20px]">person_add</span>
               <span>Add Worker</span>
             </button>
+          </div>
+
+          {/* Wage Formula Explainer Banner */}
+          <div className="p-3.5 mb-6 rounded-2xl glass-subtle border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[13px]">
+            <div className="flex items-center gap-2 text-[#012d1d] font-bold">
+              <span className="material-symbols-outlined text-[#116c4a] text-[20px]">calculate</span>
+              <span>Wage Formula: Days Worked × Daily Wage = Total Payment</span>
+            </div>
+            <div className="text-[12px] text-[#414844] bg-white/70 px-3 py-1 rounded-xl border border-emerald-500/20 font-medium">
+              Example: 10 days × ₹500/day = <strong className="text-[#116c4a]">₹5,000</strong>
+            </div>
           </div>
 
           {workers.length === 0 ? (
@@ -1404,16 +1530,39 @@ interface CropModalProps {
 
 const CropModal: React.FC<CropModalProps> = ({ crop, onClose, onSave }) => {
   const [name, setName] = useState(crop?.name || '');
-  const [category, setCategory] = useState(crop?.category || 'Fruit');
-  const [plantationDate, setPlantationDate] = useState(crop?.plantationDate || '15-06-2025');
+  const [category, setCategory] = useState(crop?.category ? normalizeCategory(crop.category) : 'Fruit');
+  const [plantationDate, setPlantationDate] = useState(
+    crop?.plantationDate || new Date().toLocaleDateString('en-GB').replace(/\//g, '-')
+  );
   const [durationDays, setDurationDays] = useState(crop?.durationDays ? String(crop.durationDays) : '180');
   const [description, setDescription] = useState(crop?.description || '');
   const [error, setError] = useState('');
 
+  const handleSelectCrop = (preset: { name: string; category: string; defaultDurationDays?: number }) => {
+    setName(preset.name);
+    setCategory(preset.category);
+    if (preset.defaultDurationDays) {
+      setDurationDays(String(preset.defaultDurationDays));
+    }
+    setError('');
+  };
+
+  const handleCategoryChange = (newCat: string) => {
+    setCategory(newCat);
+    // If adding a new crop and the currently entered name does not match the new category, clear name so user picks
+    if (!crop) {
+      const inCat = getCropsByCategory(newCat);
+      const exists = inCat.some(c => c.name.toLowerCase() === name.toLowerCase());
+      if (!exists) {
+        setName('');
+      }
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      setError('Crop name is required');
+      setError('Please select a crop or enter a variety name');
       return;
     }
     const days = parseInt(durationDays);
@@ -1432,87 +1581,100 @@ const CropModal: React.FC<CropModalProps> = ({ crop, onClose, onSave }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#012d1d]/35 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="glass-strong rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-white/85 shadow-[0_24px_70px_rgba(1,45,29,0.22)] animate-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-emerald-500/20">
-          <h3 className="font-bold text-[20px] text-[#012d1d]">
-            {crop ? 'Edit Crop' : 'Add New Crop'}
-          </h3>
-          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1 rounded-xl hover:bg-white/60 transition-colors cursor-pointer">
+    <div className="fixed inset-0 z-50 bg-[#012d1d]/40 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+      <div className="glass-strong rounded-3xl p-5 sm:p-7 max-w-2xl w-full max-h-[92vh] flex flex-col border border-white/85 shadow-[0_24px_70px_rgba(1,45,29,0.25)] animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between pb-3 mb-3 border-b border-emerald-500/20 shrink-0">
+          <div>
+            <h3 className="font-bold text-[20px] text-[#012d1d]">
+              {crop ? 'Edit Crop Details' : 'Add New Crop (नई फसल जोड़ें)'}
+            </h3>
+            <p className="text-[12px] text-[#414844]">
+              Select a category to reveal specific crops or add your own local variety.
+            </p>
+          </div>
+          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1.5 rounded-xl hover:bg-white/60 transition-colors cursor-pointer">
             <span className="material-symbols-outlined text-[24px]">close</span>
           </button>
         </div>
 
-        {error && <div className="p-3 mb-4 rounded-xl bg-red-500/10 text-[#ba1a1a] border border-red-200/60 text-[13px] font-semibold">{error}</div>}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-[13px] font-bold text-[#012d1d] mb-1">Crop Name *</label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="e.g. Bhagwa Pomegranate, Ratnagiri Alphonso"
-              className="w-full px-4 py-2.5 glass-input text-[15px]"
-              required
-            />
+        {error && (
+          <div className="p-3 mb-3 rounded-xl bg-red-500/10 text-[#ba1a1a] border border-red-200/60 text-[13px] font-semibold shrink-0">
+            {error}
           </div>
+        )}
 
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto pr-1">
+          {/* Dynamic Category-Based Crop Selection Interface */}
+          <CropCategorySelector
+            selectedCategory={category}
+            selectedCropName={name}
+            onSelectCategory={handleCategoryChange}
+            onSelectCrop={handleSelectCrop}
+            onCustomCropNameChange={setName}
+          />
+
+          {/* Selected Crop Name & Confirmation */}
+          <div className="p-3.5 rounded-2xl glass-subtle border border-emerald-500/20 space-y-3">
             <div>
-              <label className="block text-[13px] font-bold text-[#012d1d] mb-1">Category *</label>
-              <select
-                value={category}
-                onChange={e => setCategory(e.target.value)}
-                className="w-full px-3 py-2.5 glass-input text-[14px]"
-              >
-                <option value="Fruit">Fruit</option>
-                <option value="Grain">Grain & Wheat</option>
-                <option value="Spices">Spices & Herbs</option>
-                <option value="Vegetables">Vegetables</option>
-                <option value="Cash Crop">Cash Crop (Sugarcane/Cotton)</option>
-                <option value="Pulses">Pulses & Dal</option>
-              </select>
+              <label className="block text-[13px] font-bold text-[#012d1d] mb-1">
+                Selected Crop Name / Variety *
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="Choose from above or type variety name..."
+                className="w-full px-4 py-2.5 glass-input text-[15px] font-semibold text-[#012d1d]"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[13px] font-bold text-[#012d1d] mb-1">
+                  Plantation / Sowing Date (DD-MM-YYYY) *
+                </label>
+                <input
+                  type="text"
+                  value={plantationDate}
+                  onChange={e => setPlantationDate(e.target.value)}
+                  placeholder="DD-MM-YYYY"
+                  className="w-full px-4 py-2.5 glass-input text-[14px]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[13px] font-bold text-[#012d1d] mb-1">
+                  Expected Duration (Days) *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="999"
+                  value={durationDays}
+                  onChange={e => setDurationDays(e.target.value)}
+                  className="w-full px-4 py-2.5 glass-input text-[14px] font-numeric-table font-bold"
+                  required
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-[13px] font-bold text-[#012d1d] mb-1">Duration (Days) *</label>
-              <input
-                type="number"
-                min="1"
-                max="999"
-                value={durationDays}
-                onChange={e => setDurationDays(e.target.value)}
-                className="w-full px-3 py-2.5 glass-input text-[14px]"
-                required
+              <label className="block text-[13px] font-bold text-[#012d1d] mb-1">
+                Plot Description / Notes (Optional)
+              </label>
+              <textarea
+                rows={2}
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="e.g. 3.5 acres North parcel, fertile black soil, drip irrigation installed"
+                className="w-full px-4 py-2 glass-input text-[13px]"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-[13px] font-bold text-[#012d1d] mb-1">Plantation Date (DD-MM-YYYY) *</label>
-            <input
-              type="text"
-              value={plantationDate}
-              onChange={e => setPlantationDate(e.target.value)}
-              placeholder="DD-MM-YYYY"
-              className="w-full px-4 py-2.5 glass-input text-[15px]"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-[13px] font-bold text-[#012d1d] mb-1">Description / Plot Details</label>
-            <textarea
-              rows={2}
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              placeholder="e.g. 5 acres North plot with fertile black soil"
-              className="w-full px-4 py-2.5 glass-input text-[14px]"
-            />
-          </div>
-
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-emerald-500/20">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-emerald-500/20 shrink-0">
             <button
               type="button"
               onClick={onClose}
@@ -1522,9 +1684,9 @@ const CropModal: React.FC<CropModalProps> = ({ crop, onClose, onSave }) => {
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] cursor-pointer"
+              className="px-6 py-2.5 rounded-xl glass-btn-primary water-shimmer text-white font-bold text-[14px] cursor-pointer shadow-md"
             >
-              Save Crop
+              {crop ? 'Update Crop' : 'Save Crop to Khata'}
             </button>
           </div>
         </form>
