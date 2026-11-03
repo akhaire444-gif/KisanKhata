@@ -6,7 +6,6 @@ import { HomePage } from './pages/HomePage';
 import { FarmerDashboard } from './pages/farmer/FarmerDashboard';
 import { AboutPage, ContactPage } from './pages/public/AboutAndContact';
 import { AuthModal, CompleteProfileModal } from './components/AuthModals';
-import { WaterLoader } from './components/WaterLoader';
 import { NavigationPath } from './types';
 
 const PUBLIC_PATHS: NavigationPath[] = ['home', 'about', 'contact'];
@@ -74,8 +73,9 @@ const MainApp: React.FC = () => {
     // 1. Initial authentication verification spinner
     if (isAuthChecking) {
       return (
-        <div className="min-h-[60vh] flex flex-col items-center justify-center">
-          <WaterLoader label="Verifying secure farm session..." size="md" />
+        <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
+          <div className="w-9 h-9 border-3 border-[#116c4a]/20 border-t-[#116c4a] rounded-full animate-spin" />
+          <p className="text-xs font-semibold text-[#414844]">Verifying secure session...</p>
         </div>
       );
     }
@@ -115,26 +115,13 @@ const MainApp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen text-[#111c2d] flex flex-col font-sans relative overflow-x-hidden selection:bg-[#a1f4c8] selection:text-[#012d1d]">
-      {/* Living Water Fixed Layered Background ("Clear Water on a Green Field") */}
-      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden bg-gradient-to-br from-[#eaf6f0] via-[#e3f1f4] to-[#f4f8ff]" aria-hidden="true">
-        {/* Subtle Living Water Caustic Pattern */}
-        <svg
-          className="absolute inset-0 w-full h-full opacity-[0.035] mix-blend-multiply"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <filter id="water-filter">
-            <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="3" result="noise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="20" />
-          </filter>
-          <rect width="100%" height="100%" fill="none" stroke="#116c4a" strokeWidth="1.5" strokeDasharray="6 14" filter="url(#water-filter)" />
-        </svg>
-
-        {/* 4 Drifting Blurred Living Water & Light Orbs */}
-        <div className="absolute -top-32 -left-32 w-[520px] h-[520px] rounded-full bg-gradient-to-br from-[#a1f4c8]/45 via-[#8fe3d9]/35 to-transparent blur-[100px] animate-orb-1" />
-        <div className="absolute top-1/4 -right-32 w-[580px] h-[580px] rounded-full bg-gradient-to-bl from-[#8fe3d9]/40 via-[#c1ecd4]/30 to-transparent blur-[110px] animate-orb-2" />
-        <div className="absolute top-2/3 left-1/4 w-[480px] h-[480px] rounded-full bg-gradient-to-tr from-[#ffdcc3]/35 via-[#a1f4c8]/25 to-transparent blur-[115px] animate-orb-3" />
-        <div className="absolute -bottom-32 right-1/4 w-[460px] h-[460px] rounded-full bg-gradient-to-tl from-[#c1ecd4]/40 via-[#8fe3d9]/25 to-transparent blur-[105px] animate-orb-4" />
+    <div className="min-h-screen bg-[#f7f9fd] text-[#111c2d] flex flex-col font-sans relative overflow-x-hidden selection:bg-[#a1f4c8] selection:text-[#012d1d]">
+      {/* macOS Ambient Mesh Glows (Provides refraction substrate for liquid glass) */}
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden" aria-hidden="true">
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-gradient-to-br from-emerald-200/40 via-teal-100/30 to-transparent blur-[110px]" />
+        <div className="absolute top-1/4 -right-32 w-[480px] h-[480px] rounded-full bg-gradient-to-bl from-blue-100/40 via-emerald-100/30 to-transparent blur-[120px]" />
+        <div className="absolute top-2/3 left-1/4 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-100/25 via-emerald-100/20 to-transparent blur-[120px]" />
+        <div className="absolute -bottom-32 right-1/4 w-[380px] h-[380px] rounded-full bg-gradient-to-tl from-teal-100/35 to-transparent blur-[100px]" />
       </div>
 
       {/* Global Navigation Header */}
@@ -167,7 +154,7 @@ const MainApp: React.FC = () => {
 
       {/* Toast Notification Pill */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-[0_12px_36px_rgba(1,45,29,0.28)] border border-[#a1f4c8]/30 bg-[#012d1d]/90 backdrop-blur-xl text-white transition-all animate-bounce duration-500">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.22)] border border-white/20 bg-[#012d1d]/90 backdrop-blur-xl text-white animate-in slide-in-from-bottom-3 transition-all">
           <span className="material-symbols-outlined text-[20px] text-[#a1f4c8]">
             {toastMessage.type === 'error' ? 'error' : toastMessage.type === 'info' ? 'info' : 'check_circle'}
           </span>

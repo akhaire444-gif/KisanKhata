@@ -2,64 +2,6 @@
 
 All notable changes to the KisanKhata backend and documentation are tracked here.
 
-## [1.5.0] - 2026-11-03 (Complete 3D Farming UI Redesign & Category-Based Crop Selection)
-
-### Added
-- **3D Indian Living Farm & Animated Farmer Hero (`FarmHeroScene.tsx`):**
-  - Integrated 3D stylized Indian farmer with procedural kinematics: cotton kurta, traditional dhoti, saffron gamcha/pagri, and wooden/iron farming tool (hoe).
-  - Looping agricultural activity: natural body weight shift, bending forward to inspect crops, arm swinging with farming tool, and head tilting.
-  - Realistic green agricultural furrows, raised soil ridges, and swaying crop foliage responding to wind physics.
-  - Translucent irrigation canal with watery refraction alongside the crop beds.
-  - Distant low-poly rolling hills, tree line, drifting fluffy clouds, and warm natural morning sunlight.
-  - Damped camera parallax tracking cursor movement, with pointer-events disabled on the canvas so hero text, buttons, and Google authentication remain 100% accessible.
-  - Automatic `IntersectionObserver` pause on scroll and Page Visibility pause on tab blur.
-- **Context-Aware Category-Based Crop Selection (`cropCatalogue.ts` & `CropCategorySelector.tsx`):**
-  - Comprehensive Indian crop catalogue categorized into **Fruits**, **Vegetables**, **Cereals & Grains**, **Pulses & Dal**, **Cash Crops**, and **Spices & Herbs**.
-  - Localized bilingual names (English + Hindi/Marathi) with standard crop duration presets.
-  - Dynamic `CropCategorySelector` inside `CropModal`: selecting a category immediately updates the available options.
-  - Selecting any crop auto-fills crop name and default harvest duration in days.
-  - In-category quick search and "Custom Variety" option for regional or specialized cultivars.
-  - Filter tabs in the Crops Management dashboard allowing farmers to browse crops by category.
-- **Worker Wage Formula Explainer:**
-  - Added dedicated visual calculation formula banner: `Days Worked × Daily Wage = Total Payment (e.g., 10 days × ₹500/day = ₹5,000)`.
-
-### Changed
-- Updated `HomePage.tsx` hero headline: "Your Farm. Your Expenses. Your Growth." with agricultural value propositions and prominent action buttons.
-- Cleaned up deprecated `HeroScene.tsx` in favor of the new comprehensive `FarmHeroScene.tsx`.
-- Updated `docs/UI_DESIGN_SYSTEM.md` with 3D farm environment specifications and crop selection architecture.
-
-## [1.4.0] - 2026-11-03 (Professional Glassy / Watery Redesign & 3D Animation System)
-
-### Added
-- **"Clear Water on a Green Field" Living Visual System:**
-  - Layered living-water background (`#eaf6f0` → `#e3f1f4` → `#f4f8ff`) with 4 drifting blurred ambient orbs and subtle caustic SVG light texture.
-  - Comprehensive glass utility system in `index.css`: `.glass`, `.glass-strong`, `.glass-subtle`, `.glass-dark`, `.glass-input`, `.glass-btn-primary`, `.glass-btn-secondary`, and `.water-shimmer`.
-  - Created `frontend/src/components/WaterLoader.tsx`: Pulsing glass droplet loader with specular reflection for session verification.
-  - Created `frontend/src/components/TiltCard.tsx`: Interactive 3D hover perspective tilt card with cursor-tracking specular glare effect.
-  - Created `frontend/src/components/CountUp.tsx`: Smooth animated counter supporting formatted INR currency strings.
-  - Created `docs/UI_DESIGN_SYSTEM.md`: Full architectural reference for design tokens, WebGL scene parameters, accessibility compliance, and print overrides.
-- **Three.js / React Three Fiber 3D Hero Scene:**
-  - Integrated `three`, `@react-three/fiber`, and `@react-three/drei` dynamically loaded via `React.lazy()` and `Suspense`.
-  - Physically accurate `MeshPhysicalMaterial` water droplets with dynamic transmission, dispersion, and realistic 1.333 water index of refraction.
-  - 3-point studio lighting with damped mouse parallax camera rotation.
-  - Performance guards: `IntersectionObserver` auto-pauses rendering when out of viewport; Page Visibility API pauses rendering when inactive; WebGL capability check with `StaticHeroFallback.tsx`.
-
-### Changed
-- **Frontend Modernization across all screens (Visual-Only):**
-  - Upgraded `Header.tsx` to `.glass-strong` with glossy active pill and translucent drawer navigation.
-  - Upgraded `Footer.tsx` with `.glass-subtle` and living-water accents.
-  - Upgraded `HomePage.tsx` with 3D hero scene, `TiltCard` feature cards, and shimmering action buttons.
-  - Upgraded `AuthModals.tsx` (Sign In, Register, and Complete Profile) to `.glass-strong` with `.glass-input` and `.glass-btn-primary`.
-  - Upgraded `FarmerDashboard.tsx` (all tabs: overview, crops, expenses, workers, fertilizers, reminders, reports, help):
-    - Glass-styled tab navigation bar with glossy emerald active pill.
-    - Overview KPIs with `TiltCard`, `CountUp`, and high-contrast `.glass-dark` card.
-    - Quick Expense Khata banner and 7 Core Touch buttons wrapped in `TiltCard`.
-    - All sub-modals (`CropModal`, `ExpenseModal`, `WorkerModal`, `FertilizerModal`, `ReminderModal`, and delete confirmation dialog) restyled with `.glass-strong`, `.glass-input`, and `.glass-btn-*`.
-    - Clean tabular layouts with `.glass-subtle` zebra striping and sticky frosted headers.
-    - Full `@media print` style overrides ensuring crisp white-paper A4 print fidelity with all glass and blurs disabled.
-  - Upgraded `AboutAndContact.tsx` and `WateringReminderModal.tsx` to match the glass design system.
-- Strict preservation of all business logic, API requests, routing, auth flows, validation, and state management.
-
 ## [1.3.0] - 2026-11-02 (Farmer-Only Sign-Up & Render Proxy Redirect Fix)
 
 ### Changed

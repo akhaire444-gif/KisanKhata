@@ -48,7 +48,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
   const navItems = currentFarmer ? authenticatedNavItems : publicNavItems;
 
   return (
-    <header className="fixed top-0 w-full z-50 glass-strong border-b border-white/85 shadow-[0_4px_24px_rgba(1,45,29,0.04)] transition-all">
+    <header className="fixed top-0 w-full z-50 bg-white/75 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.03)] border-b border-white/75 transition-all">
       <div className="h-20 w-full px-4 lg:px-8 max-w-7xl mx-auto flex items-center justify-between gap-4">
         {/* Left: Brand & Tenant ID */}
         <div className="flex items-center gap-3 lg:gap-4">
@@ -67,7 +67,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
                   ? 'Connecting to backend...'
                   : 'Backend is offline'
             }
-            className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all border glass-subtle ${backendStatus === 'connected'
+            className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all border backdrop-blur-md shadow-2xs ${backendStatus === 'connected'
                 ? 'bg-[#1b4332]/10 text-[#116c4a] border-emerald-500/25'
                 : backendStatus === 'checking'
                   ? 'bg-amber-500/10 text-amber-800 border-amber-300/40'
@@ -93,7 +93,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
 
           {/* Tenant Status Pill */}
           {currentFarmer && (
-            <div className="hidden xl:flex items-center px-3.5 py-1 rounded-full text-[12px] font-bold shadow-xs glass-subtle bg-[#a1f4c8]/50 text-[#0f5135] border border-emerald-300/80">
+            <div className="hidden xl:flex items-center px-3.5 py-1 rounded-full text-[12px] font-bold shadow-xs backdrop-blur-md bg-[#a1f4c8]/80 text-[#0f5135] border border-emerald-300/80">
               <span className="material-symbols-outlined text-[15px] mr-1">
                 verified
               </span>
@@ -103,7 +103,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
         </div>
 
         {/* Center: Navigation Pill Bar */}
-        <nav className="hidden lg:flex items-center gap-1 glass-subtle p-1.5 rounded-2xl border border-white/75 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9),0_2px_8px_rgba(0,0,0,0.02)]">
+        <nav className="hidden lg:flex items-center gap-1 bg-white/45 backdrop-blur-xl p-1.5 rounded-2xl border border-white/75 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9),0_2px_8px_rgba(0,0,0,0.02)]">
           {navItems.map(item => {
             const isActive = currentPath === item.path;
             return (
@@ -111,7 +111,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
                 key={item.path}
                 onClick={() => handleNavClick(item.path)}
                 className={`relative px-3.5 py-1.5 text-[13px] font-semibold rounded-xl transition-all cursor-pointer ${isActive
-                    ? 'bg-gradient-to-r from-[#1b4332] to-[#012d1d] text-white shadow-[0_4px_14px_rgba(1,45,29,0.25),inset_0_1px_0_rgba(255,255,255,0.3)]'
+                    ? 'bg-[#012d1d]/90 text-white shadow-[0_3px_12px_rgba(1,45,29,0.28),inset_0_1px_0_rgba(255,255,255,0.3)] backdrop-blur-md'
                     : 'text-[#414844] hover:text-[#012d1d] hover:bg-white/70'
                   }`}
               >
@@ -128,7 +128,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
 
         {/* Right: Currency & Actions / Profile */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full glass-subtle border border-white/80 text-[12px] font-bold text-[#012d1d]">
+          <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/60 backdrop-blur-md border border-white/80 text-[12px] font-bold text-[#012d1d] shadow-2xs">
             <span>₹</span>
             <span>INR</span>
           </div>
@@ -138,7 +138,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
               {/* Notification Bell */}
               <button
                 onClick={() => handleNavClick('reminders')}
-                className="relative p-2 rounded-xl text-[#012d1d] glass-btn-secondary"
+                className="relative p-2 rounded-xl text-[#012d1d] bg-white/60 hover:bg-white/90 backdrop-blur-md border border-white/80 shadow-2xs transition-all cursor-pointer"
                 title="Reminders"
                 aria-label="View Reminders"
               >
@@ -152,7 +152,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
               <div className="relative">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-2xl glass-btn-secondary"
+                  className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-2xl bg-white/75 hover:bg-white/95 backdrop-blur-md border border-white/85 shadow-2xs hover:shadow-xs transition-all cursor-pointer"
                   aria-expanded={isProfileOpen}
                   aria-label="User profile menu"
                 >
@@ -177,7 +177,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
 
                 {/* Profile Popover Window */}
                 {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-64 rounded-2xl glass-strong shadow-[0_20px_50px_rgba(1,45,29,0.18)] border border-white/85 p-3 z-50 animate-in fade-in-50 zoom-in-95">
+                  <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-white/80 p-3 z-50 animate-in fade-in-50 zoom-in-95">
                     <div className="px-3 py-2 border-b border-slate-100 mb-2">
                       <p className="font-bold text-[14px] text-[#012d1d] truncate">
                         {currentFarmer.firstName} {currentFarmer.lastName}
@@ -235,7 +235,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
               <button
                 type="button"
                 onClick={handleGoogleQuickAuth}
-                className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl glass-btn-secondary text-[#111c2d] text-[12px] font-semibold"
+                className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-[#111c2d] text-[12px] font-semibold border border-slate-200 shadow-2xs hover:shadow-xs transition-all cursor-pointer"
                 title="Continue with Google"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
@@ -249,14 +249,14 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
               <button
                 type="button"
                 onClick={() => onOpenAuthModal(false)}
-                className="px-3.5 py-1.5 rounded-xl text-[13px] font-bold text-[#012d1d] glass-btn-secondary"
+                className="px-3.5 py-1.5 rounded-xl text-[13px] font-bold text-[#012d1d] bg-white/70 hover:bg-white/95 backdrop-blur-md border border-white/85 shadow-2xs hover:shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
               >
                 Sign In
               </button>
               <button
                 type="button"
                 onClick={() => onOpenAuthModal(true)}
-                className="px-3.5 py-1.5 rounded-xl glass-btn-primary text-white text-[13px] font-bold water-shimmer"
+                className="px-3.5 py-1.5 rounded-xl bg-[#012d1d]/90 hover:bg-[#012d1d] text-white text-[13px] font-bold shadow-[0_4px_14px_rgba(1,45,29,0.25),inset_0_1px_0_rgba(255,255,255,0.25)] hover:shadow-[0_6px_20px_rgba(1,45,29,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
               >
                 Get Started
               </button>
@@ -266,7 +266,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center text-[#111c2d] glass-subtle border border-white/80 hover:bg-white/85 transition-colors cursor-pointer"
+            className="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center text-[#111c2d] bg-white/60 backdrop-blur-md border border-white/80 hover:bg-white/85 transition-colors"
             aria-label="Toggle Menu"
           >
             <span className="material-symbols-outlined text-[24px]">
@@ -278,9 +278,9 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden glass-strong border-b border-white/85 px-4 py-4 space-y-3 shadow-xl animate-in slide-in-from-top-2">
+        <div className="lg:hidden bg-white/85 backdrop-blur-2xl border-b border-white/80 px-4 py-4 space-y-3 shadow-xl">
           {currentFarmer && (
-            <div className="flex items-center justify-between pb-2 mb-1 border-b border-emerald-500/20">
+            <div className="flex items-center justify-between pb-2 mb-1 border-b border-[#f0f3ff]">
               <span className="text-[12px] font-semibold text-[#116c4a]">
                 Tenant: {currentFarmer.tenantId}
               </span>
@@ -294,8 +294,8 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
                 key={item.path}
                 onClick={() => handleNavClick(item.path)}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-semibold text-left transition-all ${currentPath === item.path
-                    ? 'bg-gradient-to-r from-[#1b4332] to-[#012d1d] text-white shadow-xs'
-                    : 'glass-subtle text-[#111c2d]'
+                    ? 'bg-[#012d1d] text-white shadow-xs'
+                    : 'bg-white/60 hover:bg-white/85 border border-white/70 text-[#111c2d]'
                   }`}
               >
                 <span>{item.label}</span>
@@ -308,14 +308,14 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
             ))}
           </div>
 
-          <div className="pt-2 border-t border-emerald-500/20 space-y-2">
+          <div className="pt-2 border-t border-[#f0f3ff] space-y-2">
             {currentFarmer ? (
               <button
                 onClick={() => {
                   setIsMobileMenuOpen(false);
                   logoutFarmer();
                 }}
-                className="w-full py-2.5 rounded-xl bg-red-500/10 text-[#ba1a1a] border border-red-200/50 text-[13px] font-bold text-center cursor-pointer flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 rounded-xl bg-[#ffdad6]/60 text-[#ba1a1a] text-[13px] font-bold text-center cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <span className="material-symbols-outlined text-[16px]">logout</span>
                 <span>Sign Out ({currentFarmer.firstName})</span>
@@ -327,7 +327,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
                     setIsMobileMenuOpen(false);
                     handleGoogleQuickAuth();
                   }}
-                  className="w-full py-2.5 rounded-xl glass-btn-secondary text-[#111c2d] text-[13px] font-bold text-center cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-2.5 rounded-xl bg-white border border-slate-200 text-[#111c2d] text-[13px] font-bold text-center cursor-pointer flex items-center justify-center gap-2 shadow-xs"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -343,7 +343,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
                       setIsMobileMenuOpen(false);
                       onOpenAuthModal(false);
                     }}
-                    className="flex-1 py-2.5 rounded-xl glass-btn-primary text-white text-[13px] font-bold text-center cursor-pointer"
+                    className="flex-1 py-2.5 rounded-xl bg-[#012d1d] text-white text-[13px] font-bold text-center cursor-pointer"
                   >
                     Sign In
                   </button>
@@ -352,7 +352,7 @@ export const Header: React.FC<{ onOpenAuthModal: (isRegister?: boolean) => void 
                       setIsMobileMenuOpen(false);
                       onOpenAuthModal(true);
                     }}
-                    className="flex-1 py-2.5 rounded-xl glass-btn-secondary text-[#012d1d] text-[13px] font-bold text-center cursor-pointer"
+                    className="flex-1 py-2.5 rounded-xl bg-[#e7eeff] text-[#012d1d] text-[13px] font-bold text-center cursor-pointer"
                   >
                     Register Farm
                   </button>
