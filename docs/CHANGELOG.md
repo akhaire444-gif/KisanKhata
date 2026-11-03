@@ -2,6 +2,30 @@
 
 All notable changes to the KisanKhata backend and documentation are tracked here.
 
+## [1.4.0] - 2026-11-03 (Full 3D Agricultural Redesign & Glassmorphism Design System)
+
+### Added
+- **3D Agricultural Environment & Hero Scene (`FarmHeroScene.tsx`):**
+  - Interactive 3D WebGL farmland with furrowed crop rows, animated flowing irrigation water canal, terraced fields, orchard fruit trees, and drifting clouds.
+  - Smooth damped mouse camera parallax with `IntersectionObserver` and visibility-state GPU pausing.
+  - Dedicated SVG/CSS agricultural landscape illustration (`StaticHeroFallback.tsx`) for non-WebGL/reduced-motion environments.
+- **Realistic 3D Agricultural Models:**
+  - **Indian Farmer Model (`FarmerCharacter.tsx`):** Anatomical geometry, dhoti folds, khadi kurta, saffron pagri/safa turban, mustache, shoulder gamcha, and wooden hoe with multi-state procedural animations (`farming`, `waving`, `idle`).
+  - **Indian Agricultural Tractor (`Tractor3DModel.tsx`):** Sculpted tractor hood, radiator grille, headlights, vertical exhaust chimney with vibrating rain flap, driver platform, suspension seat, and large rear wheels with diagonal chevron lugs.
+  - **Crop & Produce 3D Library (`Crop3DModels.tsx`):** Procedural 3D models for Mango, Banana, Grapes, Pomegranate, Orange, Guava, Papaya, Watermelon, Tomato, Onion, Potato, Brinjal, Chilli, Cabbage, Okra, Wheat, Maize, Sugarcane, Cotton, Pulse pod, Fertilizer bag, and Knapsack Sprayer.
+- **Category-Aware 3D Crop Selector (`Crop3DSelector.tsx`):**
+  - Integrated into `CropModal` for adding crops with live rotating 3D preview, bilingual English/Hindi/Marathi search, and 1-tap duration/category autofill.
+- **Dashboard 3D Upgrades (`FarmerDashboard.tsx`):**
+  - Welcome banner with live animated 3D mini farm viewport (`MiniFarmCanvas.tsx`).
+  - Interactive 3D perspective hover cards (`TiltCard.tsx`) with dynamic specular glare.
+  - Smooth animated metric counters (`CountUp.tsx`) with ₹ INR formatting.
+  - Prominent worker wage formula display banner (`Days Worked × Daily Wage = Total Payment`).
+  - Category filter tabs for registered crops.
+- **Glassmorphism Design System & Print Mode (`index.css`):**
+  - `.glass`, `.glass-strong`, `.glass-subtle`, `.glass-dark`, and `.water-shimmer` utilities.
+  - Clean white-paper print reset for certified A4 reports.
+- **Documentation:** Created `docs/UI_DESIGN_SYSTEM.md`.
+
 ## [1.3.0] - 2026-11-02 (Farmer-Only Sign-Up & Render Proxy Redirect Fix)
 
 ### Changed

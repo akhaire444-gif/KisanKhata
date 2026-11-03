@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Crop, Expense, Worker, FertilizerRecord, Reminder, ExpenseCategory } from '../../types';
 import { EXPENSE_CATEGORIES_CONFIG } from '../../constants/expenseCategories';
+import { TiltCard } from '../../components/TiltCard';
+import { CountUp } from '../../components/CountUp';
+import { MiniFarmCanvas } from '../../components/three/MiniFarmCanvas';
+import { Crop3DSelector } from '../../components/Crop3DSelector';
+import { CropPreset } from '../../data/cropCatalogue';
 
 type FarmerTab = 
   | 'overview' 
@@ -74,6 +79,7 @@ export const FarmerDashboard: React.FC = () => {
 
   // Form modals state
   const [showAddCropModal, setShowAddCropModal] = useState(false);
+  const [cropCategoryFilter, setCropCategoryFilter] = useState<string>('All');
   const [editingCrop, setEditingCrop] = useState<Crop | null>(null);
 
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
@@ -157,9 +163,9 @@ export const FarmerDashboard: React.FC = () => {
 
   return (
     <div className="w-full min-h-[calc(100vh-80px)] py-6 px-4 lg:px-8 max-w-7xl mx-auto">
-      {/* Top Header Bar for Farmer */}
-      <div className="bg-white/75 hover:bg-white/85 backdrop-blur-2xl rounded-3xl p-6 shadow-[0_8px_32px_rgba(0,0,0,0.03)] border border-white/80 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all duration-300">
-        <div>
+      {/* Top Header Bar for Farmer with 3D Mini Farm */}
+      <div className="bg-white/80 hover:bg-white/90 backdrop-blur-2xl rounded-3xl p-6 shadow-[0_8px_32px_rgba(0,0,0,0.03)] border border-white mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-300">
+        <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             <span className="px-3 py-1 rounded-full font-bold text-[12px] backdrop-blur-md bg-emerald-500/15 text-[#1b724f] border border-emerald-500/25 shadow-xs">
               Tenant: {currentFarmer?.tenantId || 'Farm Ledger'}
@@ -172,26 +178,30 @@ export const FarmerDashboard: React.FC = () => {
           <p className="text-[14px] text-[#414844]">
             {currentFarmer?.farmName || 'My Farm'} • {currentFarmer?.address || currentFarmer?.state || 'Bharat'}
           </p>
+          <div className="flex items-center gap-2 mt-4">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`px-4 py-2 rounded-xl font-bold text-[13px] transition-all cursor-pointer backdrop-blur-md ${
+                activeTab === 'overview'
+                  ? 'bg-[#012d1d] text-white shadow-sm border border-[#012d1d]'
+                  : 'bg-white/60 text-[#414844] hover:bg-white/90 hover:text-[#012d1d] border border-white/80'
+              }`}
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={logoutFarmer}
+              className="px-4 py-2 rounded-xl bg-red-500/10 text-[#ba1a1a] hover:bg-red-500/20 border border-red-200/60 font-bold text-[13px] flex items-center gap-1.5 backdrop-blur-md transition-all cursor-pointer shadow-xs"
+            >
+              <span className="material-symbols-outlined text-[18px]">logout</span>
+              <span>Log Out</span>
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl font-bold text-[13px] transition-all cursor-pointer backdrop-blur-md ${
-              activeTab === 'overview'
-                ? 'bg-[#012d1d] text-white shadow-sm border border-[#012d1d]'
-                : 'bg-white/60 text-[#414844] hover:bg-white/90 hover:text-[#012d1d] border border-white/80'
-            }`}
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={logoutFarmer}
-            className="px-4 py-2.5 rounded-xl bg-red-500/10 text-[#ba1a1a] hover:bg-red-500/20 border border-red-200/60 font-bold text-[13px] flex items-center gap-1.5 backdrop-blur-md transition-all cursor-pointer shadow-xs"
-          >
-            <span className="material-symbols-outlined text-[18px]">logout</span>
-            <span>Log Out</span>
-          </button>
+        {/* 3D Animated Mini Farm Viewport */}
+        <div className="shrink-0 self-center md:self-auto">
+          <MiniFarmCanvas className="w-52 h-36" />
         </div>
       </div>
 
@@ -260,43 +270,59 @@ export const FarmerDashboard: React.FC = () => {
       {/* 1. OVERVIEW */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          {/* Quick Metrics */}
+          {/* Quick Metrics with 3D Depth & CountUp */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white/75 hover:bg-white/90 backdrop-blur-xl p-5 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_14px_35px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300">
-              <div className="flex items-center justify-between text-[#414844] text-[13px] mb-2">
-                <span>Active Crops</span>
-                <span className="material-symbols-outlined text-[#116c4a] text-[22px]">yard</span>
+            <TiltCard>
+              <div className="bg-white/80 hover:bg-white/95 backdrop-blur-xl p-5 rounded-3xl border border-white shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_14px_35px_rgba(0,0,0,0.06)] transition-all duration-300 h-full">
+                <div className="flex items-center justify-between text-[#414844] text-[13px] mb-2">
+                  <span>Active Crops</span>
+                  <span className="material-symbols-outlined text-[#116c4a] text-[22px]">yard</span>
+                </div>
+                <div className="text-[26px] font-bold text-[#012d1d]">
+                  <CountUp end={crops.length} />
+                </div>
+                <div className="text-[12px] text-[#116c4a] font-medium mt-1">Sowing to yield cycle</div>
               </div>
-              <div className="text-[26px] font-bold text-[#012d1d]">{crops.length}</div>
-              <div className="text-[12px] text-[#116c4a] font-medium mt-1">Sowing to yield cycle</div>
-            </div>
+            </TiltCard>
 
-            <div className="bg-white/75 hover:bg-white/90 backdrop-blur-xl p-5 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_14px_35px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300">
-              <div className="flex items-center justify-between text-[#414844] text-[13px] mb-2">
-                <span>Total Expenses</span>
-                <span className="material-symbols-outlined text-[#ba1a1a] text-[22px]">payments</span>
+            <TiltCard>
+              <div className="bg-white/80 hover:bg-white/95 backdrop-blur-xl p-5 rounded-3xl border border-white shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_14px_35px_rgba(0,0,0,0.06)] transition-all duration-300 h-full">
+                <div className="flex items-center justify-between text-[#414844] text-[13px] mb-2">
+                  <span>Total Expenses</span>
+                  <span className="material-symbols-outlined text-[#ba1a1a] text-[22px]">payments</span>
+                </div>
+                <div className="text-[26px] font-bold text-[#012d1d]">
+                  <CountUp end={totalExpenseSum} prefix="₹" />
+                </div>
+                <div className="text-[12px] text-[#414844] font-medium mt-1">{expenses.length} ledger entries</div>
               </div>
-              <div className="text-[26px] font-bold text-[#012d1d]">₹{totalExpenseSum.toLocaleString('en-IN')}</div>
-              <div className="text-[12px] text-[#414844] font-medium mt-1">{expenses.length} ledger entries</div>
-            </div>
+            </TiltCard>
 
-            <div className="bg-white/75 hover:bg-white/90 backdrop-blur-xl p-5 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_14px_35px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300">
-              <div className="flex items-center justify-between text-[#414844] text-[13px] mb-2">
-                <span>Labor Wage Ledger</span>
-                <span className="material-symbols-outlined text-[#1b724f] text-[22px]">engineering</span>
+            <TiltCard>
+              <div className="bg-white/80 hover:bg-white/95 backdrop-blur-xl p-5 rounded-3xl border border-white shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_14px_35px_rgba(0,0,0,0.06)] transition-all duration-300 h-full">
+                <div className="flex items-center justify-between text-[#414844] text-[13px] mb-2">
+                  <span>Labor Wage Ledger</span>
+                  <span className="material-symbols-outlined text-[#1b724f] text-[22px]">engineering</span>
+                </div>
+                <div className="text-[26px] font-bold text-[#012d1d]">
+                  <CountUp end={totalWorkerWages} prefix="₹" />
+                </div>
+                <div className="text-[12px] text-[#414844] font-medium mt-1">{workers.length} active workers</div>
               </div>
-              <div className="text-[26px] font-bold text-[#012d1d]">₹{totalWorkerWages.toLocaleString('en-IN')}</div>
-              <div className="text-[12px] text-[#414844] font-medium mt-1">{workers.length} active workers</div>
-            </div>
+            </TiltCard>
 
-            <div className="bg-white/75 hover:bg-white/90 backdrop-blur-xl p-5 rounded-3xl border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_14px_35px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300">
-              <div className="flex items-center justify-between text-[#414844] text-[13px] mb-2">
-                <span>Spray / Inputs Logs</span>
-                <span className="material-symbols-outlined text-[#3f6653] text-[22px]">eco</span>
+            <TiltCard>
+              <div className="bg-white/80 hover:bg-white/95 backdrop-blur-xl p-5 rounded-3xl border border-white shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_14px_35px_rgba(0,0,0,0.06)] transition-all duration-300 h-full">
+                <div className="flex items-center justify-between text-[#414844] text-[13px] mb-2">
+                  <span>Spray / Inputs Logs</span>
+                  <span className="material-symbols-outlined text-[#3f6653] text-[22px]">eco</span>
+                </div>
+                <div className="text-[26px] font-bold text-[#012d1d]">
+                  <CountUp end={fertilizerRecords.length} />
+                </div>
+                <div className="text-[12px] text-[#414844] font-medium mt-1">Recorded field applications</div>
               </div>
-              <div className="text-[26px] font-bold text-[#012d1d]">{fertilizerRecords.length}</div>
-              <div className="text-[12px] text-[#414844] font-medium mt-1">Recorded field applications</div>
-            </div>
+            </TiltCard>
           </div>
 
           {/* Quick Expense Khata Banner */}
@@ -427,7 +453,12 @@ export const FarmerDashboard: React.FC = () => {
       )}
 
       {/* 2. CROPS MANAGEMENT */}
-      {activeTab === 'crops' && (
+      {activeTab === 'crops' && (() => {
+        const displayedCrops = cropCategoryFilter === 'All'
+          ? crops
+          : crops.filter(c => (c.category || '').toLowerCase() === cropCategoryFilter.toLowerCase());
+
+        return (
         <div className="bg-white/80 backdrop-blur-2xl rounded-3xl p-6 border border-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200/60">
             <div>
@@ -448,77 +479,114 @@ export const FarmerDashboard: React.FC = () => {
             </button>
           </div>
 
-          {crops.length === 0 ? (
+          {/* Category Filter Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-5 no-scrollbar">
+            <button
+              onClick={() => setCropCategoryFilter('All')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition-all ${
+                cropCategoryFilter === 'All'
+                  ? 'bg-[#012d1d] text-white shadow-xs'
+                  : 'bg-white/80 hover:bg-white text-slate-700 border border-slate-200/80'
+              }`}
+            >
+              All Crops ({crops.length})
+            </button>
+            {['Fruit', 'Vegetables', 'Grain', 'Pulses', 'Cash Crop', 'Spices'].map(cat => {
+              const count = crops.filter(c => (c.category || '').toLowerCase() === cat.toLowerCase()).length;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setCropCategoryFilter(cat)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer transition-all ${
+                    cropCategoryFilter === cat
+                      ? 'bg-[#116c4a] text-white shadow-xs'
+                      : 'bg-white/80 hover:bg-white text-slate-700 border border-slate-200/80'
+                  }`}
+                >
+                  {cat} ({count})
+                </button>
+              );
+            })}
+          </div>
+
+          {displayedCrops.length === 0 ? (
             <div className="text-center py-12 bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-slate-200/50">
               <span className="material-symbols-outlined text-[#717973] text-[48px] mb-2">yard</span>
-              <p className="text-[16px] font-bold text-[#012d1d]">No crops added yet.</p>
-              <p className="text-[14px] text-[#414844] mb-4">Add your first crop to start tracking farm expenses.</p>
+              <p className="text-[16px] font-bold text-[#012d1d]">
+                {crops.length === 0 ? 'No crops added yet.' : `No crops found under ${cropCategoryFilter}.`}
+              </p>
+              <p className="text-[14px] text-[#414844] mb-4">
+                {crops.length === 0 ? 'Add your first crop to start tracking farm expenses.' : 'Try selecting "All Crops" or register a new crop in this category.'}
+              </p>
               <button
                 onClick={() => setShowAddCropModal(true)}
                 className="px-6 py-2.5 rounded-xl bg-[#012d1d] text-white font-bold text-[14px] cursor-pointer"
               >
-                Add Your First Crop
+                Add New Crop
               </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {crops.map(c => {
+              {displayedCrops.map(c => {
                 const cropExpenses = expenses.filter(e => e.cropId === c.id);
                 const cropExpTotal = cropExpenses.reduce((sum, e) => sum + e.amount, 0);
 
                 return (
-                  <div key={c.id} className="p-5 rounded-3xl bg-white/70 hover:bg-white/90 backdrop-blur-xl border border-white/80 hover:border-emerald-500/30 shadow-[0_6px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition-all flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="px-2.5 py-0.5 rounded-full bg-[#c1ecd4] text-[#274e3d] text-[11px] font-bold shadow-2xs">
-                          {c.category}
-                        </span>
-                        <span className="text-[12px] text-[#414844] font-medium">Planted: {c.plantationDate}</span>
-                      </div>
-                      <h3 className="font-bold text-[18px] text-[#012d1d] mb-1">{c.name}</h3>
-                      <p className="text-[13px] text-[#414844] mb-3">{c.description || 'No description provided.'}</p>
-                      <div className="text-[12px] text-[#414844] bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-slate-200/60 space-y-1">
-                        <div className="flex justify-between">
-                          <span>Duration:</span>
-                          <span className="font-bold text-[#012d1d]">{c.durationDays} Days</span>
+                  <TiltCard key={c.id} className="h-full">
+                    <div className="p-5 rounded-3xl bg-white/80 hover:bg-white/95 backdrop-blur-xl border border-white hover:border-emerald-500/30 shadow-[0_6px_24px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition-all flex flex-col justify-between h-full">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="px-2.5 py-0.5 rounded-full bg-[#c1ecd4] text-[#274e3d] text-[11px] font-bold shadow-2xs">
+                            {c.category}
+                          </span>
+                          <span className="text-[12px] text-[#414844] font-medium">Planted: {c.plantationDate}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Expenses Logged:</span>
-                          <span className="font-bold text-[#116c4a]">₹{cropExpTotal.toLocaleString('en-IN')} ({cropExpenses.length})</span>
+                        <h3 className="font-bold text-[18px] text-[#012d1d] mb-1">{c.name}</h3>
+                        <p className="text-[13px] text-[#414844] mb-3">{c.description || 'No description provided.'}</p>
+                        <div className="text-[12px] text-[#414844] bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-slate-200/60 space-y-1">
+                          <div className="flex justify-between">
+                            <span>Duration:</span>
+                            <span className="font-bold text-[#012d1d]">{c.durationDays} Days</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Expenses Logged:</span>
+                            <span className="font-bold text-[#116c4a]">₹{cropExpTotal.toLocaleString('en-IN')} ({cropExpenses.length})</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center justify-end gap-2 pt-4 mt-4 border-t border-slate-200/60">
-                      <button
-                        onClick={() => {
-                          setEditingCrop(c);
-                          setShowAddCropModal(true);
-                        }}
-                        className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-white text-[#012d1d] font-bold text-[12px] border border-slate-200/80 backdrop-blur-md shadow-2xs transition-all cursor-pointer"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() =>
-                          setDeleteConfirm({
-                            type: 'crop',
-                            id: c.id,
-                            title: `Delete crop "${c.name}"?`
-                          })
-                        }
-                        className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-red-50 text-[#ba1a1a] font-bold text-[12px] border border-red-200/70 backdrop-blur-md shadow-2xs transition-all cursor-pointer"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex items-center justify-end gap-2 pt-4 mt-4 border-t border-slate-200/60">
+                        <button
+                          onClick={() => {
+                            setEditingCrop(c);
+                            setShowAddCropModal(true);
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-white text-[#012d1d] font-bold text-[12px] border border-slate-200/80 backdrop-blur-md shadow-2xs transition-all cursor-pointer"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() =>
+                            setDeleteConfirm({
+                              type: 'crop',
+                              id: c.id,
+                              title: `Delete crop "${c.name}"?`
+                            })
+                          }
+                          className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-red-50 text-[#ba1a1a] font-bold text-[12px] border border-red-200/70 backdrop-blur-md shadow-2xs transition-all cursor-pointer"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  </TiltCard>
                 );
               })}
             </div>
           )}
         </div>
-      )}
+        );
+      })()}
 
       {/* 2. EXPENSES KHATA */}
       {activeTab === 'expenses' && (
@@ -790,6 +858,26 @@ export const FarmerDashboard: React.FC = () => {
               <span className="material-symbols-outlined text-[20px]">person_add</span>
               <span>Add Worker</span>
             </button>
+          </div>
+
+          {/* Worker Wage Formula Display Banner */}
+          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-[#012d1d] via-[#116c4a] to-[#1b4332] text-white border border-emerald-400/30 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-emerald-300 shrink-0">
+                <span className="material-symbols-outlined text-[24px]">calculate</span>
+              </div>
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
+                  Daily Wage Formula • दैनिक मजदूरी हिसाब
+                </span>
+                <p className="text-sm font-semibold text-white">
+                  Days Worked (दिन) × Daily Wage Rate (दैनिक दर ₹) = Total Payment (कुल मजदूरी ₹)
+                </p>
+              </div>
+            </div>
+            <div className="px-3.5 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-xs text-emerald-200">
+              Active Workers: <strong>{workers.length}</strong> • Total Wages: <strong>₹{totalWorkerWages.toLocaleString('en-IN')}</strong>
+            </div>
           </div>
 
           {workers.length === 0 ? (
@@ -1395,9 +1483,19 @@ const CropModal: React.FC<CropModalProps> = ({ crop, onClose, onSave }) => {
   const [name, setName] = useState(crop?.name || '');
   const [category, setCategory] = useState(crop?.category || 'Fruit');
   const [plantationDate, setPlantationDate] = useState(crop?.plantationDate || '15-06-2025');
-  const [durationDays, setDurationDays] = useState(crop?.durationDays ? String(crop.durationDays) : '180');
+  const [durationDays, setDurationDays] = useState(crop?.durationDays ? String(crop.durationDays) : '120');
   const [description, setDescription] = useState(crop?.description || '');
+  const [showManualFields, setShowManualFields] = useState(Boolean(crop));
   const [error, setError] = useState('');
+
+  const handleSelectPreset = (preset: CropPreset) => {
+    setName(preset.name);
+    setCategory(preset.category);
+    setDurationDays(String(preset.defaultDurationDays));
+    if (preset.description && !description) {
+      setDescription(preset.description);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1421,13 +1519,18 @@ const CropModal: React.FC<CropModalProps> = ({ crop, onClose, onSave }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-white/95 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-[0_24px_70px_rgba(0,0,0,0.22)] border border-white/85">
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-white/95 backdrop-blur-2xl rounded-3xl p-6 sm:p-7 max-w-2xl w-full shadow-[0_24px_70px_rgba(0,0,0,0.22)] border border-white/85 max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200/60">
-          <h3 className="font-bold text-[20px] text-[#012d1d]">
-            {crop ? 'Edit Crop' : 'Add New Crop'}
-          </h3>
-          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1 rounded-xl hover:bg-slate-100/60 transition-colors cursor-pointer">
+          <div>
+            <h3 className="font-bold text-[20px] text-[#012d1d]">
+              {crop ? 'Edit Crop' : 'Add New Crop (फसल जोड़ें)'}
+            </h3>
+            <p className="text-xs text-slate-500">
+              Select an Indian crop preset with rotating 3D preview, or enter a custom variety.
+            </p>
+          </div>
+          <button onClick={onClose} className="text-[#717973] hover:text-[#012d1d] p-1.5 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
             <span className="material-symbols-outlined text-[24px]">close</span>
           </button>
         </div>
@@ -1435,71 +1538,103 @@ const CropModal: React.FC<CropModalProps> = ({ crop, onClose, onSave }) => {
         {error && <div className="p-3 mb-4 rounded-xl bg-red-500/10 text-[#ba1a1a] border border-red-200/60 text-[13px] font-semibold">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-[13px] font-bold text-[#012d1d] mb-1">Crop Name *</label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="e.g. Bhagwa Pomegranate, Ratnagiri Alphonso"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[15px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[13px] font-bold text-[#012d1d] mb-1">Category *</label>
-              <select
-                value={category}
-                onChange={e => setCategory(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
-              >
-                <option value="Fruit">Fruit</option>
-                <option value="Grain">Grain & Wheat</option>
-                <option value="Spices">Spices & Herbs</option>
-                <option value="Vegetables">Vegetables</option>
-                <option value="Cash Crop">Cash Crop (Sugarcane/Cotton)</option>
-                <option value="Pulses">Pulses & Dal</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-bold text-[#012d1d] mb-1">Duration (Days) *</label>
-              <input
-                type="number"
-                min="1"
-                max="999"
-                value={durationDays}
-                onChange={e => setDurationDays(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
-                required
+          {/* 3D Crop Category Selector (shown when adding new crop or can be browsed) */}
+          {!crop && (
+            <div className="mb-2">
+              <Crop3DSelector
+                selectedName={name}
+                selectedCategory={category}
+                onSelect={handleSelectPreset}
               />
             </div>
-          </div>
+          )}
 
-          <div>
-            <label className="block text-[13px] font-bold text-[#012d1d] mb-1">Plantation Date (DD-MM-YYYY) *</label>
-            <input
-              type="text"
-              value={plantationDate}
-              onChange={e => setPlantationDate(e.target.value)}
-              placeholder="DD-MM-YYYY"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[15px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
-              required
-            />
-          </div>
+          {/* Toggle manual fields button */}
+          {!crop && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowManualFields(!showManualFields)}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#116c4a] hover:underline"
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  {showManualFields ? 'expand_less' : 'tune'}
+                </span>
+                {showManualFields ? 'Hide Variety & Date Details' : 'Edit Variety Name, Plantation Date & Details'}
+              </button>
+            </div>
+          )}
 
-          <div>
-            <label className="block text-[13px] font-bold text-[#012d1d] mb-1">Description / Plot Details</label>
-            <textarea
-              rows={2}
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              placeholder="e.g. 5 acres North plot with fertile black soil"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
-            />
-          </div>
+          {/* Editable Fields (Always visible on Edit, or toggled on Add) */}
+          {(showManualFields || Boolean(crop)) && (
+            <div className="space-y-3 pt-2 border-t border-slate-200/60">
+              <div>
+                <label className="block text-[13px] font-bold text-[#012d1d] mb-1">Crop Name & Variety *</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="e.g. Bhagwa Pomegranate, Ratnagiri Alphonso, Kesar"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[15px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[13px] font-bold text-[#012d1d] mb-1">Category *</label>
+                  <select
+                    value={category}
+                    onChange={e => setCategory(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                  >
+                    <option value="Fruit">Fruit (फल)</option>
+                    <option value="Grain">Grain & Wheat (अनाज / धान्य)</option>
+                    <option value="Vegetables">Vegetables (सब्जियां / भाजीपाला)</option>
+                    <option value="Pulses">Pulses & Dal (दालें / कडधान्ये)</option>
+                    <option value="Cash Crop">Cash Crop (Sugarcane/Cotton)</option>
+                    <option value="Spices">Spices & Herbs (मसाले)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[13px] font-bold text-[#012d1d] mb-1">Duration (Days) *</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="999"
+                    value={durationDays}
+                    onChange={e => setDurationDays(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[13px] font-bold text-[#012d1d] mb-1">Plantation Date (DD-MM-YYYY) *</label>
+                <input
+                  type="text"
+                  value={plantationDate}
+                  onChange={e => setPlantationDate(e.target.value)}
+                  placeholder="DD-MM-YYYY"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[15px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[13px] font-bold text-[#012d1d] mb-1">Description / Plot Details</label>
+                <textarea
+                  rows={2}
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="e.g. 5 acres North parcel with drip irrigation"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-md text-[14px] focus:outline-none focus:ring-2 focus:ring-[#116c4a]/30 shadow-2xs"
+                />
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200/60">
             <button
